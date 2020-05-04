@@ -1,0 +1,24 @@
+@UI {
+  application myApplication { 
+	  screens { 
+	    screen screen1 (layout : Vertical) {
+	        children {
+	            button btn1a (label : 'Ok')
+	            button btn1b (
+	                label : 'Cancel' 
+	                backgroundColor : #(red : 100 green : 50)
+            	)
+            	link(label: 'To screen 2') {
+            	  targetScreen: screen2
+            	}
+	        }
+	    } 
+	    screen screen2 {
+	        children {
+	            button btn2a (label : 'Ok')
+	        }
+	    } 
+	    screen screen3 {} 
+	  } 
+  }
+}
