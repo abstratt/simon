@@ -19,12 +19,6 @@ import com.abstratt.simon.compiler.Metamodel;
 
 public class EcoreMetamodel implements Metamodel {
 
-	private EPackage ePackage;
-
-	public EcoreMetamodel(EPackage ePackage) {
-		this.ePackage = ePackage;
-	}
-	
 //	@Override
 //	public Collection<ObjectType> rootTypes() {
 //		return ePackage.getEClassifiers().stream().filter(EcoreMetamodel::isRootEClass).map(ec -> (EClass) ec).map(EcoreObjectType::new).collect(Collectors.toList());
@@ -34,12 +28,6 @@ public class EcoreMetamodel implements Metamodel {
 		return classifier instanceof EClass && ((EClass) classifier).eContainer() != null;
 	}
 
-	@Override
-	public Type resolveType(String typeName) {
-		EClassifier classifier = ePackage.getEClassifier(typeName);
-		return classifier == null ? null : EcoreType.fromClassifier(classifier);
-	}
-	
 	@Override
 	public boolean isNamedObject(Type resolvedType) {
 		return resolvedType instanceof EcoreSlotted<?>;
@@ -143,7 +131,7 @@ public class EcoreMetamodel implements Metamodel {
 		}
 	}
 
-	static class EcoreObjectType extends EcoreSlotted<EClass> implements Metamodel.ObjectType {
+	public static class EcoreObjectType extends EcoreSlotted<EClass> implements Metamodel.ObjectType {
 
 		public EcoreObjectType(EClass wrapped) {
 			super(wrapped);

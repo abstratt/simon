@@ -4,7 +4,16 @@ grammar Simon;
     package com.abstratt.simon.parser.antlr;
 }
 
-rootObject: object EOF;
+program: (rootObject | scopedRootObjects) EOF;
+
+scopedRootObjects: 
+'@' languageName OPEN_BRACKET rootObjects CLOSE_BRACKET;
+
+languageName: IDENT; 
+
+rootObjects: rootObject*;
+
+rootObject: object;
 
 object: objectHeader 
 properties?
@@ -12,7 +21,13 @@ components?;
 
 objectHeader: objectClass objectName?;
 
-objectClass: IDENT;
+objectClass: qualifiedIdentifier;
+
+qualifiedIdentifier: simpleIdentifier identifierTail ? ;
+
+identifierTail: '.' qualifiedIdentifier ;
+
+simpleIdentifier: IDENT ;
 
 objectName: IDENT;
 
@@ -23,12 +38,12 @@ properties:
 
 
 components:
-'{'
+OPEN_BRACKET
     component*
-'}';
+CLOSE_BRACKET;
 
 component: 
-    compositionName '{' childObjects '}';
+    compositionName? OPEN_BRACKET childObjects CLOSE_BRACKET;
     
 childObjects:
 	childObject*;    
@@ -89,9 +104,14 @@ GT: 'gt';
 
 GE: 'ge';
 
+OPEN_BRACKET: '{';
+CLOSE_BRACKET: '}';
+
 
 literal:
-   CHAR_LITERAL | NUM_LITERAL;
+   CHAR_LITERAL | NUM_LITERAL | enumLiteral;
+   
+enumLiteral: IDENT;   
 
 IDENT : ('a'..'z'|'A'..'Z') ('a'..'z'|'A'..'Z'|'0'..'9'|'_')*;
 

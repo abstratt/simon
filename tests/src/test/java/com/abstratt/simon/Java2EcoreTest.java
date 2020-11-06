@@ -75,6 +75,15 @@ public class Java2EcoreTest {
 		EClassifier redType = red.getEType();
 		assertSame(int.class, redType.getInstanceClass());
 	}
+	
+	@Test
+	void enumSlot() {
+		EClass result = build(UI.Container.class);
+		EList<EAttribute> attributes = result.getEAttributes();
+		EAttribute layout = find(attributes, a -> a.getName().equals("layout"));
+		EClassifier layoutType = layout.getEType();
+		assertTrue(layoutType instanceof EEnum, () -> layoutType.getClass().getName());
+	}
 
 	@Test
 	void enumType() {

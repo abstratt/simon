@@ -14,14 +14,6 @@ import java.util.Collection;
  */
 public interface Metamodel {
 
-	/**
-	 * Resolves the given type name into a type instance.
-	 * 
-	 * @param typeName
-	 * @return the corresponding type instance
-	 */
-	Type resolveType(String typeName);
-	
 	boolean isNamedObject(Type resolvedType);
 	
 	/**

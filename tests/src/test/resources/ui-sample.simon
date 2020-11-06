@@ -1,0 +1,15 @@
+@UI {
+  application MyApplication { 
+	  screens { 
+	    screen Screen1 (layout = Vertical) {
+	        children {
+	            button(label = 'Ok')
+	            button(label = 'Cancel')
+	        }
+	    } 
+	    screen Screen2 {} 
+	    screen Screen3 {} 
+	  } 
+  }
+}
+

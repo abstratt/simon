@@ -15,6 +15,11 @@ public interface UI {
 		String name();
 	}
 	
+	interface Labeled {
+		@Meta.Attribute
+		String label();
+	}
+	
 	static abstract class BaseNamed implements Named {
 		private String name;
 
@@ -56,20 +61,25 @@ public interface UI {
 		}
 	}
 	
-
-	class Link extends Component {
+	abstract class LabeledComponent extends Component implements Labeled {
 		private String label;
-		private Screen targetScreen;
-
-		@Meta.Attribute
+		@Override
 		public String label() {
 			return label;
-		}
+		}	
+	}
+	
+
+	class Link extends LabeledComponent {
+		private Screen targetScreen;
+
 
 		@Meta.Reference
 		public Screen targetScreen() {
 			return targetScreen;
 		}
+
+
 	}
 	
 	class Screen extends Container {
@@ -98,7 +108,7 @@ public interface UI {
 	}
 
 	
-	class Button extends Component {
+	class Button extends LabeledComponent {
 		private Color backgroundColor;
 		private Color foregroundColor;
 
