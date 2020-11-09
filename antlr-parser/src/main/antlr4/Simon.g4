@@ -109,9 +109,11 @@ CLOSE_BRACKET: '}';
 
 
 literal:
-   CHAR_LITERAL | NUM_LITERAL | enumLiteral;
+   CHAR_LITERAL | NUM_LITERAL | enumLiteral | recordLiteral;
    
 enumLiteral: IDENT;   
+
+recordLiteral: '#' properties ;
 
 IDENT : ('a'..'z'|'A'..'Z') ('a'..'z'|'A'..'Z'|'0'..'9'|'_')*;
 

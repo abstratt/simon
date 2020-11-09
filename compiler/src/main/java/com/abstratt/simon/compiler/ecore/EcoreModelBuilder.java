@@ -15,12 +15,13 @@ import com.abstratt.simon.compiler.Configuration.ValueSetting;
 import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreObjectType;
 import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreRelationship;
 import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlot;
+import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlotted;
 
-public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType, EObject> {
+public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType, EcoreSlotted<?>, EObject> {
 
 	@Override
-	public Instantiation<EcoreObjectType> instantiation() {
-		return this::createRootObject;
+	public Instantiation<EcoreSlotted<?>> instantiation() {
+		return this::createObject;
 	}
 
 	@Override
@@ -43,7 +44,7 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 		return this::addChild;
 	}
 	
-	public <E extends EObject> E createRootObject(EcoreObjectType resolvedType) {
+	public <E extends EObject> E createObject(EcoreSlotted<?> resolvedType) {
 		return (E) resolvedType.newModelElement();
 	}
 	

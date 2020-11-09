@@ -37,8 +37,10 @@ import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.ETypedElement;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EcorePackage;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 
 import com.abstratt.simon.Meta;
+import com.abstratt.simon.Meta.RecordType;
 import com.abstratt.simon.Meta.Required;
 
 public class Java2EcoreMapper {
@@ -206,6 +208,7 @@ public class Java2EcoreMapper {
 		System.out.println("Building record type " + className);
 		EClass eClass = EcoreFactory.eINSTANCE.createEClass();
 		eClass.setName(className);
+		EcoreUtil.setConstraints(eClass, Arrays.asList(RecordType.class.getSimpleName()));
 		addAttributes(context, clazz, eClass);
 		return eClass;
 	}

@@ -1,21 +1,23 @@
 package com.abstratt.simon.compiler;
 
+import com.abstratt.simon.compiler.Metamodel.BasicType;
 import com.abstratt.simon.compiler.Metamodel.Composition;
 import com.abstratt.simon.compiler.Metamodel.ObjectType;
 import com.abstratt.simon.compiler.Metamodel.Reference;
 import com.abstratt.simon.compiler.Metamodel.Slot;
+import com.abstratt.simon.compiler.Metamodel.Slotted;
 
 public interface Configuration {
-	interface Provider<T extends ObjectType, M> {
+	interface Provider<O extends ObjectType, S extends Slotted, M> {
 		Naming<M> naming();
-		Instantiation<T> instantiation();
-		<S extends Slot> ValueSetting<M, S> valueSetting(); 
-		<R extends Reference> Linking<M, R> linking();
+		<S1 extends S> Instantiation<S1> instantiation();
+		<L extends Slot> ValueSetting<M, L> valueSetting(); 
+		<F extends Reference> Linking<M, F> linking();
 		<C extends Composition> Parenting<M, C> parenting();
 	}
 	
-	interface Instantiation<T extends ObjectType> {
-		<M> M createObject(T resolvedType);
+	interface Instantiation<S extends Slotted> {
+		<OBJ> OBJ createObject(S basicType);
 	}
 	
 	interface Naming<M> {

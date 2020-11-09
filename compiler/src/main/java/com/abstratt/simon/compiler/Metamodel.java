@@ -14,13 +14,14 @@ import java.util.Collection;
  */
 public interface Metamodel {
 
-	boolean isNamedObject(Type resolvedType);
-	
 	/**
 	 * If some model element can be named, should implement Named. 
 	 */
 	interface Named {
 		String name();
+		static boolean isNamed(Object o) {
+			return o instanceof Named;
+		}
 	}
 
 	interface Type extends Named {
@@ -76,6 +77,7 @@ public interface Metamodel {
 	}
 
 	interface Enumerated extends BasicType {
+		Object valueForName(String valueName);
 	}
 
 	interface Primitive extends BasicType {

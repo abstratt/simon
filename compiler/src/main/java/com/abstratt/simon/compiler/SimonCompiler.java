@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
@@ -15,23 +16,39 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.UnbufferedTokenStream;
 import org.antlr.v4.runtime.tree.pattern.RuleTagToken;
+import org.eclipse.emf.ecore.EObject;
 
 import com.abstratt.simon.compiler.Configuration.Provider;
 import com.abstratt.simon.compiler.Metamodel.ObjectType;
+import com.abstratt.simon.compiler.Metamodel.Slotted;
 import com.abstratt.simon.parser.antlr.SimonLexer;
 import com.abstratt.simon.parser.antlr.SimonParser;
 
 public class SimonCompiler<T> {
-	private Metamodel metamodel;
-	private TypeSource typeSource;
-	private Configuration.Provider<? extends ObjectType,T> configurationProvider;
-	public SimonCompiler(Metamodel metamodel, TypeSource typeSource, Provider<? extends ObjectType, T> configurationProvider) {
-		this.metamodel = metamodel;
+	private TypeSource<?> typeSource;
+	private Configuration.Provider<? extends ObjectType,? extends Slotted, T> configurationProvider;
+	
+	public static class Result<T> {
+		private final T rootObject;
+		private final List<Problem> problems;
+		public Result(T rootObject, List<Problem> problems) {
+			this.rootObject = rootObject;
+			this.problems = problems;
+		}
+		public T getRootObject() {
+			return rootObject;
+		}
+		public List<Problem> getProblems() {
+			return problems;
+		}
+	}
+	
+	public SimonCompiler(TypeSource<?> typeSource, Provider<? extends ObjectType,? extends Slotted, T> configurationProvider) {
 		this.typeSource = typeSource;
 		this.configurationProvider = configurationProvider;
 	}
 	
-	public T compile(URI uri) {
+	public Result<T> compile(URI uri) {
 		try {
 			return compile(uri.toURL());
 		} catch (MalformedURLException e) {
@@ -39,7 +56,7 @@ public class SimonCompiler<T> {
 		}
 	}
 	
-	public T compile(URL url) {
+	public Result<T> compile(URL url) {
 		try (InputStream contents = url.openStream()) {
 			return compile(CharStreams.fromStream(contents));
 		} catch (IOException e) {
@@ -47,7 +64,7 @@ public class SimonCompiler<T> {
 		}
 	}	
 	
-	public T compile(Path toParse) {
+	public Result<T> compile(Path toParse) {
 		try {
 			return compile(CharStreams.fromPath(toParse));
 		} catch (IOException e) {
@@ -55,7 +72,7 @@ public class SimonCompiler<T> {
 		}
 	}
 
-	public T compile(String toParse) {
+	public Result<T> compile(String toParse) {
 		try (StringReader reader = new StringReader(toParse)) {
 			return compile(CharStreams.fromReader(reader));
 		} catch (IOException e) {
@@ -63,10 +80,10 @@ public class SimonCompiler<T> {
 		}
 	}
 
-	private T compile(CharStream input) {
+	private Result<T> compile(CharStream input) {
 		SimonLexer lexer = new SimonLexer(input);
 		SimonParser parser = new SimonParser(new UnbufferedTokenStream<RuleTagToken>(lexer));
-		SimonBuilder<T> builder = new SimonBuilder<T>(metamodel, typeSource, configurationProvider);
+		SimonBuilder<T> builder = new SimonBuilder<T>(typeSource, configurationProvider);
 		parser.addParseListener(builder);
 		parser.addErrorListener(new BaseErrorListener() {
 			@Override
@@ -76,10 +93,7 @@ public class SimonCompiler<T> {
 			}		
 		});
 		parser.program();
-		if (builder.hasProblems()) {
-			throw new CompilerException(builder.getProblems());
-		}
 		T result = builder.build();
-		return result;
+		return new Result<>(result, builder.getProblems());
 	}
 }

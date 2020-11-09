@@ -28,12 +28,21 @@ import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EcoreValidator;
 import org.junit.jupiter.api.Test;
 
+import com.abstratt.simon.compiler.Metamodel;
+import com.abstratt.simon.compiler.SimonCompiler;
+import com.abstratt.simon.compiler.Configuration.Provider;
+import com.abstratt.simon.compiler.ecore.EPackageTypeSource;
+import com.abstratt.simon.compiler.ecore.EcoreMetamodel;
+import com.abstratt.simon.compiler.ecore.EcoreModelBuilder;
+import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreObjectType;
+import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlotted;
 import com.abstratt.simon.examples.Kirra;
 import com.abstratt.simon.examples.UI;
 import com.abstratt.simon.examples.UI.PanelLayout;
 import com.abstratt.simon.java2ecore.Java2EcoreMapper;
 
 public class Java2EcoreTest {
+	
 	@Test
 	void objectType() {
 		EClass result = build(Kirra.Namespace.class);

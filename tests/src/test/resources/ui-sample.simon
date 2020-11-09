@@ -4,7 +4,13 @@
 	    screen Screen1 (layout = Vertical) {
 	        children {
 	            button(label = 'Ok')
-	            button(label = 'Cancel')
+	            button(
+	                label = 'Cancel' 
+	                backgroundColor = # (
+	                	red = 100
+	                	green = 50
+                	)
+            	)
 	        }
 	    } 
 	    screen Screen2 {} 

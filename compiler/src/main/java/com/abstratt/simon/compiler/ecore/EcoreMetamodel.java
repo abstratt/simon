@@ -11,29 +11,24 @@ import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.EEnum;
 import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.ETypedElement;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 
 import com.abstratt.simon.compiler.Metamodel;
 
-public class EcoreMetamodel implements Metamodel {
+public interface EcoreMetamodel extends Metamodel {
 
 //	@Override
 //	public Collection<ObjectType> rootTypes() {
 //		return ePackage.getEClassifiers().stream().filter(EcoreMetamodel::isRootEClass).map(ec -> (EClass) ec).map(EcoreObjectType::new).collect(Collectors.toList());
 //	}
 	
-	private static boolean isRootEClass(EClassifier classifier) {
+	public static boolean isRootEClass(EClassifier classifier) {
 		return classifier instanceof EClass && ((EClass) classifier).eContainer() != null;
 	}
 
-	@Override
-	public boolean isNamedObject(Type resolvedType) {
-		return resolvedType instanceof EcoreSlotted<?>;
-	}
-
-	static class EcoreSlotted<T extends EClass> extends EcoreType<T> implements Slotted {
+	public abstract static class EcoreSlotted<T extends EClass> extends EcoreType<T> implements Slotted {
 		public EcoreSlotted(T wrapped) {
 			super(wrapped);
 		}
@@ -69,16 +64,22 @@ public class EcoreMetamodel implements Metamodel {
 	}
 
 	static abstract class EcoreType<EC extends EClassifier> extends EcoreNamed<EC> implements Metamodel.Type {
+		private static final Object SLOTTED_RECORD_TYPE = "recordType";
+		private static final String SIMON_ANNOTATION = "simon.annotation";
+
 		public EcoreType(EC wrapped) {
 			super(wrapped);
 		}
 
 		public static EcoreType<?> fromClassifier(EClassifier classifier) {
 			if (classifier instanceof EClass) {
+				boolean isRecord = EcoreUtil.getConstraints(classifier).contains(RecordType.class.getSimpleName());
+				if (isRecord)
+					return new EcoreRecordType((EClass) classifier);
 				return new EcoreObjectType((EClass) classifier);
 			}
 			if (classifier instanceof EEnum) {
-				return new EcoreEnumValue((EDataType) classifier);	
+				return new EcoreEnumValue((EEnum) classifier);	
 			}
 			return new EcorePrimitiveValue((EDataType) classifier);
 		}
@@ -131,7 +132,7 @@ public class EcoreMetamodel implements Metamodel {
 		}
 	}
 
-	public static class EcoreObjectType extends EcoreSlotted<EClass> implements Metamodel.ObjectType {
+	static class EcoreObjectType extends EcoreSlotted<EClass> implements Metamodel.ObjectType {
 
 		public EcoreObjectType(EClass wrapped) {
 			super(wrapped);
@@ -149,5 +150,11 @@ public class EcoreMetamodel implements Metamodel {
 		}
 
 	}
+	
+	static class EcoreRecordType extends EcoreSlotted<EClass> implements Metamodel.RecordType {
 
+		public EcoreRecordType(EClass wrapped) {
+			super(wrapped);
+		}
+	}
 }

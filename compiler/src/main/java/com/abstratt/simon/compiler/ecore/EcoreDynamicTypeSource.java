@@ -1,5 +1,6 @@
 package com.abstratt.simon.compiler.ecore;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -20,14 +21,16 @@ public class EcoreDynamicTypeSource implements TypeSource<EcoreType<EClassifier>
 
 	Map<String, EPackage> packages;
 	private Reflections reflections;
+	Collection<URL> urls = ClasspathHelper.forClassLoader(getClass().getClassLoader());
 	public EcoreDynamicTypeSource() {
+		System.out.println("URL: " + urls);
 		this.reflections = new Reflections(new ConfigurationBuilder()
-			     .setUrls(ClasspathHelper.forClassLoader()));
+			     .setUrls(urls));
 		
 		Set<Class<?>> packageImplementations = reflections.getTypesAnnotatedWith(Package.class);
 		Java2EcoreMapper mapper = new Java2EcoreMapper();
 		this.packages = packageImplementations.stream().collect(Collectors.toMap(Class::getName, packageClass -> mapper.map(packageClass)));
-		System.out.println(packages);
+		System.out.println("*** Packages:\n" + packages);
 	}
 	
 	@Override

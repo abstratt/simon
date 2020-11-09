@@ -7,9 +7,9 @@ import org.eclipse.emf.ecore.EObject;
 import com.abstratt.simon.compiler.Metamodel;
 import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreType;
 
-public abstract class EcoreValue extends EcoreType<EDataType> implements Metamodel.BasicType {
+public abstract class EcoreValue<DT extends EDataType> extends EcoreType<DT> implements Metamodel.BasicType {
 
-	public EcoreValue(EDataType classifier) {
+	public EcoreValue(DT classifier) {
 		super(classifier);
 	}
 
