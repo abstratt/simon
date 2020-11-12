@@ -82,21 +82,25 @@ public interface Metamodel {
 
 	interface Primitive extends BasicType {
 		enum Kind {
-			String, Integer
+			String, Integer, Boolean
 		}
 
 		Kind kind(); 
 	}
+	
+	interface Feature<T extends Type> extends Typed<T> {
+		
+	}
 
-	interface Slot extends Typed<BasicType> {
+	interface Slot extends Feature<BasicType> {
 
 	}
 
-	interface Composition extends Typed<ObjectType> {
+	interface Composition extends Feature<ObjectType> {
 
 	}
 
-	interface Reference extends Typed<ObjectType> {
+	interface Reference extends Feature<ObjectType> {
 
 	}
 }

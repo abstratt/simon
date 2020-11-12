@@ -31,6 +31,8 @@ simpleIdentifier: IDENT ;
 
 objectName: IDENT;
 
+objectNameRef: qualifiedIdentifier;
+
 properties:
 '('
     slot*
@@ -39,11 +41,16 @@ properties:
 
 components:
 OPEN_BRACKET
-    component*
+    componentOrLink*
 CLOSE_BRACKET;
 
+componentOrLink: component | link;
+
 component: 
-    compositionName? OPEN_BRACKET childObjects CLOSE_BRACKET;
+    featureName? OPEN_BRACKET childObjects CLOSE_BRACKET;
+    
+link: 
+    featureName? keyValueSep objectNameRef;
     
 childObjects:
 	childObject*;    
@@ -51,12 +58,12 @@ childObjects:
 childObject:
     object;
 
-compositionName: IDENT;
-
 slot: 
-    slotName? '=' slotValue;
+    featureName? keyValueSep slotValue;
     
-slotName: IDENT;    
+keyValueSep: ':'|'=';    
+    
+featureName: IDENT;    
 
 slotValue: literal;
     

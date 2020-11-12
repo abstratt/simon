@@ -89,11 +89,17 @@ public class SimonCompiler<T> {
 			@Override
 			public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line,
 					int charPositionInLine, String msg, RecognitionException e) {
-				builder.addProblem(new Problem(line, charPositionInLine, msg));
+				builder.reportError(false, line, charPositionInLine, msg);
 			}		
 		});
-		parser.program();
-		T result = builder.build();
+		T result = null;
+		try {
+			parser.program();
+			builder.checkAbort();
+			result = builder.build();
+		} catch (AbortCompilationException e) {
+			// a fatal compilation error
+		}
 		return new Result<>(result, builder.getProblems());
 	}
 }

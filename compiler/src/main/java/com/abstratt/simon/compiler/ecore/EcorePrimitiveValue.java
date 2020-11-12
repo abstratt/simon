@@ -23,6 +23,8 @@ public class EcorePrimitiveValue extends EcoreValue<EDataType> implements Metamo
 	@Override
 	public Kind kind() {
 		EDataType eClass = wrapped;
+		if (EcorePackage.Literals.EBOOLEAN == eClass)
+			return Kind.Boolean;
 		if (EcorePackage.Literals.ESTRING == eClass)
 			return Kind.String;
 		if (EcorePackage.Literals.EINT == eClass || EcorePackage.Literals.EINTEGER_OBJECT == eClass)

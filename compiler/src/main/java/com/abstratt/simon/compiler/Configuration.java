@@ -1,6 +1,5 @@
 package com.abstratt.simon.compiler;
 
-import com.abstratt.simon.compiler.Metamodel.BasicType;
 import com.abstratt.simon.compiler.Metamodel.Composition;
 import com.abstratt.simon.compiler.Metamodel.ObjectType;
 import com.abstratt.simon.compiler.Metamodel.Reference;
@@ -9,7 +8,9 @@ import com.abstratt.simon.compiler.Metamodel.Slotted;
 
 public interface Configuration {
 	interface Provider<O extends ObjectType, S extends Slotted, M> {
-		Naming<M> naming();
+		NameSetting<M> nameSetting();
+		NameQuerying<M> nameQuerying();
+		NameResolution<M> nameResolution();
 		<S1 extends S> Instantiation<S1> instantiation();
 		<L extends Slot> ValueSetting<M, L> valueSetting(); 
 		<F extends Reference> Linking<M, F> linking();
@@ -20,7 +21,7 @@ public interface Configuration {
 		<OBJ> OBJ createObject(S basicType);
 	}
 	
-	interface Naming<M> {
+	interface NameSetting<M> {
 		/**
 		 * Being M a 'nameable' object, this method sets the object name.
 		 * 
@@ -28,6 +29,19 @@ public interface Configuration {
 		 * @param name the new name
 		 */
 		void setName(M named, String name);
+	}
+	interface NameQuerying<M> {
+		/**
+		 * Being M a 'nameable' object, this method sets the object name.
+		 * 
+		 * @param named the named object
+		 * @param name the new name
+		 */
+		String getName(M named);
+	}
+	
+	interface NameResolution<M> {
+		M resolve(M scope, String... path);
 	}
 	
 	interface ValueSetting<M, S extends Slot> {

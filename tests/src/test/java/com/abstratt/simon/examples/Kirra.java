@@ -10,6 +10,7 @@ public interface Kirra {
 
 	public static interface Named {
 		@Meta.Name
+		@Meta.Attribute
 		String name();
 	}
 	
@@ -32,17 +33,43 @@ public interface Kirra {
 		}
 
 	}
+	
+	abstract class Feature<T extends Type> extends BaseTyped<T> {
+		private boolean multiple;
+		@Meta.Attribute
+		public boolean multiple() {
+			return multiple;
+		}
+	}
 
-	class Property extends BaseTyped<BasicType> {
+	class Property extends Feature<BasicType> {
 
 	}
 
+	class Relationship extends Feature<Entity> {
+		private Relationship opposite;
+		@Meta.Reference
+		Relationship opposite() {
+			return this.opposite;
+		}
+	}
+	
+	class Action extends BaseNamed {
+		private Collection<Parameter> parameters;
 
-	class Relationship extends BaseTyped<Entity> {
-
+		@Meta.Contained
+		Collection<Parameter> parameters() {
+			return this.parameters;
+		}
+	}
+	
+    class Parameter extends BaseTyped<Type> {
+		
 	}
 	
 	interface TypedElement<T extends Type> {
+		@Meta.Reference
+		@Meta.Required
 	    T type();
 	}
 	
@@ -54,13 +81,10 @@ public interface Kirra {
 		}
 	}
 
-	class EntityRef {
-		String entityName;
-	}
-
 	class Entity extends BaseNamed implements Type {
 		private Collection<Property> properties;
 		private Collection<Relationship> relationships;
+		private Collection<Action> actions;
 		private Collection<Entity> superTypes;
 		private Collection<Entity> subTypes;
 		private Namespace namespace;
@@ -84,6 +108,12 @@ public interface Kirra {
 		}
 		
 		@Meta.Contained
+		@Meta.Typed(Action.class)
+		public Collection<Action> actions() {
+			return actions;
+		}
+		
+		@Meta.Contained
 		@Meta.Typed(Relationship.class)
 		public Collection<Relationship> relationships() {
 			return relationships;
@@ -104,7 +134,7 @@ public interface Kirra {
 	}
 
 	enum Primitive implements BasicType {
-
+		Integer, String, Date
 	}
 
 	class TupleType extends BaseNamed implements BasicType {

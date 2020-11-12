@@ -4,44 +4,45 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.emf.common.util.BasicEMap;
-import org.eclipse.emf.common.util.EMap;
 
 import com.abstratt.simon.compiler.Configuration.Instantiation;
+import com.abstratt.simon.compiler.Configuration.Linking;
 import com.abstratt.simon.compiler.Configuration.Parenting;
 import com.abstratt.simon.compiler.Configuration.Provider;
-import com.abstratt.simon.compiler.Configuration.ValueSetting;
-import com.abstratt.simon.compiler.Metamodel.BasicType;
 import com.abstratt.simon.compiler.Metamodel.Composition;
 import com.abstratt.simon.compiler.Metamodel.Enumerated;
+import com.abstratt.simon.compiler.Metamodel.Feature;
 import com.abstratt.simon.compiler.Metamodel.ObjectType;
 import com.abstratt.simon.compiler.Metamodel.Primitive;
 import com.abstratt.simon.compiler.Metamodel.RecordType;
+import com.abstratt.simon.compiler.Metamodel.Reference;
 import com.abstratt.simon.compiler.Metamodel.Slot;
 import com.abstratt.simon.compiler.Metamodel.Slotted;
 import com.abstratt.simon.compiler.Metamodel.Type;
 import com.abstratt.simon.parser.antlr.SimonBaseListener;
 import com.abstratt.simon.parser.antlr.SimonParser;
 import com.abstratt.simon.parser.antlr.SimonParser.ComponentContext;
+import com.abstratt.simon.parser.antlr.SimonParser.FeatureNameContext;
+import com.abstratt.simon.parser.antlr.SimonParser.LinkContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ObjectClassContext;
+import com.abstratt.simon.parser.antlr.SimonParser.ObjectContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ObjectHeaderContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ObjectNameContext;
+import com.abstratt.simon.parser.antlr.SimonParser.PropertiesContext;
 import com.abstratt.simon.parser.antlr.SimonParser.RecordLiteralContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ScopedRootObjectsContext;
 import com.abstratt.simon.parser.antlr.SimonParser.SlotContext;
-import com.abstratt.simon.parser.antlr.SimonParser.SlotNameContext;
 
 public class SimonBuilder<T> extends SimonBaseListener {
 
-	static class ElementInfo<T> {
+	class ElementInfo {
 		private T object;
 		private Slotted type;
 		public ElementInfo(T object, Slotted type) {
@@ -58,7 +59,7 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		}
 		@Override
 		public String toString() {
-			return object + " : " + type.name();
+			return configurationProvider.nameQuerying().getName(object) + " : " + type.name();
 		}
 
 		public Slotted getSlotted() {
@@ -68,8 +69,24 @@ public class SimonBuilder<T> extends SimonBaseListener {
 
 	private Configuration.Provider<ObjectType, Slotted, T> configurationProvider;
 	private TypeSource<?> typeSource;
-	private Deque<ElementInfo<T>> currentScope = new LinkedList<>();
+	private Deque<ElementInfo> currentScope = new LinkedList<>();
 	private List<Problem> problems = new LinkedList<>();
+	private List<ResolutionRequest> resolutionRequests = new LinkedList<>();
+	
+	interface Resolver<R> {
+		void resolve(R resolved);
+	}
+	
+	class ResolutionRequest {
+		private T scope;
+		private String name;
+		private Resolver<T> resolver;
+		public ResolutionRequest(T scope, String name, Resolver<T> resolver) {
+			this.scope = scope;
+			this.name = name;
+			this.resolver = resolver;
+		}
+	}
 
 	public SimonBuilder(TypeSource typeSource, Configuration.Provider<? extends ObjectType,? extends Slotted, T> configurationProvider) {
 		this.typeSource = typeSource;
@@ -77,30 +94,34 @@ public class SimonBuilder<T> extends SimonBaseListener {
 	}
 
 	public T build() {
-		if (currentScope.size() != 1) {
-			throw new IllegalStateException("Unexpected stack size: " + currentScope.size());
-		}
-		return pop().getObject();
+		checkAbort();
+		resolve();
+		return currentScope.getFirst().getObject();
 	}
 	
+	private void resolve() {
+		for (ResolutionRequest request : resolutionRequests) {
+			checkAbort();
+			String name = request.name;
+			Resolver<T> resolver = request.resolver;
+			T scope = request.scope;
+			T resolved = configurationProvider.nameResolution().resolve(scope, name);
+			resolver.resolve(resolved);
+		}
+	}
+
 	@Override
 	public void exitScopedRootObjects(ScopedRootObjectsContext ctx) {
-		if (abort()) {
-			return;
-		}
 		String packageName = getIdentifier(ctx.languageName());
 		typeSource.use(packageName);
 	}
 	
-	private boolean abort() {
+	boolean abort() {
 		return !problems.isEmpty();
 	}
 
 	@Override
 	public void exitObjectHeader(ObjectHeaderContext ctx) {
-		if (abort()) {
-			return;
-		}
 		ObjectClassContext object = ctx.objectClass();
 		String typeName = getTypeName(object);
 		Type resolvedType = typeSource.resolveType(typeName);
@@ -115,16 +136,16 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		T created = instantiation.createObject(asObjectType);
 		ObjectNameContext objectName = ctx.objectName();
 		if (objectName != null) {
-			configurationProvider.naming().setName(created, getIdentifier(objectName));
+			configurationProvider.nameSetting().setName(created, getIdentifier(objectName));
 		}
 		push(asObjectType, created);
 	}
-
+	
 	private String getTypeName(ObjectClassContext object) {
 		String text = object.getText();
-		if (text.indexOf('.') < 0) return StringUtils.capitalize(text);
+		if (text.indexOf('.') < 0) return text;
 		String[] components = text.split("\\.");
-		String typeName = components[0] + '.' + StringUtils.capitalize(components[1]);
+		String typeName = components[0] + '.' + components[1];
 		return typeName;
 	}
 
@@ -140,49 +161,81 @@ public class SimonBuilder<T> extends SimonBaseListener {
 	}
 	
 	@Override
+	public void exitLink(LinkContext ctx) {
+		ElementInfo parentInfo = peek().get();
+		FeatureNameContext featureNameCtx = ctx.featureName();
+		Reference reference = getObjectFeature(parentInfo, featureNameCtx, ObjectType::referenceByName);
+		Linking<T, Reference> linking = configurationProvider.linking();
+		String nameToResolve = ctx.objectNameRef().getText();
+		addResolver(nameToResolve, resolved -> linking.link(reference, parentInfo.object, resolved));
+	}
+	
+	private void addResolver(String name, Resolver<T> resolver) {
+		resolutionRequests.add(new ResolutionRequest(currentScope.peek().getObject(), name, resolver));
+	}
+
+	@Override
 	public void exitComponent(ComponentContext ctx) {
-		if (abort()) {
-			return;
-		}
 		int childCount = ctx.childObjects().getChildCount();
 		List<T> components = new ArrayList<>(childCount);
 		for (int i = 0; i < childCount; i++) {
-			components.add(0, pop().getObject());
+			SimonBuilder<T>.ElementInfo last = pop();
+			T child = last.getObject();
+			debug("Collecting child to add: ", last);
+			components.add(0, child);
 		}
-		ElementInfo<T> parentInfo = peekFirst().get();
-		T parent = parentInfo.getObject();
-		Slotted parentType = parentInfo.getType();
+		ElementInfo parentInfo = peek().get();
+		Parenting<T, Composition> parenting = configurationProvider.parenting();
+		Composition composition = getObjectFeature(parentInfo, ctx.featureName(), ObjectType::compositionByName);
+		for (T child : components) {
+			parenting.addChild(composition, parentInfo.getObject(), child);
+		}
+	}
+
+	private <F extends Feature<ObjectType>> F getObjectFeature(ElementInfo featureOwnerInfo, ParserRuleContext featureNameCtx, BiFunction<ObjectType, String, F> getter) {
+		Slotted parentType = featureOwnerInfo.getType();
 		if (!(parentType instanceof ObjectType)) {
-			throw new CompilerException("This type cannot have components: " + parentType.name());
+			reportFatalError(featureNameCtx, "This type cannot have components: " + parentType.name());
 		}
 		ObjectType parentTypeAsObjectType = (ObjectType) parentType;
-		String compositionName = getIdentifier(ctx.compositionName());
-		Composition composition = parentTypeAsObjectType.compositionByName(compositionName);
-		Parenting<T, Composition> parenting = configurationProvider.parenting();
-		for (T child : components) {
-			parenting.addChild(composition, parent, child);
+		String featureName = getIdentifier(featureNameCtx);
+		F feature = getter.apply(parentTypeAsObjectType, featureName);
+		if (feature == null) {
+			reportFatalError(featureNameCtx, "No feature '" + featureName + "' in " + parentType.name());
 		}
-		super.exitComponent(ctx);
+		return feature;
 	}
 	
+	private void reportFatalError(ParserRuleContext ctx, String message) {
+		reportError(true, ctx, message);
+	}
+
+	private void reportError(boolean fatal, ParserRuleContext ctx, String message) {
+		int line = ctx.getStart().getLine();
+		int column = ctx.getStart().getCharPositionInLine();
+		reportError(fatal, line, column, message);
+	}
+
+	void reportError(boolean fatal, int line, int column, String message) {
+		addProblem(new Problem(line, column, message));
+		if (fatal) {
+			throw new AbortCompilationException();
+		}
+	}
+
 	@Override
 	public void exitRecordLiteral(RecordLiteralContext ctx) {
-		if (abort()) {
-			return;
-		}
 		// take the record out of the stack
+		debug("Removing record", peek());
 		pop();
 	}
 	
 	@Override
 	public void enterRecordLiteral(RecordLiteralContext ctx) {
 		SlotContext slotContext = findParent(ctx, SlotContext.class);
-		if (abort()) {
-			return;
-		}
-		ElementInfo<T> info = peekFirst().get();
+		ElementInfo info = peek().get();
 		
-		String propertyName = getIdentifier(slotContext.slotName());
+		String propertyName = getIdentifier(slotContext.featureName());
 		Slotted asSlotted = (Slotted) info.type;
 		Slot slot = asSlotted.slotByName(propertyName);
 		if (slot == null) {
@@ -206,16 +259,8 @@ public class SimonBuilder<T> extends SimonBaseListener {
 	}
 	
 	@Override
-	public void exitSlotName(SlotNameContext ctx) {
-
-	}
-	
-	@Override
 	public void exitSlot(SlotContext ctx) {
-		if (abort()) {
-			return;
-		}
-		ElementInfo<T> info = peekFirst().get();
+		ElementInfo info = peek().get();
 		
 		T target = info.getObject();
 		parseSlotValue(ctx, info.getType(), (slot, value) -> {
@@ -224,7 +269,7 @@ public class SimonBuilder<T> extends SimonBaseListener {
 	}
 
 	private void parseSlotValue(SlotContext ctx, Slotted slotOwner, BiConsumer<Slot, Object> consumer) {
-		String propertyName = getIdentifier(ctx.slotName());
+		String propertyName = getIdentifier(ctx.featureName());
 		Slot slot = slotOwner.slotByName(propertyName);
 		if (slot == null) {
 			throw new CompilerException("Unknown property: " + propertyName + " in type " + slotOwner.name());
@@ -251,7 +296,8 @@ public class SimonBuilder<T> extends SimonBaseListener {
 
 	private Object parseRecordLiteral(RecordType recordType, RecordLiteralContext recordLiteralContext) {
 		T newRecord = configurationProvider.instantiation().createObject(recordType);
-		List<SlotContext> slots = recordLiteralContext.properties().slot();
+		PropertiesContext properties = recordLiteralContext.properties();
+		List<SlotContext> slots = properties.slot();
 		for (SlotContext slotContext : slots) {
 			parseSlotValue(slotContext, recordType, (Slot slot, Object newValue) -> 
 				configurationProvider.valueSetting().setValue(slot, newRecord, (T) newValue)
@@ -273,28 +319,32 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		case String:
 			slotValue = literalText.substring(1, literalText.length() - 1);
 			break;
+		case Boolean:
+			slotValue = Boolean.parseBoolean(literalText);
+			break;
 		default: throw new IllegalStateException();
 		}
 		return slotValue;
 	}
 
 	
-	private ElementInfo<T> pop() {
-		return debug("pop", currentScope.removeFirst());
+	private ElementInfo pop() {
+		return debug("pop (" + currentScope.size() +")" + currentScope, currentScope.removeFirst());
 	}
 
 	private <Z> Z debug(String tag, Z toDebug) {
-		System.out.println(tag +": " + toDebug);
+		System.out.println("\n" + tag +": " + toDebug);
 		return toDebug;
 	}
 
-	private Optional<ElementInfo<T>> peekFirst() {
-		return debug("peekFirst", Optional.ofNullable(currentScope.peekFirst()));
+	private Optional<ElementInfo> peek() {
+		return debug("peekFirst (" + currentScope.size() +")", Optional.ofNullable(currentScope.peekFirst()));
 	}
 	
 	private void push(Slotted type, T created) {
-		ElementInfo<T> newInfo = new ElementInfo<>(created, type);
-		currentScope.push(debug("Pushing", newInfo));
+		ElementInfo newInfo = new ElementInfo(created, type);
+		String name = configurationProvider.nameQuerying().getName(newInfo.getObject());
+		currentScope.push(debug("Pushing (" + currentScope.size() +")" + currentScope, newInfo));
 	}
 
 	public void addProblem(Problem problem) {
@@ -307,5 +357,11 @@ public class SimonBuilder<T> extends SimonBaseListener {
 
 	public List<Problem> getProblems() {
 		return problems;
+	}
+
+	public void checkAbort() {
+		if (abort()) {
+			throw new AbortCompilationException();
+		}
 	}
 }
