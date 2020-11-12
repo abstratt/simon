@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -78,13 +77,22 @@ public class SimonBuilder<T> extends SimonBaseListener {
 	}
 	
 	class ResolutionRequest {
-		private T scope;
-		private String name;
-		private Resolver<T> resolver;
-		public ResolutionRequest(T scope, String name, Resolver<T> resolver) {
+		private final ParserRuleContext context;
+		private final T scope;
+		private final String name;
+		private final Resolver<T> resolver;
+		private Type expectedType;
+		public ResolutionRequest(ParserRuleContext context, T scope, String name, Resolver<T> resolver) {
+			this.context = context;
 			this.scope = scope;
 			this.name = name;
 			this.resolver = resolver;
+		}
+		int getLine() {
+			return context.start.getLine();
+		}
+		int getColumn() {
+			return context.start.getCharPositionInLine();
 		}
 	}
 
@@ -101,12 +109,15 @@ public class SimonBuilder<T> extends SimonBaseListener {
 	
 	private void resolve() {
 		for (ResolutionRequest request : resolutionRequests) {
-			checkAbort();
 			String name = request.name;
 			Resolver<T> resolver = request.resolver;
 			T scope = request.scope;
 			T resolved = configurationProvider.nameResolution().resolve(scope, name);
-			resolver.resolve(resolved);
+			if (resolved != null) {
+				resolver.resolve(resolved);
+			} else {
+				reportError(false, request.getLine(), request.getColumn(), "Unknown name: '" + name + "'");
+			}
 		}
 	}
 
@@ -167,11 +178,11 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		Reference reference = getObjectFeature(parentInfo, featureNameCtx, ObjectType::referenceByName);
 		Linking<T, Reference> linking = configurationProvider.linking();
 		String nameToResolve = ctx.objectNameRef().getText();
-		addResolver(nameToResolve, resolved -> linking.link(reference, parentInfo.object, resolved));
+		addResolver(nameToResolve, resolved -> linking.link(reference, parentInfo.object, resolved), ctx.objectNameRef());
 	}
 	
-	private void addResolver(String name, Resolver<T> resolver) {
-		resolutionRequests.add(new ResolutionRequest(currentScope.peek().getObject(), name, resolver));
+	private void addResolver(String name, Resolver<T> resolver, ParserRuleContext context) {
+		resolutionRequests.add(new ResolutionRequest(context, currentScope.peek().getObject(), name, resolver));
 	}
 
 	@Override

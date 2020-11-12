@@ -40,8 +40,8 @@
       relationships {
         Relationship members(multiple: true) { type: Member }
       }
-      actions {
-        Action sendCommunication {
+      operations {
+        Operation sendCommunication {
           parameters {
             Parameter newCommunication { type: Message }
           }

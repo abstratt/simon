@@ -54,12 +54,29 @@ public interface Kirra {
 		}
 	}
 	
-	class Action extends BaseNamed {
+	class Operation extends BaseNamed {
+		
 		private Collection<Parameter> parameters;
+		private OperationKind kind;
+		private boolean public_;
+		
+		enum OperationKind {
+			Action, Constructor, Event, Finder, Retriever
+		}
 
 		@Meta.Contained
 		Collection<Parameter> parameters() {
 			return this.parameters;
+		}
+		
+		@Meta.Attribute
+		public OperationKind kind() {
+			return kind;
+		}
+		
+		@Meta.Attribute
+		public boolean public_() {
+			return public_;
 		}
 	}
 	
@@ -84,7 +101,7 @@ public interface Kirra {
 	class Entity extends BaseNamed implements Type {
 		private Collection<Property> properties;
 		private Collection<Relationship> relationships;
-		private Collection<Action> actions;
+		private Collection<Operation> operations;
 		private Collection<Entity> superTypes;
 		private Collection<Entity> subTypes;
 		private Namespace namespace;
@@ -108,9 +125,9 @@ public interface Kirra {
 		}
 		
 		@Meta.Contained
-		@Meta.Typed(Action.class)
-		public Collection<Action> actions() {
-			return actions;
+		@Meta.Typed(Operation.class)
+		public Collection<Operation> operations() {
+			return operations;
 		}
 		
 		@Meta.Contained
@@ -133,6 +150,7 @@ public interface Kirra {
 
 	}
 
+	@Meta.PrimitiveType
 	enum Primitive implements BasicType {
 		Integer, String, Date
 	}

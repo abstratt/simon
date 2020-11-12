@@ -28,14 +28,16 @@ public @interface Meta {
 	public @interface Reference {
 		String opposite() default "";
 	}
-
+	
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
+	@Inherited
 	public @interface Attribute {
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.METHOD)	
+	@Target(ElementType.METHOD)
+	@Inherited
 	public @interface Typed {
 		Class<?> value();
 	}
@@ -58,13 +60,27 @@ public @interface Meta {
 		boolean value() default true;
 	}
 
+	/**
+	 * ObjectTypes are the default classification, so usually do not need to be explicitly used.
+	 */
 	@Retention(RetentionPolicy.RUNTIME)
-	//TODO what are these for again?
+	@Inherited
 	public @interface ObjectType {
 	}
 
+	/**
+	 * A record is an structured data type that can only hold primitives, enumeration values and other records. 
+	 */
 	@Retention(RetentionPolicy.RUNTIME)
-	//TODO what are these for again?	
+	@Inherited
 	public @interface RecordType {
+	}
+	
+	/**
+	 * For enums only?
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.TYPE)
+	public @interface PrimitiveType {
 	}
 }
