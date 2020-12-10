@@ -3,26 +3,58 @@ package com.abstratt.simon.examples;
 import java.util.Collection;
 import java.util.List;
 
-import com.abstratt.simon.Meta;
+import org.apache.commons.lang3.text.WordUtils;
+
+import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
+import com.abstratt.simon.metamodel.dsl.Meta;
 
 @Meta.Package
 public interface Kirra {
+	
+	static abstract class Primitive implements BasicType{
+		@Override
+		public java.lang.String name() {
+			return WordUtils.uncapitalize(getClass().getSimpleName());
+		}
+	}
+	
+	@Meta.PrimitiveType(PrimitiveKind.String)
+	static class String extends Primitive {}
+	@Meta.PrimitiveType(PrimitiveKind.String)
+	static class Memo extends Primitive {}
+	@Meta.PrimitiveType(PrimitiveKind.Boolean)
+	static class Boolean extends Primitive {}
+	@Meta.PrimitiveType(PrimitiveKind.Decimal)
+	static class Decimal extends Primitive {}
+	@Meta.PrimitiveType(PrimitiveKind.Integer)
+	static class Integer extends Primitive {}
+	@Meta.PrimitiveType(PrimitiveKind.Other)
+	static class Date extends Primitive {}
+	@Meta.PrimitiveType(PrimitiveKind.Other)
+	static class DateTime extends Primitive {}
+	@Meta.PrimitiveType(PrimitiveKind.Other)
+	static class Time extends Primitive {}
+	//@Meta.PrimitiveType
+//	public enum Primitives {
+//		String, Memo, Decimal, Integer, Boolean, Date, DateTime, Time
+//	}
 
 	public static interface Named {
 		@Meta.Name
 		@Meta.Attribute
-		String name();
+		java.lang.String name();
 	}
 	
 	static abstract class BaseNamed implements Named {
-		private String name;
+		private java.lang.String name;
 
 		@Override
-		public String name() {
+		public java.lang.String name() {
 			return name;
 		}
 	}
 
+	@Meta.Composite(root = true)
 	class Namespace extends BaseNamed {
 		private Collection<Entity> entities;
 
@@ -148,11 +180,6 @@ public interface Kirra {
 
 	interface BasicType extends Type {
 
-	}
-
-	@Meta.PrimitiveType
-	enum Primitive implements BasicType {
-		Integer, String, Date
 	}
 
 	class TupleType extends BaseNamed implements BasicType {

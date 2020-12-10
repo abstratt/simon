@@ -18,4 +18,8 @@ public class EPackageTypeSource implements TypeSource<EcoreType<? extends EClass
 		EClassifier classifier = ePackage.getEClassifier(typeName);
 		return classifier == null ? null : EcoreType.fromClassifier(classifier);
 	}
+	
+	public EPackage getPackage() {
+		return ePackage;
+	}
 }

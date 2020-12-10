@@ -1,10 +1,10 @@
 package com.abstratt.simon.compiler;
 
-import com.abstratt.simon.compiler.Metamodel.Composition;
-import com.abstratt.simon.compiler.Metamodel.ObjectType;
-import com.abstratt.simon.compiler.Metamodel.Reference;
-import com.abstratt.simon.compiler.Metamodel.Slot;
-import com.abstratt.simon.compiler.Metamodel.Slotted;
+import com.abstratt.simon.metamodel.Metamodel.Composition;
+import com.abstratt.simon.metamodel.Metamodel.ObjectType;
+import com.abstratt.simon.metamodel.Metamodel.Reference;
+import com.abstratt.simon.metamodel.Metamodel.Slot;
+import com.abstratt.simon.metamodel.Metamodel.Slotted;
 
 public interface Configuration {
 	interface Provider<O extends ObjectType, S extends Slotted, M> {
@@ -16,11 +16,11 @@ public interface Configuration {
 		<F extends Reference> Linking<M, F> linking();
 		<C extends Composition> Parenting<M, C> parenting();
 	}
-	
+
 	interface Instantiation<S extends Slotted> {
 		<OBJ> OBJ createObject(S basicType);
 	}
-	
+
 	interface NameSetting<M> {
 		/**
 		 * Being M a 'nameable' object, this method sets the object name.

@@ -10,28 +10,29 @@ import java.util.function.BiFunction;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.commons.lang3.StringUtils;
 
 import com.abstratt.simon.compiler.Configuration.Instantiation;
 import com.abstratt.simon.compiler.Configuration.Linking;
 import com.abstratt.simon.compiler.Configuration.Parenting;
 import com.abstratt.simon.compiler.Configuration.Provider;
-import com.abstratt.simon.compiler.Metamodel.Composition;
-import com.abstratt.simon.compiler.Metamodel.Enumerated;
-import com.abstratt.simon.compiler.Metamodel.Feature;
-import com.abstratt.simon.compiler.Metamodel.ObjectType;
-import com.abstratt.simon.compiler.Metamodel.Primitive;
-import com.abstratt.simon.compiler.Metamodel.RecordType;
-import com.abstratt.simon.compiler.Metamodel.Reference;
-import com.abstratt.simon.compiler.Metamodel.Slot;
-import com.abstratt.simon.compiler.Metamodel.Slotted;
-import com.abstratt.simon.compiler.Metamodel.Type;
+import com.abstratt.simon.metamodel.Metamodel.BasicType;
+import com.abstratt.simon.metamodel.Metamodel.Composition;
+import com.abstratt.simon.metamodel.Metamodel.Enumerated;
+import com.abstratt.simon.metamodel.Metamodel.Feature;
+import com.abstratt.simon.metamodel.Metamodel.ObjectType;
+import com.abstratt.simon.metamodel.Metamodel.Primitive;
+import com.abstratt.simon.metamodel.Metamodel.RecordType;
+import com.abstratt.simon.metamodel.Metamodel.Reference;
+import com.abstratt.simon.metamodel.Metamodel.Slot;
+import com.abstratt.simon.metamodel.Metamodel.Slotted;
+import com.abstratt.simon.metamodel.Metamodel.Type;
 import com.abstratt.simon.parser.antlr.SimonBaseListener;
 import com.abstratt.simon.parser.antlr.SimonParser;
 import com.abstratt.simon.parser.antlr.SimonParser.ComponentContext;
 import com.abstratt.simon.parser.antlr.SimonParser.FeatureNameContext;
 import com.abstratt.simon.parser.antlr.SimonParser.LinkContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ObjectClassContext;
-import com.abstratt.simon.parser.antlr.SimonParser.ObjectContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ObjectHeaderContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ObjectNameContext;
 import com.abstratt.simon.parser.antlr.SimonParser.PropertiesContext;
@@ -135,7 +136,7 @@ public class SimonBuilder<T> extends SimonBaseListener {
 	public void exitObjectHeader(ObjectHeaderContext ctx) {
 		ObjectClassContext object = ctx.objectClass();
 		String typeName = getTypeName(object);
-		Type resolvedType = typeSource.resolveType(typeName);
+		Type resolvedType = typeSource.resolveType(StringUtils.capitalize(typeName));
 		ObjectType asObjectType = (ObjectType) resolvedType;
 		if (asObjectType == null) {
 			throw new CompilerException("Unknown type: " + typeName);
@@ -292,15 +293,16 @@ public class SimonBuilder<T> extends SimonBaseListener {
 
 	private Object buildValue(SlotContext ctx, Slot slot) {
 		Object slotValue;
-		if (slot.type() instanceof Primitive) {
-			slotValue = parsePrimitiveLiteral((Primitive) slot.type(), ctx.slotValue().literal().getText());
-		} else if (slot.type() instanceof Enumerated) {
-			slotValue = parseEnumeratedLiteral((Enumerated) slot.type(), ctx.slotValue().literal().getText());
-		} else if (slot.type() instanceof RecordType) {
-			RecordType slotTypeAsRecordType = (RecordType) slot.type();
+		BasicType slotType = slot.type();
+		if (slotType instanceof Primitive) {
+			slotValue = parsePrimitiveLiteral((Primitive) slotType, ctx.slotValue().literal().getText());
+		} else if (slotType instanceof Enumerated) {
+			slotValue = parseEnumeratedLiteral((Enumerated) slotType, ctx.slotValue().literal().getText());
+		} else if (slotType instanceof RecordType) {
+			RecordType slotTypeAsRecordType = (RecordType) slotType;
 			slotValue = parseRecordLiteral(slotTypeAsRecordType, ctx.slotValue().literal().recordLiteral());
 		} else {
-			throw new IllegalStateException("Unsupported basic type: " + slot.type().name());
+			throw new IllegalStateException("Unsupported basic type: " + slotType.name());
 		}
 		return slotValue;
 	}
@@ -327,11 +329,15 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		case Integer:
 			slotValue = Integer.parseInt(literalText);
 			break;
-		case String:
-			slotValue = literalText.substring(1, literalText.length() - 1);
-			break;
+		case Decimal:
+			slotValue = Double.parseDouble(literalText);
+			break;			
 		case Boolean:
 			slotValue = Boolean.parseBoolean(literalText);
+			break;
+		case String:
+		case Other:			
+			slotValue = literalText.substring(1, literalText.length() - 1);
 			break;
 		default: throw new IllegalStateException();
 		}

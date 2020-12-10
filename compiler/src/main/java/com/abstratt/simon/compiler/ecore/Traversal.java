@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 interface Traversal {
 	/**
 	 * Hops from the given object to another one.
@@ -20,6 +21,22 @@ interface Traversal {
 	 * @return the destination object, or null, if a hop was not possible
 	 */
 	EObject hop(EObject context);
+	
+	default Stream<EObject> enumerate(EObject context) {
+		return Optional.ofNullable(hop(context)).map(Stream::of).orElseGet(Stream::empty);
+	}
+	
+	interface Multiple extends Traversal {
+		Stream<EObject> enumerate(EObject context);
+		default EObject hop(EObject context) {
+			return enumerate(context).findFirst().orElse(null);
+		}
+		
+		default Multiple filter(Predicate<EObject> predicate) {
+			return context -> enumerate(context).filter(predicate);
+		}
+		
+	}
 	
 	/**
 	 * Composes this hop and another hop so the result is the same as hop2(hop1(c)).
@@ -32,13 +49,19 @@ interface Traversal {
 	}
 	
 	static Traversal search(EAttribute nameAttribute, String... path) {
+		return search(nameAttribute, 0, path);
+	}
+	
+	static Traversal search(EAttribute nameAttribute, int offset, String... path) {
+		if (offset >= path.length)
+			return self();
 		// the first element is either a child or the child of an ancestor
 		// the rest of the elements are resolved as (potential) children
-		Traversal findChild = childWithAttributeValued(nameAttribute, path[0]);
+		Traversal findChild = childWithAttributeValued(nameAttribute, path[offset]);
 		Traversal resolveFirst = bubbleUp(findChild);
-		if (path.length == 1)
+		if (path.length == offset + 1)
 			return resolveFirst;
-		Traversal traverseRest = compose(stream(path,  1, path.length).map(segment -> childWithAttributeValued(nameAttribute, segment)));
+		Traversal traverseRest = compose(stream(path,  offset + 1, path.length - offset).map(segment -> childWithAttributeValued(nameAttribute, segment)));
 		return resolveFirst.then(traverseRest);
 	}
 	
@@ -100,6 +123,15 @@ interface Traversal {
 	static Traversal list(String name, Predicate<EObject> predicate) {
 		return context -> Optional.ofNullable(((EList<EObject>) getValue(context, name))).flatMap(list -> list.stream().filter(predicate).findFirst()).orElse(null);
 	}
+	
+	static Multiple children() {
+		return context -> context.eContents().stream();
+	}
+	
+	static Traversal root() {
+		return EcoreUtil::getRootContainer;
+	}
+	
 	/**
 	 * Returns a hop that will produce the value of feature for its container. 
 	 * @param name

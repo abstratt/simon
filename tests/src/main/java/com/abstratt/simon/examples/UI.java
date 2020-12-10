@@ -2,7 +2,7 @@ package com.abstratt.simon.examples;
 
 import java.util.List;
 
-import com.abstratt.simon.Meta;
+import com.abstratt.simon.metamodel.dsl.Meta;
 
 
 @Meta.Package
@@ -45,6 +45,7 @@ public interface UI {
 		}
 	}
 
+	@Meta.Composite
 	abstract class Container extends Component {
 		private List<Component> children;
 		private PanelLayout layout;
@@ -97,6 +98,7 @@ public interface UI {
 		}
 	}
 	
+	@Meta.Composite(root = true)
 	class Application extends BaseNamed {
 		private List<Screen> screens;
 		

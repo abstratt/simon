@@ -12,10 +12,10 @@ import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
-import com.abstratt.simon.Meta.Package;
 import com.abstratt.simon.compiler.TypeSource;
 import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreType;
-import com.abstratt.simon.java2ecore.Java2EcoreMapper;
+import com.abstratt.simon.metamodel.dsl.Meta.Package;
+import com.abstratt.simon.metamodel.dsl.java2ecore.Java2EcoreMapper;
 
 public class EcoreDynamicTypeSource implements TypeSource<EcoreType<EClassifier>> {
 

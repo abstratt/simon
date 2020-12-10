@@ -1,49 +1,49 @@
 @Kirra {
-  Namespace communications {
+  namespace communications {
     entities {
     
-      Entity Member {
+      entity Member {
         properties {
-          Property name{type: String}
+          property name{type: String}
         }      
         relationships {
-          Relationship group { 
+          relationship group { 
             type : Group 
             opposite: Group.members 
           }
         }
       }
       
-      Entity RegularMember {
+      entity RegularMember {
         superTypes: Member
       }
       
-      Entity Manager {
+      entity Manager {
         superTypes: RegularMember
       }
     
-    Entity Message {
+    entity Message {
       properties {
-        Property sent { type: Date }
-        Property subject { type: String }
-        Property memo { type: String }
+        property sent { type: Date }
+        property subject { type: String }
+        property memo { type: String }
       }
       relationships {
-        Relationship group { type: Group } 
+        relationship group { type: Group } 
       }
     } 
     
-    Entity Group {
+    entity Group {
       properties {
-        Property name{type: String}
+        property name{type: String}
       }
       relationships {
-        Relationship members(multiple: true) { type: Member }
+        relationship members(multiple: true) { type: Member }
       }
       operations {
-        Operation sendCommunication {
+        operation sendCommunication {
           parameters {
-            Parameter newCommunication { type: Message }
+            parameter newCommunication { type: Message }
           }
         }
       }    

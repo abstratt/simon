@@ -23,6 +23,8 @@ import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.ETypedElement;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EcoreValidator;
@@ -31,6 +33,8 @@ import org.junit.jupiter.api.Test;
 import com.abstratt.simon.examples.Kirra;
 import com.abstratt.simon.examples.UI;
 import com.abstratt.simon.examples.UI.PanelLayout;
+import com.abstratt.simon.metamodel.dsl.java2ecore.Java2EcoreMapper;
+import com.abstratt.simon.metamodel.dsl.java2ecore.MetaEcoreHelper;
 
 public class Java2EcoreTest {
 	
@@ -66,14 +70,25 @@ public class Java2EcoreTest {
 	}
 
 	@Test
+	void primitiveType() {
+		EClass result = build(UI.Color.class);
+		assertEquals(UI.Color.class.getSimpleName(), result.getName());
+		EList<EAttribute> attributes = result.getEAttributes();
+
+		EAttribute red = find(attributes, a -> a.getName().equals("red"));
+		EClassifier redType = MetaEcoreHelper.getValueType(red);
+		assertSame(Integer.class, redType.getInstanceClass());
+	}
+	
+	@Test
 	void primitive() {
 		EClass result = build(UI.Color.class);
 		assertEquals(UI.Color.class.getSimpleName(), result.getName());
 		EList<EAttribute> attributes = result.getEAttributes();
 
 		EAttribute red = find(attributes, a -> a.getName().equals("red"));
-		EClassifier redType = red.getEType();
-		assertSame(int.class, redType.getInstanceClass());
+		EClassifier redType = MetaEcoreHelper.getValueType(red);
+		assertSame(Integer.class, redType.getInstanceClass());
 	}
 	
 	@Test
@@ -195,7 +210,7 @@ public class Java2EcoreTest {
 		assertFalse(allAttributes.isEmpty());
 		EAttribute name = find(allAttributes, e -> e.getName().equals("name"));
 		assertNotNull(name);
-		EDataType nameEType = ((EDataType) name.getEType());
+		EDataType nameEType = MetaEcoreHelper.getValueType(name);
 		assertSame(EcorePackage.Literals.ESTRING, nameEType);
 	}
 
@@ -213,8 +228,7 @@ public class Java2EcoreTest {
 		EClass linkEclass = build(UI.Link.class);
 		EAttribute label = find(linkEclass.getEAllAttributes(), e -> e.getName().equals("label"));
 		assertNotNull(label);
-		EDataType labelEType = ((EDataType) label.getEType());
-		assertSame(EcorePackage.Literals.ESTRING, labelEType);
+		assertSame(EcorePackage.Literals.ESTRING, MetaEcoreHelper.getValueFeature(((EClass) label.getEType())).getEType());
 	}
 
 	@Test
@@ -222,7 +236,7 @@ public class Java2EcoreTest {
 		EClass applicationEclass = build(UI.Application.class);
 		EAttribute name = find(applicationEclass.getEAllAttributes(), e -> e.getName().equals("name"));
 		assertNotNull(name);
-		EDataType nameEType = ((EDataType) name.getEType());
+		EDataType nameEType = MetaEcoreHelper.getValueType(name);
 		assertSame(EcorePackage.Literals.ESTRING, nameEType);
 	}
 

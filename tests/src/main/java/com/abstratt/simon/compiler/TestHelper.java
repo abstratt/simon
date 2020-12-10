@@ -16,14 +16,25 @@ import com.abstratt.simon.compiler.ecore.EcoreDynamicTypeSource;
 import com.abstratt.simon.compiler.ecore.EcoreModelBuilder;
 import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreObjectType;
 import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlotted;
+import com.abstratt.simon.examples.Kirra;
 import com.abstratt.simon.examples.UI;
-import com.abstratt.simon.java2ecore.Java2EcoreMapper;
+import com.abstratt.simon.metamodel.dsl.java2ecore.Java2EcoreMapper;
 
 public class TestHelper {
 	
 	static EPackage UI_PACKAGE = new Java2EcoreMapper().map(UI.class);
-	public static EClass eClassFor(Class<?> clazz) {
-		return (EClass) UI_PACKAGE.getEClassifier(clazz.getSimpleName());
+	static EPackage KIRRA_PACKAGE = new Java2EcoreMapper().map(Kirra.class);
+	public static EClass uiClassFor(Class<?> clazz) {
+		EPackage package_ = UI_PACKAGE;
+		return eClassFor(clazz, package_);
+	}
+	public static EClass kirraClassFor(Class<?> clazz) {
+		EPackage package_ = KIRRA_PACKAGE;
+		return eClassFor(clazz, package_);
+	}
+
+	private static EClass eClassFor(Class<?> clazz, EPackage package_) {
+		return (EClass) package_.getEClassifier(clazz.getSimpleName());
 	}
 
 	
@@ -39,7 +50,7 @@ public class TestHelper {
 	}
 	
 	public static EObject compileResource(String path) {
-		URL resourceUrl = CompilerTests.class.getResource(path);
+		URL resourceUrl = TestHelper.class.getResource(path);
 		assertNotNull(resourceUrl, () -> "Resource not found: " + path);
 		Provider<EcoreObjectType, EcoreSlotted<?>, EObject> modelBuilder = new EcoreModelBuilder();
 		TypeSource<?> typeSource = new EcoreDynamicTypeSource();

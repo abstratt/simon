@@ -19,8 +19,8 @@ import org.antlr.v4.runtime.tree.pattern.RuleTagToken;
 import org.eclipse.emf.ecore.EObject;
 
 import com.abstratt.simon.compiler.Configuration.Provider;
-import com.abstratt.simon.compiler.Metamodel.ObjectType;
-import com.abstratt.simon.compiler.Metamodel.Slotted;
+import com.abstratt.simon.metamodel.Metamodel.ObjectType;
+import com.abstratt.simon.metamodel.Metamodel.Slotted;
 import com.abstratt.simon.parser.antlr.SimonLexer;
 import com.abstratt.simon.parser.antlr.SimonParser;
 

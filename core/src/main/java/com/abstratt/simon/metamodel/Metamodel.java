@@ -1,4 +1,4 @@
-package com.abstratt.simon.compiler;
+package com.abstratt.simon.metamodel;
 
 import java.util.Collection;
 
@@ -81,12 +81,17 @@ public interface Metamodel {
 	}
 
 	interface Primitive extends BasicType {
-		enum Kind {
-			String, Integer, Boolean
-		}
-
-		Kind kind(); 
+		PrimitiveKind kind();
 	}
+	
+	enum PrimitiveKind {
+		Integer,
+		Decimal,
+		Boolean,
+		String,
+		Other
+	}
+
 	
 	interface Feature<T extends Type> extends Typed<T> {
 		

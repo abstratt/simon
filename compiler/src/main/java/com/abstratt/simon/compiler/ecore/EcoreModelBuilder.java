@@ -6,9 +6,13 @@ import java.util.Optional;
 
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.EcorePackage;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 
 import com.abstratt.simon.compiler.Configuration;
 import com.abstratt.simon.compiler.Configuration.Instantiation;
@@ -22,6 +26,7 @@ import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreObjectType;
 import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreRelationship;
 import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlot;
 import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlotted;
+import com.abstratt.simon.metamodel.dsl.java2ecore.MetaEcoreHelper;
 
 public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType, EcoreSlotted<?>, EObject> {
 
@@ -42,7 +47,7 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 
 	@Override
 	public NameSetting<EObject> nameSetting() {
-		return this::setName;
+		return MetaEcoreHelper::setName;
 	}
 
 	@Override
@@ -67,37 +72,27 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 	public EObject resolve(EObject scope, String... path) {
 		EAttribute nameAttribute = EcoreHelper.findFeatureInHierarchy(scope, "name");
 		EObject resolved = Traversal.search(nameAttribute, path).hop(scope);
+		if (resolved == null) {
+			// maybe a meta-reference? TODO-RC hacked together for hackathon, does this make sense at all for primitive types? probably not!
+			ENamedElement metaStart = scope.eClass().getEPackage();
+			resolved = Traversal.search(EcorePackage.Literals.ENAMED_ELEMENT__NAME, path).hop(metaStart);
+			if (resolved == null) {
+				EObject root = Traversal.root().hop(scope);
+				EcoreHelper.tree(root).forEach(System.out::println);
+			}
+		}
+		EObject finalResolved = resolved;
 		System.out.println("Resolved " + Arrays.asList(path) + " to " + Optional.ofNullable(resolved)
-				.map(it -> getName(it) + " : " + resolved.eClass().getName()).orElse(null));
+				.map(it -> getName(it) + " : " + finalResolved.eClass().getName()).orElse(null));
 		return resolved;
 	}
 
 	public String getName(EObject named) {
-		EStructuralFeature nameProperty = getNameAttribute(named);
+		EStructuralFeature nameProperty = MetaEcoreHelper.getNameAttribute(named);
 		if (nameProperty == null) {
 			return null;
 		}
 		return (String) named.eGet(nameProperty);
-	}
-
-	private EAttribute getNameAttribute(EObject named) {
-		EClass eClass = named.eClass();
-		return getNameAttribute(eClass);
-	}
-
-	private EAttribute getNameAttribute(EClass eClass) {
-		return (EAttribute) eClass.getEStructuralFeature("name");
-	}
-
-	public void setName(EObject named, String name) {
-		System.out.println("Setting name of a " + named.eClass().getName() + " to " + name);
-		// TODO-RC what to do about objects that do not support naming? Is it supported
-		// across the board?
-		EStructuralFeature nameProperty = getNameAttribute(named);
-		if (nameProperty == null) {
-			throw new IllegalArgumentException("No 'name' feature in '" + named.eClass().getName());
-		}
-		named.eSet(nameProperty, name);
 	}
 
 	public void link(EcoreRelationship reference, EObject referrer, EObject referred) {
@@ -113,7 +108,8 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 	}
 
 	public void setValue(EcoreSlot slot, EObject target, Object value) {
-		target.eSet(slot.wrapped(), value);
+		EAttribute eAttribute = slot.wrapped();
+		target.eSet(eAttribute, MetaEcoreHelper.wrappedPrimitiveValue(value));
 	}
 
 	private void setOrAddReference(EObject source, EObject target, EcoreRelationship relationship) {

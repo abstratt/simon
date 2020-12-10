@@ -1,6 +1,6 @@
 package com.abstratt.simon.compiler;
 
-import com.abstratt.simon.compiler.Metamodel.Type;
+import com.abstratt.simon.metamodel.Metamodel.Type;
 
 public interface TypeSource<T extends Type> {
 

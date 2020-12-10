@@ -1,4 +1,4 @@
-package com.abstratt.simon.java2ecore;
+package com.abstratt.simon.metamodel.dsl.java2ecore;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -39,9 +39,10 @@ import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 
-import com.abstratt.simon.Meta;
-import com.abstratt.simon.Meta.RecordType;
-import com.abstratt.simon.Meta.Required;
+import com.abstratt.simon.metamodel.dsl.Meta;
+import com.abstratt.simon.metamodel.dsl.Meta.PrimitiveType;
+import com.abstratt.simon.metamodel.dsl.Meta.RecordType;
+import com.abstratt.simon.metamodel.dsl.Meta.Required;
 
 public class Java2EcoreMapper {
 	private class Context {
@@ -143,11 +144,22 @@ public class Java2EcoreMapper {
 
 	private <E extends ENamedElement> void resolve(Class<?> clazz, Context context, Consumer<E> consumer) {
 		System.out.println();
-		if (isPackage(clazz)) {
+		if (MetaEcoreHelper.isPackage(clazz)) {
 			context.resolve(clazz, clazz, this::buildPackage, (Consumer<EPackage>) consumer);
-		} else if (isEnum(clazz)) {
+		} else if (MetaEcoreHelper.isPrimitive(clazz)) {
+			if (clazz.isEnum()) {
+//				Enum<?>[] enumConstants = (Enum<?>[]) clazz.getEnumConstants();
+//				for (Enum<?> enum1 : enumConstants) {
+//					System.out.println("Primitive: " + enum1.name());
+//					context.resolve(clazz, clazz, this::buildPrimitiveType, (Consumer<EClass>) consumer);			
+//				}	
+			} else {
+				context.resolve(clazz, clazz, this::buildPrimitiveType, (Consumer<EClass>) consumer);	
+			}
+			
+		} else if (MetaEcoreHelper.isEnum(clazz)) {
 			context.resolve(clazz, clazz, this::buildEnumType, (Consumer<EEnum>) consumer);
-		} else if (isRecord(clazz)) {
+		} else if (MetaEcoreHelper.isRecord(clazz)) {
 			context.resolve(clazz, clazz, this::buildRecordType, (Consumer<EClass>) consumer);
 		} else {
 			context.resolve(clazz, clazz, this::buildObjectType, (Consumer<EClass>) consumer);
@@ -162,28 +174,42 @@ public class Java2EcoreMapper {
 		return result.getName() + " (" + result.eClass().getName() + ")";
 	}
 
-	private boolean isPackage(Class<?> clazz) {
-		return clazz.isAnnotationPresent(Meta.Package.class);
-	}
-
-	private boolean isEnum(Class<?> clazz) {
-		return clazz.isEnum();
-	}
-
-	private boolean isRecord(Class<?> clazz) {
-		return clazz.isAnnotationPresent(Meta.RecordType.class);
-	}
-
-	private EPackage buildPackage(Context context, Class<?> clazz) {
+	private EPackage buildPackage(Context context, Class<?> packageClass) {
 		EPackage ePackage = EcoreFactory.eINSTANCE.createEPackage();
-		ePackage.setNsURI(clazz.getSimpleName());
-		ePackage.setNsPrefix(clazz.getSimpleName());
-		ePackage.setName(clazz.getSimpleName());
-		for (Class<?> nested : clazz.getClasses()) {
+		ePackage.setNsURI(packageClass.getSimpleName());
+		ePackage.setNsPrefix(packageClass.getSimpleName());
+		ePackage.setName(packageClass.getSimpleName());
+		for (Class<?> nested : packageClass.getClasses()) {
 			this.<EClassifier>resolve(nested, context, ePackage.getEClassifiers()::add);
 		}
 		return ePackage;
 	}
+	
+//	private EDataType buildPrimitiveType(Context context, Class<?> clazz) {
+//		String className = clazz.getSimpleName();
+//		System.out.println("Building primitive type " + className);
+//		EDataType eDataType = EcoreFactory.eINSTANCE.createEDataType();
+//		eDataType.setName(className);
+//		eDataType.setInstanceTypeName(className);
+//		eDataType.setInstanceClass(clazz);
+//		return eDataType;
+//	}
+	
+	private EClass buildPrimitiveType(Context context, Class<?> clazz) {
+		// a primitive type is a class without any features
+		String className = clazz.getSimpleName();
+		System.out.println("Building primitive type " + className);
+		EClass eClass = EcoreFactory.eINSTANCE.createEClass();
+		eClass.setName(className);
+		EAttribute eAttribute = EcoreFactory.eINSTANCE.createEAttribute();
+		eAttribute.setName(MetaEcoreHelper.PRIMITIVE_VALUE_FEATURE);
+		EDataType primitiveType = MetaEcoreHelper.getPrimitiveEType(clazz);
+		eAttribute.setEType(primitiveType);
+		eClass.getEStructuralFeatures().add(eAttribute);
+		MetaEcoreHelper.makePrimitiveType(eClass, MetaEcoreHelper.getPrimitiveKind(primitiveType));
+		return eClass;
+	}
+
 
 	private EEnum buildEnumType(Context context, Class<?> clazz) {
 		String className = clazz.getSimpleName();
@@ -208,7 +234,7 @@ public class Java2EcoreMapper {
 		System.out.println("Building record type " + className);
 		EClass eClass = EcoreFactory.eINSTANCE.createEClass();
 		eClass.setName(className);
-		EcoreUtil.setConstraints(eClass, Arrays.asList(RecordType.class.getSimpleName()));
+		MetaEcoreHelper.makeRecordType(eClass);
 		addAttributes(context, clazz, eClass);
 		return eClass;
 	}
@@ -218,7 +244,11 @@ public class Java2EcoreMapper {
 		System.out.println("Building object type " + className);
 		boolean isInterface = Modifier.isInterface(clazz.getModifiers());
 		boolean isAbstractClass = Modifier.isAbstract(clazz.getModifiers());
+		boolean isRootComposite = MetaEcoreHelper.isRootComposite(clazz);
 		EClass eClass = EcoreFactory.eINSTANCE.createEClass();
+		if (isRootComposite) {
+			EcoreUtil.setAnnotation(eClass, MetaEcoreHelper.SIMON_ANNOTATION, MetaEcoreHelper.ROOT_COMPOSITE_VALUE, Boolean.toString(true));
+		}
 		Class<?> superJavaClass = clazz.getSuperclass();
 		if (superJavaClass != null) {
 			collectSuperType(context, clazz, superJavaClass, debug("Setting super type on " + eClass.getName(), eClass.getESuperTypes()::add));
@@ -386,28 +416,53 @@ public class Java2EcoreMapper {
 	}
 
 	private EClassifier buildBasicType(Context context, Class<?> type) {
-		if (type == String.class) {
+		if (type.isEnum())
+			return buildEnumType(context, type);
+		if (MetaEcoreHelper.isRecord(type))
+			return buildRecordType(context, type);
+		return buildPrimitiveType(context, type);
+
+//		if (type == String.class) {
+//			return EcorePackage.eINSTANCE.getEString();
+//		}
+//		if (type == int.class) {
+//			return EcorePackage.eINSTANCE.getEInt();
+//		}
+//		if (type == Integer.class) {
+//			return EcorePackage.eINSTANCE.getEIntegerObject();
+//		}
+//		if (type == boolean.class) {
+//			return EcorePackage.eINSTANCE.getEBoolean();
+//		}
+//		if (type == Boolean.class) {
+//			return EcorePackage.eINSTANCE.getEBooleanObject();
+//		}
+//		EDataType dataType = EcoreFactory.eINSTANCE.createEDataType();
+//		dataType.setInstanceTypeName(type.getName());
+//		dataType.setName(type.getSimpleName());
+//		return dataType;
+	}
+	
+	private EDataType getPrimitiveType(Class<?> javaPrimitiveType) {
+		if (javaPrimitiveType == String.class) {
 			return EcorePackage.eINSTANCE.getEString();
 		}
-		if (type == int.class) {
+		if (javaPrimitiveType == int.class) {
 			return EcorePackage.eINSTANCE.getEInt();
 		}
-		if (type == Integer.class) {
+		if (javaPrimitiveType == Integer.class) {
 			return EcorePackage.eINSTANCE.getEIntegerObject();
 		}
-		if (type == boolean.class) {
+		if (javaPrimitiveType == boolean.class) {
 			return EcorePackage.eINSTANCE.getEBoolean();
 		}
-		if (type == Boolean.class) {
+		if (javaPrimitiveType == Boolean.class) {
 			return EcorePackage.eINSTANCE.getEBooleanObject();
 		}
-		if (type.isEnum()) {
-			return buildEnumType(context, type);
+		if (MetaEcoreHelper.isPrimitive(javaPrimitiveType)) {
+			
 		}
-		EDataType dataType = EcoreFactory.eINSTANCE.createEDataType();
-		dataType.setInstanceTypeName(type.getName());
-		dataType.setName(type.getSimpleName());
-		return dataType;
+		throw new IllegalStateException(javaPrimitiveType.getSimpleName());
 	}
 
 	private Class<?> getType(Method method) {

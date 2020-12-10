@@ -2,6 +2,7 @@ package com.abstratt.simon.compiler.ecore;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
@@ -11,11 +12,13 @@ import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.EEnum;
 import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.ETypedElement;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 
-import com.abstratt.simon.compiler.Metamodel;
+import com.abstratt.simon.metamodel.Metamodel;
+import com.abstratt.simon.metamodel.dsl.java2ecore.MetaEcoreHelper;
 
 public interface EcoreMetamodel extends Metamodel {
 
@@ -41,7 +44,13 @@ public interface EcoreMetamodel extends Metamodel {
 
 		@Override
 		public EObject newModelElement() {
-			return wrapped().getEPackage().getEFactoryInstance().create(wrapped());
+			T eClass = wrapped();
+			EObject newObject = instantiateEClass(eClass);
+			return newObject;
+		}
+
+		protected EObject instantiateEClass(EClass eClass) {
+			return eClass.getEPackage().getEFactoryInstance().create(eClass);
 		}
 	}
 
@@ -64,8 +73,6 @@ public interface EcoreMetamodel extends Metamodel {
 	}
 
 	static abstract class EcoreType<EC extends EClassifier> extends EcoreNamed<EC> implements Metamodel.Type {
-		private static final Object SLOTTED_RECORD_TYPE = "recordType";
-		private static final String SIMON_ANNOTATION = "simon.annotation";
 
 		public EcoreType(EC wrapped) {
 			super(wrapped);
@@ -73,15 +80,18 @@ public interface EcoreMetamodel extends Metamodel {
 
 		public static EcoreType<?> fromClassifier(EClassifier classifier) {
 			if (classifier instanceof EClass) {
-				boolean isRecord = EcoreUtil.getConstraints(classifier).contains(RecordType.class.getSimpleName());
+				boolean isRecord = MetaEcoreHelper.isRecord(classifier);
 				if (isRecord)
 					return new EcoreRecordType((EClass) classifier);
+				boolean isPrimitive = MetaEcoreHelper.isPrimitive(classifier);
+				if (isPrimitive)
+					return new EcorePrimitiveValue((EClass) classifier);
 				return new EcoreObjectType((EClass) classifier);
 			}
 			if (classifier instanceof EEnum) {
 				return new EcoreEnumValue((EEnum) classifier);	
 			}
-			return new EcorePrimitiveValue((EDataType) classifier);
+			return new EcorePrimitiveValue((EClass) classifier);
 		}
 		
 		@Override
@@ -147,6 +157,23 @@ public interface EcoreMetamodel extends Metamodel {
 		public Collection<Reference> references() {
 			return wrapped().getEAllReferences().stream().filter(ref -> !ref.isContainment() && !ref.isContainer())
 					.map(EcoreRelationship::new).collect(Collectors.toList());
+		}
+		
+		@Override
+		public EObject newModelElement() {
+			EObject newModelElement = super.newModelElement();
+			if (MetaEcoreHelper.isRootComposite(wrapped())) {
+				//TODO-RC HACK! Finds all primitives in the metamodel and instatiate them here
+				//btw, these types are floating around
+				wrapped.getEPackage().getEClassifiers().stream() //
+					.filter(MetaEcoreHelper::isPrimitive)//
+					.map(it -> (EClass) it)//
+					.map(this::instantiateEClass)//
+					.forEach(e ->
+						MetaEcoreHelper.setName(e, e.eClass().getName())
+					);
+			}
+			return newModelElement;
 		}
 
 	}

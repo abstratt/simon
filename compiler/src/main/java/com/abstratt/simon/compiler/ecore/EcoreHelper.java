@@ -6,7 +6,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -16,6 +15,7 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.EcoreFactory;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 
 public class EcoreHelper {
 	
@@ -67,7 +67,17 @@ public class EcoreHelper {
 	public static <F extends EStructuralFeature> F findFeatureInHierarchy(EObject scope, String featureName) {
 		return (F) EcoreHelper.hierarchy(scope).map(e -> EcoreHelper.findStructuralFeature(e, featureName)).filter(Objects::nonNull).findFirst().orElseThrow(() -> new IllegalArgumentException("No 'name' feature found in composition structure"));
 	}
+	
+	public static Stream<EObject> tree(EObject start) {
+        Stream<EObject> children = StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+        		EcoreUtil.getAllContents(start, true),
+                Spliterator.ORDERED | Spliterator.IMMUTABLE), false);
+		return Stream.concat(Stream.of(start), children); 
+	}
 
+	/**
+	 * Returns all elements starting from the given object all the way up to its root container.
+	 */
 	public static Stream<EObject> hierarchy(EObject start) {
         final Iterator<EObject> iterator = new Iterator<EObject>() {
             @SuppressWarnings("unchecked")
