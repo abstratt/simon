@@ -1,25 +1,24 @@
 @UI {
   Application myApplication { 
-	  screens { 
-	    Screen screen1 (layout : Vertical) {
-	        children {
-	            Button btn1a (label : 'Ok')
-	            Button btn1b (
-	                label : 'Cancel' 
-	                backgroundColor : #(red : 100 green : 50)
-            	)
-            	Link(label: 'To screen 2') {
-            	  targetScreen: screen2
-            	}
-	        }
-	    } 
-	    Screen screen2 {
-	        children {
-	            Button btn2a (label : 'Ok')
-	        }
-	    } 
-	    Screen screen3 {} 
-	  } 
+    screens {
+      Screen screen1 (layout : Vertical) {
+        children {
+          Button btn1a (label : 'Ok')
+          Button btn1b (
+            label : 'Cancel' 
+            backgroundColor : #(red : 100 green : 50)
+          )
+          Link(label: 'To screen 2') {
+            targetScreen: screen2
+          }
+        }
+      } 
+      Screen screen2 {
+        children {
+          Button btn2a (label : 'Ok')
+        }
+      } 
+      Screen screen3 {} 
+    } 
   }
 }
-
