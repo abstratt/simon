@@ -109,7 +109,7 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 
 	public void setValue(EcoreSlot slot, EObject target, Object value) {
 		EAttribute eAttribute = slot.wrapped();
-		target.eSet(eAttribute, MetaEcoreHelper.wrappedPrimitiveValue(value));
+		target.eSet(eAttribute, MetaEcoreHelper.wrappedPrimitiveValue(eAttribute.eClass(), value));
 	}
 
 	private void setOrAddReference(EObject source, EObject target, EcoreRelationship relationship) {

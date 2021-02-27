@@ -51,6 +51,7 @@ public class Java2EcoreMapper {
 		private Deque<Runnable> pendingRequests = new LinkedList<>();
 		private Map<Class<?>, ENamedElement> built = new LinkedHashMap<>();
 		private AtomicInteger counter = new AtomicInteger();
+		private Deque<EPackage> currentPackage = new LinkedList<>();
 
 		public <EC extends ENamedElement> void resolve(Class<?> type, BiFunction<Context, Class<?>, EC> builder,
 				Consumer<EC> consumer) {
@@ -126,6 +127,17 @@ public class Java2EcoreMapper {
 				pendingRequests.removeFirst().run();
 			}
 		}
+
+		public void addPendingRequest(Runnable request) {
+			pendingRequests.add(request);
+		}
+		
+		public void enterPackage(EPackage package_) {
+			currentPackage.push(package_);
+		}
+		public void leavePackage() {
+			currentPackage.pop();
+		}
 	}
 
 	public <E extends EObject> E map(Class<?> clazz) {
@@ -179,8 +191,13 @@ public class Java2EcoreMapper {
 		ePackage.setNsURI(packageClass.getSimpleName());
 		ePackage.setNsPrefix(packageClass.getSimpleName());
 		ePackage.setName(packageClass.getSimpleName());
-		for (Class<?> nested : packageClass.getClasses()) {
-			this.<EClassifier>resolve(nested, context, ePackage.getEClassifiers()::add);
+		context.enterPackage(ePackage);
+		try {
+			for (Class<?> nested : packageClass.getClasses()) {
+				this.<EClassifier>resolve(nested, context, ePackage.getEClassifiers()::add);
+			}
+		} finally {
+			context.leavePackage();
 		}
 		return ePackage;
 	}
@@ -391,8 +408,15 @@ public class Java2EcoreMapper {
 		String attributeName = WordUtils.uncapitalize(accessor.getName().replaceFirst("^get", ""));
 		eAttribute.setName(attributeName);
 		markOptional(accessor, eAttribute);
-		context.resolve(accessor, getType(accessor), this::buildBasicType, debug("Setting type of attribute " + eAttribute.getName(), eAttribute::setEType));
+		context.resolve(accessor, getType(accessor), this::buildBasicType, debug("Setting type of attribute " + eAttribute.getName(), setAttributeType(context, eAttribute)));
 		return eAttribute;
+	}
+	
+	private <EC extends EClassifier> Consumer<EC> setAttributeType(Context context, EAttribute attribute) {
+		return classifier -> {
+			attribute.setEType(classifier);
+			context.addPendingRequest(() -> attribute.getEContainingClass().getEPackage().getEClassifiers().add(classifier));
+		};
 	}
 	
 	private <EC extends ENamedElement> Consumer<EC> debug(String tag, Consumer<EC> toDebug) {

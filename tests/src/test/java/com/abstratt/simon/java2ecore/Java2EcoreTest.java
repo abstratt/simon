@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.examples.Kirra;
 import com.abstratt.simon.examples.UI;
+import com.abstratt.simon.examples.UI.Application;
 import com.abstratt.simon.examples.UI.PanelLayout;
 import com.abstratt.simon.metamodel.dsl.java2ecore.Java2EcoreMapper;
 import com.abstratt.simon.metamodel.dsl.java2ecore.MetaEcoreHelper;
@@ -70,14 +71,13 @@ public class Java2EcoreTest {
 	}
 
 	@Test
-	void primitiveType() {
-		EClass result = build(UI.Color.class);
-		assertEquals(UI.Color.class.getSimpleName(), result.getName());
-		EList<EAttribute> attributes = result.getEAttributes();
-
-		EAttribute red = find(attributes, a -> a.getName().equals("red"));
-		EClassifier redType = MetaEcoreHelper.getValueType(red);
-		assertSame(Integer.class, redType.getInstanceClass());
+	void primitiveSlot() {
+		EPackage result = build(UI.class);
+		EClass application = (EClass) result.getEClassifier(Application.class.getSimpleName());
+		EStructuralFeature name = application.getEStructuralFeature("name");
+		assertNotNull(name.getEType().getEPackage());
+		EClassifier nameType = MetaEcoreHelper.getValueType(name);
+		assertSame(String.class, nameType.getInstanceClass());
 	}
 	
 	@Test
@@ -87,6 +87,7 @@ public class Java2EcoreTest {
 		EList<EAttribute> attributes = result.getEAttributes();
 
 		EAttribute red = find(attributes, a -> a.getName().equals("red"));
+		EClassifier attributeType = red.getEType();
 		EClassifier redType = MetaEcoreHelper.getValueType(red);
 		assertSame(Integer.class, redType.getInstanceClass());
 	}

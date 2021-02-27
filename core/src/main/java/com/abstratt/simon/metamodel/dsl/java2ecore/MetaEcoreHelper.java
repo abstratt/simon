@@ -140,7 +140,7 @@ public interface MetaEcoreHelper {
 		if (nameProperty == null) {
 			throw new IllegalArgumentException("No 'name' feature in '" + named.eClass().getName());
 		}
-		named.eSet(nameProperty, wrappedPrimitiveValue(nameProperty.eClass(), name));
+		named.eSet(nameProperty, wrappedPrimitiveValue((EClass) nameProperty.getEType(), name));
 	}
 	
 	static EStructuralFeature getValueFeature(EClass labelType) {
