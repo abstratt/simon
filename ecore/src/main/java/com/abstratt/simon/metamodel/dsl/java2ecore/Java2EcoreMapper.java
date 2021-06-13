@@ -6,15 +6,8 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.Deque;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -23,6 +16,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
@@ -40,142 +34,70 @@ import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 
 import com.abstratt.simon.metamodel.dsl.Meta;
-import com.abstratt.simon.metamodel.dsl.Meta.PrimitiveType;
-import com.abstratt.simon.metamodel.dsl.Meta.RecordType;
 import com.abstratt.simon.metamodel.dsl.Meta.Required;
+import com.abstratt.simon.metamodel.dsl.java2ecore.Context.ResolutionAction;
 
 public class Java2EcoreMapper {
-	private class Context {
-		private Set<Object> building = new LinkedHashSet<>();
-		private Set<Object> served = new LinkedHashSet<>();
-		private Deque<Runnable> pendingRequests = new LinkedList<>();
-		private Map<Class<?>, ENamedElement> built = new LinkedHashMap<>();
-		private AtomicInteger counter = new AtomicInteger();
-		private Deque<EPackage> currentPackage = new LinkedList<>();
-
-		public <EC extends ENamedElement> void resolve(Class<?> type, BiFunction<Context, Class<?>, EC> builder,
-				Consumer<EC> consumer) {
-			int requestId = counter.incrementAndGet();
-			// we are not resolving for an element that needs the type, so use a unique id
-			this.resolve(requestId, type, builder, consumer);
-		}
-
-		/**
-		 * Requests a type to be resolved in the context of mapping a Java element to a
-		 * model element.
-		 * 
-		 * @param requestId      that Java element that we are mapping and needs the resolution
-		 * @param classToResolve The Java class we need to resolve to a model element
-		 * @param builder        a builder function that can, if necessary, map the Java
-		 *                       type to a model element
-		 * @param consumer       a function that will process the resulting model
-		 *                       element
-		 */
-		public <EC extends ENamedElement> void resolve(Object requestId, Class<?> classToResolve,
-				BiFunction<Context, Class<?>, EC> builder, Consumer<EC> consumer) {
-			System.out.println("Accepted request for " + requestId + " -> " + classToResolve.getSimpleName());
-			EC existing = (EC) built.get(classToResolve);
-			if (existing != null) {
-				serve(requestId, consumer, existing);
-				return;
-			}
-			// Map the type asynchronously
-			Runnable[] task = { null };
-			task[0] = () -> {
-				System.out.println("Async handling request " + requestId + " -> " + classToResolve.getSimpleName());
-				if (isServed(requestId)) {
-					// We accept multiple requests
-					System.out.println("Already served");
-					return;
-				}
-				EC existingElement = (EC) built.get(classToResolve);
-				if (existingElement != null) {
-					System.out.println("Already solved");
-					serve(requestId, consumer, existingElement);
-				} else {
-					if (building.add(classToResolve)) {
-						System.out.println("Building for " + requestId + " -> " + classToResolve.getSimpleName());
-						EC newElement = builder.apply(this, classToResolve);
-						built.put(classToResolve, newElement);
-						System.out.println("Built for " + requestId + " -> " + classToResolve.getSimpleName());
-						serve(requestId, consumer, newElement);
-					} else {
-						System.out.println("Re-scheduling request " + requestId + " -> " + classToResolve.getSimpleName());
-						pendingRequests.add(task[0]);
-					}
-				}
-			};
-			System.out.println("Scheduling request " + requestId + " -> " + classToResolve.getSimpleName());
-			pendingRequests.add(task[0]);
-		}
-
-		private boolean isServed(Object requestId) {
-			return served.contains(requestId);
-		}
-
-		private <EC extends ENamedElement> void serve(Object requestId, Consumer<EC> consumer, EC resolved) {
-			if (served.add(requestId)) {
-				System.out.println("Serving request " + requestId);
-				consumer.accept(resolved);
-			} else {
-				System.out.println("Ignoring request " + requestId);
-			}
-		}
-
-		public void resolveRequests() {
-			while (!pendingRequests.isEmpty()) {
-				pendingRequests.removeFirst().run();
-			}
-		}
-
-		public void addPendingRequest(Runnable request) {
-			pendingRequests.add(request);
-		}
-		
-		public void enterPackage(EPackage package_) {
-			currentPackage.push(package_);
-		}
-		public void leavePackage() {
-			currentPackage.pop();
-		}
-	}
-
 	public <E extends EObject> E map(Class<?> clazz) {
 		System.out.println("*** " + Arrays.stream(new Throwable().fillInStackTrace().getStackTrace()).skip(1)
 				.findFirst().get().toString());
 
 		Context context = new Context();
 		Object[] result = { null };
-		resolve(clazz, context, r -> result[0] = r);
+		findOrBuild(clazz, context, r -> result[0] = r);
 		System.out.println("**** Resolving pending requests");
-		context.resolveRequests();
+		context.resolvePendingRequests();
 		System.out.println("**** Done");
-		
+
 		return (E) result[0];
 	}
 
-	private <E extends ENamedElement> void resolve(Class<?> clazz, Context context, Consumer<E> consumer) {
-		System.out.println();
+	/**
+	 * Finds or builds the model element corresponding to the given Java type.
+	 * 
+	 * @param <E>      the concrete model element
+	 * @param clazz    the Java type
+	 * @param context  the resolution context
+	 * @param consumer a consumer for the resolved elements
+	 */
+	private <E extends ENamedElement> void findOrBuild(Class<?> clazz, Context context, Consumer<E> consumer) {
 		if (MetaEcoreHelper.isPackage(clazz)) {
-			context.resolve(clazz, clazz, this::buildPackage, (Consumer<EPackage>) consumer);
-		} else if (MetaEcoreHelper.isPrimitive(clazz)) {
-			if (clazz.isEnum()) {
-//				Enum<?>[] enumConstants = (Enum<?>[]) clazz.getEnumConstants();
-//				for (Enum<?> enum1 : enumConstants) {
-//					System.out.println("Primitive: " + enum1.name());
-//					context.resolve(clazz, clazz, this::buildPrimitiveType, (Consumer<EClass>) consumer);			
-//				}	
-			} else {
-				context.resolve(clazz, clazz, this::buildPrimitiveType, (Consumer<EClass>) consumer);	
-			}
-			
-		} else if (MetaEcoreHelper.isEnum(clazz)) {
-			context.resolve(clazz, clazz, this::buildEnumType, (Consumer<EEnum>) consumer);
-		} else if (MetaEcoreHelper.isRecord(clazz)) {
-			context.resolve(clazz, clazz, this::buildRecordType, (Consumer<EClass>) consumer);
-		} else {
-			context.resolve(clazz, clazz, this::buildObjectType, (Consumer<EClass>) consumer);
+			context.resolveRoot(null, clazz, this::buildPackage, (Consumer<EPackage>) consumer);
+			return;
 		}
+		// may need to build the package first
+		Class<?> packageClass = getPackageClass(clazz);
+
+		context.resolve(new ResolutionAction<>(null, packageClass,
+				packageElement -> findOrBuild(packageElement, clazz, context, consumer), //
+				this::buildPackage, //
+				true));
+	}
+
+	private <E extends ENamedElement> void findOrBuild(EPackage parentPackage, Class<?> clazz, Context context,
+			Consumer<E> consumer) {
+		assert parentPackage != null : clazz.getName();
+		context.runWithScope(parentPackage, "findOrBuild(" + clazz.getName() + ")", ctx -> {
+			if (MetaEcoreHelper.isPrimitive(clazz)) {
+				if (clazz.isEnum()) {
+//					Enum<?>[] enumConstants = (Enum<?>[]) clazz.getEnumConstants();
+//					for (Enum<?> enum1 : enumConstants) {
+//						System.out.println("Primitive: " + enum1.name());
+//						context.resolve(clazz, clazz, this::buildPrimitiveType, (Consumer<EClass>) consumer);			
+//					}	
+				} else {
+					context.resolve(clazz, clazz, this::buildPrimitiveType, (Consumer<EClass>) consumer);
+				}
+
+			} else if (MetaEcoreHelper.isEnum(clazz)) {
+				context.resolve(clazz, clazz, this::buildEnumType, (Consumer<EEnum>) consumer);
+			} else if (MetaEcoreHelper.isRecord(clazz)) {
+				context.resolve(clazz, clazz, this::buildRecordType, (Consumer<EClass>) consumer);
+			} else {
+				context.resolve(clazz, clazz, this::buildObjectType, (Consumer<EClass>) consumer);
+			}
+
+		});
 	}
 
 	private static <J extends AnnotatedElement, E extends ENamedElement> String toString(J javaElement, E result) {
@@ -191,17 +113,15 @@ public class Java2EcoreMapper {
 		ePackage.setNsURI(packageClass.getSimpleName());
 		ePackage.setNsPrefix(packageClass.getSimpleName());
 		ePackage.setName(packageClass.getSimpleName());
-		context.enterPackage(ePackage);
-		try {
+
+		context.runWithScope(ePackage, "Building classes in package " + packageClass.getName(), ctx -> {
 			for (Class<?> nested : packageClass.getClasses()) {
-				this.<EClassifier>resolve(nested, context, ePackage.getEClassifiers()::add);
+				this.<EClassifier>findOrBuild(nested, context, ePackage.getEClassifiers()::add);
 			}
-		} finally {
-			context.leavePackage();
-		}
+		});
 		return ePackage;
 	}
-	
+
 //	private EDataType buildPrimitiveType(Context context, Class<?> clazz) {
 //		String className = clazz.getSimpleName();
 //		System.out.println("Building primitive type " + className);
@@ -211,7 +131,7 @@ public class Java2EcoreMapper {
 //		eDataType.setInstanceClass(clazz);
 //		return eDataType;
 //	}
-	
+
 	private EClass buildPrimitiveType(Context context, Class<?> clazz) {
 		// a primitive type is a class without any features
 		String className = clazz.getSimpleName();
@@ -224,9 +144,9 @@ public class Java2EcoreMapper {
 		eAttribute.setEType(primitiveType);
 		eClass.getEStructuralFeatures().add(eAttribute);
 		MetaEcoreHelper.makePrimitiveType(eClass, MetaEcoreHelper.getPrimitiveKind(primitiveType));
+		addSupertypes(context, clazz, eClass);
 		return eClass;
 	}
-
 
 	private EEnum buildEnumType(Context context, Class<?> clazz) {
 		String className = clazz.getSimpleName();
@@ -252,6 +172,8 @@ public class Java2EcoreMapper {
 		EClass eClass = EcoreFactory.eINSTANCE.createEClass();
 		eClass.setName(className);
 		MetaEcoreHelper.makeRecordType(eClass);
+		addClassifierToCurrentPackage(context, eClass);
+		addSupertypes(context, clazz, eClass);
 		addAttributes(context, clazz, eClass);
 		return eClass;
 	}
@@ -264,40 +186,71 @@ public class Java2EcoreMapper {
 		boolean isRootComposite = MetaEcoreHelper.isRootComposite(clazz);
 		EClass eClass = EcoreFactory.eINSTANCE.createEClass();
 		if (isRootComposite) {
-			EcoreUtil.setAnnotation(eClass, MetaEcoreHelper.SIMON_ANNOTATION, MetaEcoreHelper.ROOT_COMPOSITE_VALUE, Boolean.toString(true));
+			EcoreUtil.setAnnotation(eClass, MetaEcoreHelper.SIMON_ANNOTATION, MetaEcoreHelper.ROOT_COMPOSITE_VALUE,
+					Boolean.toString(true));
 		}
-		Class<?> superJavaClass = clazz.getSuperclass();
-		if (superJavaClass != null) {
-			collectSuperType(context, clazz, superJavaClass, debug("Setting super type on " + eClass.getName(), eClass.getESuperTypes()::add));
-		}
-		for (Class<?> i : clazz.getInterfaces()) {
-			collectSuperType(context, clazz, i, debug("Setting interface as super type on " + eClass.getName(), eClass.getESuperTypes()::add));
-		}
+		addSupertypes(context, clazz, eClass);
 
 		eClass.setName(className);
+		eClass.setAbstract(isAbstractClass);
+		eClass.setInterface(isInterface);
+		addClassifierToCurrentPackage(context, eClass);
 		addContainments(context, clazz, eClass);
 		addReferences(context, clazz, eClass);
 		addAttributes(context, clazz, eClass);
-		eClass.setAbstract(isAbstractClass);
-		eClass.setInterface(isInterface);
 		return eClass;
 	}
-	
-	private static class SuperClassRequest {
-		private final Class<?> baseJavaClass;
-		private final Class<?> superJavaClass;
-		public SuperClassRequest(Class<?> baseJavaClass, Class<?> superJavaClass) {
-			this.baseJavaClass = baseJavaClass;
-			this.superJavaClass = superJavaClass;
+
+	private void addSupertypes(Context context, Class<?> clazz, EClass eClass) {
+		Class<?> superJavaClass = clazz.getSuperclass();
+		if (superJavaClass != null) {
+			collectSuperType(context, clazz, superJavaClass,
+					debug("Setting super type on " + eClass.getName(), eClass.getESuperTypes()::add));
 		}
+		for (Class<?> i : clazz.getInterfaces()) {
+			collectSuperType(context, clazz, i,
+					debug("Setting interface as super type on " + eClass.getName(), eClass.getESuperTypes()::add));
+		}
+	}
+
+	private void addClassifierToCurrentPackage(Context context, EClass eClass) {
+		assert !context.currentScope.isEmpty();
+		ENamedElement parent = context.currentScope.peek();
+		assert parent != null;
+		assert parent instanceof EPackage;
+		((EPackage) parent).getEClassifiers().add(eClass);
+	}
+
+	private Class<?> getPackageClass(Class<?> containedClazz) {
+		assert containedClazz.isMemberClass();
+		return containedClazz.getEnclosingClass();
+	}
+
+	private abstract static class Request {
+		protected final Class<?> classToResolve;
+
+		public Request(Class<?> classToResolve) {
+			this.classToResolve = classToResolve;
+		}
+	}
+
+	private static class SuperClassRequest extends Request {
+		private final Class<?> baseJavaClass;
+
+		public SuperClassRequest(Class<?> baseJavaClass, Class<?> superJavaClass) {
+			super(superJavaClass);
+			this.baseJavaClass = baseJavaClass;
+		}
+
 		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
 			result = prime * result + ((baseJavaClass == null) ? 0 : baseJavaClass.hashCode());
-			result = prime * result + ((superJavaClass == null) ? 0 : superJavaClass.hashCode());
+			result = prime * result + ((classToResolve == null) ? 0 : classToResolve.hashCode());
 			return result;
 		}
+
 		@Override
 		public boolean equals(Object obj) {
 			if (this == obj)
@@ -312,19 +265,21 @@ public class Java2EcoreMapper {
 					return false;
 			} else if (!baseJavaClass.equals(other.baseJavaClass))
 				return false;
-			if (superJavaClass == null) {
-				if (other.superJavaClass != null)
+			if (classToResolve == null) {
+				if (other.classToResolve != null)
 					return false;
-			} else if (!superJavaClass.equals(other.superJavaClass))
+			} else if (!classToResolve.equals(other.classToResolve))
 				return false;
 			return true;
 		}
-		
+
 	}
 
-	private void collectSuperType(Context context, Class<?> baseJavaClass, Class<?> superJavaClass, Consumer<EClass> consumer) {
+	private void collectSuperType(Context context, Class<?> baseJavaClass, Class<?> superJavaClass,
+			Consumer<EClass> consumer) {
 		if (superJavaClass != Object.class) {
-			context.resolve(new SuperClassRequest(baseJavaClass, superJavaClass), superJavaClass, this::buildObjectType, consumer);
+			context.resolve(new SuperClassRequest(baseJavaClass, superJavaClass), superJavaClass, this::buildObjectType,
+					consumer);
 		}
 	}
 
@@ -399,7 +354,8 @@ public class Java2EcoreMapper {
 		markOptional(accessor, eReference);
 		Consumer<EClass> typeSetter = eReference::setEType;
 		context.resolve(accessor, getType(accessor), this::buildObjectType,
-				debug("Setting reference type on " + eReference.getName(), typeSetter.andThen(resolvedEClass -> customizer.accept(eReference))));
+				debug("Setting reference type on " + eReference.getName(),
+						typeSetter.andThen(resolvedEClass -> customizer.accept(eReference))));
 		return eReference;
 	}
 
@@ -408,17 +364,26 @@ public class Java2EcoreMapper {
 		String attributeName = WordUtils.uncapitalize(accessor.getName().replaceFirst("^get", ""));
 		eAttribute.setName(attributeName);
 		markOptional(accessor, eAttribute);
-		context.resolve(accessor, getType(accessor), this::buildBasicType, debug("Setting type of attribute " + eAttribute.getName(), setAttributeType(context, eAttribute)));
+		context.resolve(accessor, getType(accessor), this::buildBasicType,
+				debug("Setting type of attribute " + eAttribute.getName(), setAttributeType(context, eAttribute)));
 		return eAttribute;
 	}
-	
+
 	private <EC extends EClassifier> Consumer<EC> setAttributeType(Context context, EAttribute attribute) {
 		return classifier -> {
 			attribute.setEType(classifier);
-			context.addPendingRequest(() -> attribute.getEContainingClass().getEPackage().getEClassifiers().add(classifier));
+			String requestId = attribute.getName() + " : " + classifier.getName();
+			context.addPendingRequest(requestId::toString, "setAttributeType(" + attribute.getName() + ")", false,
+					ctx -> {
+						EClass eContainingClass = attribute.getEContainingClass();
+						EPackage containingClassEPackage = eContainingClass.getEPackage();
+						EList<EClassifier> containingClassEPackageClassifiers = containingClassEPackage
+								.getEClassifiers();
+						containingClassEPackageClassifiers.add(classifier);
+					});
 		};
 	}
-	
+
 	private <EC extends ENamedElement> Consumer<EC> debug(String tag, Consumer<EC> toDebug) {
 		return (value) -> {
 			System.out.println(tag + " - " + value);
@@ -466,7 +431,7 @@ public class Java2EcoreMapper {
 //		dataType.setName(type.getSimpleName());
 //		return dataType;
 	}
-	
+
 	private EDataType getPrimitiveType(Class<?> javaPrimitiveType) {
 		if (javaPrimitiveType == String.class) {
 			return EcorePackage.eINSTANCE.getEString();
@@ -484,7 +449,7 @@ public class Java2EcoreMapper {
 			return EcorePackage.eINSTANCE.getEBooleanObject();
 		}
 		if (MetaEcoreHelper.isPrimitive(javaPrimitiveType)) {
-			
+
 		}
 		throw new IllegalStateException(javaPrimitiveType.getSimpleName());
 	}

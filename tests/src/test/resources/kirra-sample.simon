@@ -4,7 +4,7 @@
     
       entity Member {
         properties {
-          property name{type: String}
+          property name{type: StringValue}
         }      
         relationships {
           relationship group { 
@@ -24,9 +24,9 @@
     
     entity Message {
       properties {
-        property sent { type: Date }
-        property subject { type: String }
-        property memo { type: String }
+        property sent { type: DateValue }
+        property subject { type: StringValue }
+        property memo { type: StringValue }
       }
       relationships {
         relationship group { type: Group } 
@@ -35,7 +35,7 @@
     
     entity Group {
       properties {
-        property name{type: String}
+        property name{type: StringValue}
       }
       relationships {
         relationship members(multiple: true) { type: Member }

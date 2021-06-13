@@ -10,31 +10,46 @@ import com.abstratt.simon.metamodel.dsl.Meta;
 
 @Meta.Package
 public interface Kirra {
-	
-	static abstract class Primitive implements BasicType{
+
+	static abstract class Primitive implements BasicType {
 		@Override
 		public java.lang.String name() {
 			return WordUtils.uncapitalize(getClass().getSimpleName());
 		}
 	}
-	
+
 	@Meta.PrimitiveType(PrimitiveKind.String)
-	static class String extends Primitive {}
+	static class StringValue extends Primitive {
+	}
+
 	@Meta.PrimitiveType(PrimitiveKind.String)
-	static class Memo extends Primitive {}
+	static class MemoValue extends Primitive {
+	}
+
 	@Meta.PrimitiveType(PrimitiveKind.Boolean)
-	static class Boolean extends Primitive {}
+	static class BooleanValue extends Primitive {
+	}
+
 	@Meta.PrimitiveType(PrimitiveKind.Decimal)
-	static class Decimal extends Primitive {}
+	static class DecimalValue extends Primitive {
+	}
+
 	@Meta.PrimitiveType(PrimitiveKind.Integer)
-	static class Integer extends Primitive {}
+	static class IntegerValue extends Primitive {
+	}
+
 	@Meta.PrimitiveType(PrimitiveKind.Other)
-	static class Date extends Primitive {}
+	static class DateValue extends Primitive {
+	}
+
 	@Meta.PrimitiveType(PrimitiveKind.Other)
-	static class DateTime extends Primitive {}
+	static class DateTimeValue extends Primitive {
+	}
+
 	@Meta.PrimitiveType(PrimitiveKind.Other)
-	static class Time extends Primitive {}
-	//@Meta.PrimitiveType
+	static class TimeValue extends Primitive {
+	}
+	// @Meta.PrimitiveType
 //	public enum Primitives {
 //		String, Memo, Decimal, Integer, Boolean, Date, DateTime, Time
 //	}
@@ -44,7 +59,7 @@ public interface Kirra {
 		@Meta.Attribute
 		java.lang.String name();
 	}
-	
+
 	static abstract class BaseNamed implements Named {
 		private java.lang.String name;
 
@@ -65,9 +80,10 @@ public interface Kirra {
 		}
 
 	}
-	
+
 	abstract class Feature<T extends Type> extends BaseTyped<T> {
 		private boolean multiple;
+
 		@Meta.Attribute
 		public boolean multiple() {
 			return multiple;
@@ -80,18 +96,19 @@ public interface Kirra {
 
 	class Relationship extends Feature<Entity> {
 		private Relationship opposite;
+
 		@Meta.Reference
 		Relationship opposite() {
 			return this.opposite;
 		}
 	}
-	
+
 	class Operation extends BaseNamed {
-		
+
 		private Collection<Parameter> parameters;
 		private OperationKind kind;
 		private boolean public_;
-		
+
 		enum OperationKind {
 			Action, Constructor, Event, Finder, Retriever
 		}
@@ -100,30 +117,31 @@ public interface Kirra {
 		Collection<Parameter> parameters() {
 			return this.parameters;
 		}
-		
+
 		@Meta.Attribute
 		public OperationKind kind() {
 			return kind;
 		}
-		
+
 		@Meta.Attribute
 		public boolean public_() {
 			return public_;
 		}
 	}
-	
-    class Parameter extends BaseTyped<Type> {
-		
+
+	class Parameter extends BaseTyped<Type> {
+
 	}
-	
+
 	interface TypedElement<T extends Type> {
 		@Meta.Reference
 		@Meta.Required
-	    T type();
+		T type();
 	}
-	
+
 	abstract class BaseTyped<T extends Type> extends BaseNamed implements TypedElement<T> {
 		protected T type;
+
 		@Override
 		public T type() {
 			return type;
@@ -149,26 +167,26 @@ public interface Kirra {
 		public Collection<Entity> superTypes() {
 			return superTypes;
 		}
-		
+
 		@Meta.Reference
 		@Meta.Typed(Entity.class)
 		public Collection<Entity> subTypes() {
 			return subTypes;
 		}
-		
+
 		@Meta.Contained
 		@Meta.Typed(Operation.class)
 		public Collection<Operation> operations() {
 			return operations;
 		}
-		
+
 		@Meta.Contained
 		@Meta.Typed(Relationship.class)
 		public Collection<Relationship> relationships() {
 			return relationships;
 		}
-		
-		@Meta.Reference(opposite="entities")
+
+		@Meta.Reference(opposite = "entities")
 		public Namespace namespace() {
 			return namespace;
 		}

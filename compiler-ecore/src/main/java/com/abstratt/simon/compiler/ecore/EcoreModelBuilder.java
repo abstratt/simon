@@ -6,13 +6,9 @@ import java.util.Optional;
 
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
-import org.eclipse.emf.ecore.EcorePackage;
-import org.eclipse.emf.ecore.util.EcoreUtil;
 
 import com.abstratt.simon.compiler.Configuration;
 import com.abstratt.simon.compiler.Configuration.Instantiation;
@@ -47,7 +43,7 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 
 	@Override
 	public NameSetting<EObject> nameSetting() {
-		return MetaEcoreHelper::setName;
+		return EcoreHelper::setName;
 	}
 
 	@Override
@@ -72,15 +68,15 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 	public EObject resolve(EObject scope, String... path) {
 		EAttribute nameAttribute = EcoreHelper.findFeatureInHierarchy(scope, "name");
 		EObject resolved = Traversal.search(nameAttribute, path).hop(scope);
-		if (resolved == null) {
-			// maybe a meta-reference? TODO-RC hacked together for hackathon, does this make sense at all for primitive types? probably not!
-			ENamedElement metaStart = scope.eClass().getEPackage();
-			resolved = Traversal.search(EcorePackage.Literals.ENAMED_ELEMENT__NAME, path).hop(metaStart);
-			if (resolved == null) {
-				EObject root = Traversal.root().hop(scope);
-				EcoreHelper.tree(root).forEach(System.out::println);
-			}
-		}
+//		if (resolved == null) {
+//			// maybe a meta-reference? TODO-RC hacked together for hackathon, does this make sense at all for primitive types? probably not!
+//			ENamedElement metaStart = scope.eClass().getEPackage();
+//			resolved = Traversal.search(EcorePackage.Literals.ENAMED_ELEMENT__NAME, path).hop(metaStart);
+//			if (resolved == null) {
+//				EObject root = Traversal.root().hop(scope);
+//				EcoreHelper.tree(root).forEach(System.out::println);
+//			}
+//		}
 		EObject finalResolved = resolved;
 		System.out.println("Resolved " + Arrays.asList(path) + " to " + Optional.ofNullable(resolved)
 				.map(it -> getName(it) + " : " + finalResolved.eClass().getName()).orElse(null));
@@ -92,7 +88,13 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 		if (nameProperty == null) {
 			return null;
 		}
-		return (String) named.eGet(nameProperty);
+		Object nameValue = named.eGet(nameProperty);
+		if (nameValue == null || !(nameValue instanceof EObject)) {
+			return (String) nameValue;
+		}
+		EObject nameAsValue = (EObject) nameValue;
+		EStructuralFeature valueFeature = MetaEcoreHelper.getValueFeature(nameAsValue.eClass());
+		return nameAsValue == null ? null : (String) nameAsValue.eGet(valueFeature);
 	}
 
 	public void link(EcoreRelationship reference, EObject referrer, EObject referred) {
@@ -109,7 +111,12 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 
 	public void setValue(EcoreSlot slot, EObject target, Object value) {
 		EAttribute eAttribute = slot.wrapped();
-		target.eSet(eAttribute, MetaEcoreHelper.wrappedPrimitiveValue(eAttribute.eClass(), value));
+		EObject valueAsEObject;
+		if (MetaEcoreHelper.isPrimitive(eAttribute.getEType()))
+			valueAsEObject = EcoreHelper.wrappedPrimitiveValue((EClass) eAttribute.getEType(), value);
+		else
+			valueAsEObject = (EObject) value;
+		target.eSet(eAttribute, valueAsEObject);
 	}
 
 	private void setOrAddReference(EObject source, EObject target, EcoreRelationship relationship) {

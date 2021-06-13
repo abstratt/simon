@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.eclipse.emf.common.util.DiagnosticChain;
+import org.eclipse.emf.common.util.BasicDiagnostic;
+import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
@@ -24,12 +25,13 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
-import org.eclipse.emf.ecore.ETypedElement;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EcoreValidator;
 import org.junit.jupiter.api.Test;
 
+import com.abstratt.simon.compiler.ecore.EPackageTypeSource;
+import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreType;
 import com.abstratt.simon.examples.Kirra;
 import com.abstratt.simon.examples.UI;
 import com.abstratt.simon.examples.UI.Application;
@@ -38,11 +40,18 @@ import com.abstratt.simon.metamodel.dsl.java2ecore.Java2EcoreMapper;
 import com.abstratt.simon.metamodel.dsl.java2ecore.MetaEcoreHelper;
 
 public class Java2EcoreTest {
-	
+
 	@Test
 	void objectType() {
 		EClass result = build(Kirra.Namespace.class);
 		assertEquals(Kirra.Namespace.class.getSimpleName(), result.getName());
+	}
+
+	@Test
+	void rootType() {
+		assertTrue(MetaEcoreHelper.isRootComposite(UI.Application.class));
+		EClass result = build(Kirra.Namespace.class);
+		assertTrue(MetaEcoreHelper.isRootComposite(result));
 	}
 
 	@Test
@@ -65,9 +74,23 @@ public class Java2EcoreTest {
 		EClass result = build(UI.Color.class);
 		assertEquals(UI.Color.class.getSimpleName(), result.getName());
 		EList<EAttribute> attributes = result.getEAttributes();
-		assertNotNull(find(attributes, a -> a.getName().equals("red")));
-		assertNotNull(find(attributes, a -> a.getName().equals("green")));
-		assertNotNull(find(attributes, a -> a.getName().equals("blue")));
+		EAttribute red = find(attributes, a -> a.getName().equals("red"));
+		EAttribute green = find(attributes, a -> a.getName().equals("green"));
+		EAttribute blue = find(attributes, a -> a.getName().equals("blue"));
+		assertNotNull(red);
+		assertNotNull(green);
+		assertNotNull(blue);
+	}
+
+	@Test
+	void recordTypeAttributes() {
+		EClass result = build(UI.Color.class);
+		assertEquals(UI.Color.class.getSimpleName(), result.getName());
+		EList<EAttribute> attributes = result.getEAttributes();
+		EAttribute red = find(attributes, a -> a.getName().equals("red"));
+		assertNotNull(red);
+		EDataType redEType = MetaEcoreHelper.getValueType(red);
+		assertSame(EcorePackage.Literals.EINT, redEType);
 	}
 
 	@Test
@@ -79,7 +102,7 @@ public class Java2EcoreTest {
 		EClassifier nameType = MetaEcoreHelper.getValueType(name);
 		assertSame(String.class, nameType.getInstanceClass());
 	}
-	
+
 	@Test
 	void primitive() {
 		EClass result = build(UI.Color.class);
@@ -89,9 +112,9 @@ public class Java2EcoreTest {
 		EAttribute red = find(attributes, a -> a.getName().equals("red"));
 		EClassifier attributeType = red.getEType();
 		EClassifier redType = MetaEcoreHelper.getValueType(red);
-		assertSame(Integer.class, redType.getInstanceClass());
+		assertSame(int.class, redType.getInstanceClass());
 	}
-	
+
 	@Test
 	void enumSlot() {
 		EClass result = build(UI.Container.class);
@@ -140,6 +163,22 @@ public class Java2EcoreTest {
 	}
 
 	@Test
+	void superClass2() {
+		EPackage uiPackage = build(Kirra.class);
+		EClass namedEClass = (EClass) uiPackage.getEClassifier(name(Kirra.Named.class));
+		EClass typeEClass = (EClass) uiPackage.getEClassifier(name(Kirra.Type.class));
+		EClass basicTypeEClass = (EClass) uiPackage.getEClassifier(name(Kirra.BasicType.class));
+		EClass primitiveEClass = (EClass) uiPackage.getEClassifier(name(Kirra.Primitive.class));
+		EClass stringValueEClass = (EClass) uiPackage.getEClassifier(name(Kirra.StringValue.class));
+
+		assertTrue(namedEClass.getESuperTypes().isEmpty());
+		assertTrue(namedEClass.isSuperTypeOf(typeEClass));
+		assertTrue(typeEClass.isSuperTypeOf(basicTypeEClass));
+		assertTrue(basicTypeEClass.isSuperTypeOf(primitiveEClass));
+		assertTrue(primitiveEClass.isSuperTypeOf(stringValueEClass));
+	}
+
+	@Test
 	void packages() {
 		EPackage kirraPackage = build(Kirra.class);
 		assertNotNull(kirraPackage);
@@ -147,6 +186,15 @@ public class Java2EcoreTest {
 		Object entityClass = find(allClassifiers, pred((EClassifier eo) -> eo instanceof EClass)//
 				.and(pred(eo -> "Entity".equals(eo.getName()))));
 		assertNotNull(entityClass);
+	}
+
+	@Test
+	void containingPackage() {
+		EPackage kirraPackage = build(Kirra.class);
+		assertNotNull(kirraPackage);
+		EClassifier entityEClass = kirraPackage.getEClassifier(name(Kirra.Entity.class));
+		assertNotNull(entityEClass);
+		assertSame(kirraPackage, entityEClass.getEPackage());
 	}
 
 	@Test
@@ -229,7 +277,8 @@ public class Java2EcoreTest {
 		EClass linkEclass = build(UI.Link.class);
 		EAttribute label = find(linkEclass.getEAllAttributes(), e -> e.getName().equals("label"));
 		assertNotNull(label);
-		assertSame(EcorePackage.Literals.ESTRING, MetaEcoreHelper.getValueFeature(((EClass) label.getEType())).getEType());
+		assertSame(EcorePackage.Literals.ESTRING,
+				MetaEcoreHelper.getValueFeature(((EClass) label.getEType())).getEType());
 	}
 
 	@Test
@@ -253,12 +302,20 @@ public class Java2EcoreTest {
 		assertSame(subTypes, superTypes.getEOpposite());
 	}
 
+	@Test
+	void typeResolution() {
+		EPackage uiPackage = build(UI.class);
+		EPackageTypeSource typeSource = new EPackageTypeSource(uiPackage);
+		EcoreType<?> resolved = typeSource.resolveType("Application");
+		assertNotNull(resolved);
+	}
+
 	<E extends EObject> List<E> filter(List<E> toFilter, Predicate<E> predicate) {
 		return toFilter.stream().filter(predicate).collect(Collectors.toList());
 	}
 
 	<E extends EObject> E find(List<E> toFilter, Predicate<E> predicate) {
-		return toFilter.stream().filter(predicate).findAny().get();
+		return toFilter.stream().filter(predicate).findAny().orElse(null);
 	}
 
 	<E extends EObject> Predicate<E> pred(Predicate<E> p1) {
@@ -280,10 +337,10 @@ public class Java2EcoreTest {
 	}
 
 	private <E extends ENamedElement> void ensureValid(E built) {
-		Diagnostician diagnostics = Diagnostician.INSTANCE;
-		Map<Object, Object> diagContext = diagnostics.createDefaultContext();
-		DiagnosticChain diagnostic = diagnostics.createDefaultDiagnostic(built);
-		boolean validation = EcoreValidator.INSTANCE.validate(built, diagnostic, diagContext);
-		assertTrue(validation, diagnostic::toString);
+		Map<Object, Object> diagContext = Diagnostician.INSTANCE.createDefaultContext();
+		BasicDiagnostic diagnostic = new BasicDiagnostic();
+		EcoreValidator.INSTANCE.validate(built, diagnostic, diagContext);
+		int severity = diagnostic.getSeverity();
+		assertTrue(severity < Diagnostic.ERROR, () -> diagnostic.toString());
 	}
 }

@@ -21,31 +21,32 @@ public class EcoreDynamicTypeSource implements TypeSource<EcoreType<EClassifier>
 
 	Map<String, EPackage> packages;
 	private Reflections reflections;
-	Collection<URL> urls = ClasspathHelper.forClassLoader(getClass().getClassLoader());
+
 	public EcoreDynamicTypeSource() {
+		Collection<URL> urls = ClasspathHelper.forClassLoader();
 		System.out.println("URL: " + urls);
-		this.reflections = new Reflections(new ConfigurationBuilder()
-			     .setUrls(urls));
-		
+		this.reflections = new Reflections(new ConfigurationBuilder().setUrls(urls));
+
 		Set<Class<?>> packageImplementations = reflections.getTypesAnnotatedWith(Package.class);
 		Java2EcoreMapper mapper = new Java2EcoreMapper();
-		this.packages = packageImplementations.stream().collect(Collectors.toMap(Class::getName, packageClass -> mapper.map(packageClass)));
+		this.packages = packageImplementations.stream()
+				.collect(Collectors.toMap(Class::getName, packageClass -> mapper.map(packageClass)));
 		System.out.println("*** Packages:\n" + packages);
 	}
-	
+
 	@Override
 	public EcoreType<EClassifier> resolveType(String typeName) {
 		Collection<EPackage> packages = this.packages.values();
 		return packages //
 				.stream() //
-				.map(ePackage -> ePackage.getEClassifier(typeName)) //
+				.map(ePackage -> EcoreHelper.findClassifierByName(ePackage, typeName)) //
 				.filter(it -> it != null) //
 				.map(eClass -> (EcoreType<EClassifier>) EcoreType.fromClassifier(eClass)) //
 				.findAny().orElse(null);
 	}
-	
+
 	@Override
 	public void use(String sourceName) {
-		
+
 	}
 }

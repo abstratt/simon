@@ -10,8 +10,7 @@ import com.abstratt.simon.metamodel.Metamodel;
 import com.abstratt.simon.metamodel.dsl.Meta.Type.Nature;
 
 /**
- * An annotation-based internal DSL for creating Java-based
- * Simon metamodels.
+ * An annotation-based internal DSL for creating Java-based Simon metamodels.
  */
 public @interface Meta {
 	@Retention(RetentionPolicy.RUNTIME)
@@ -19,17 +18,18 @@ public @interface Meta {
 	@Inherited
 	public @interface Type {
 		enum Nature {
-			Primitive, Object, Record, Enumeration 
+			Primitive, Object, Record, Enumeration
 		}
+
 		Nature value();
 	}
-	
+
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)
 	@Inherited
 	public @interface Package {
 	}
-	
+
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)
 	@Inherited
@@ -52,7 +52,7 @@ public @interface Meta {
 	public @interface Reference {
 		String opposite() default "";
 	}
-	
+
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
 	@Inherited
@@ -85,7 +85,8 @@ public @interface Meta {
 	}
 
 	/**
-	 * ObjectTypes are the default classification, so usually do not need to be explicitly used.
+	 * ObjectTypes are the default classification, so usually do not need to be
+	 * explicitly used.
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
@@ -94,16 +95,18 @@ public @interface Meta {
 	}
 
 	/**
-	 * A record is an structured data type that can only hold primitives, enumeration values and other records. 
+	 * A record is an structured data type that can only hold primitives,
+	 * enumeration values and other records.
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
 	@Type(Nature.Record)
 	public @interface RecordType {
 	}
-	
+
 	/**
-	 * For enums only? No, for classes as well. (i.e. either enum values or regular classes will be interpreted as primitives)
+	 * For enums only? No, for classes as well. (i.e. either enum values or regular
+	 * classes will be interpreted as primitives)
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)

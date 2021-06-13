@@ -15,10 +15,11 @@ public class EPackageTypeSource implements TypeSource<EcoreType<? extends EClass
 
 	@Override
 	public EcoreType<? extends EClassifier> resolveType(String typeName) {
-		EClassifier classifier = ePackage.getEClassifier(typeName);
+		EClassifier classifier = EcoreHelper.findClassifierByName(ePackage, typeName);
+		;
 		return classifier == null ? null : EcoreType.fromClassifier(classifier);
 	}
-	
+
 	public EPackage getPackage() {
 		return ePackage;
 	}

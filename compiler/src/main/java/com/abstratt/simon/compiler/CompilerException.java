@@ -1,6 +1,5 @@
 package com.abstratt.simon.compiler;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -11,7 +10,7 @@ public class CompilerException extends RuntimeException {
 	public CompilerException(List<Problem> problems) {
 		this.problems = problems;
 	}
-	
+
 	public CompilerException() {
 		super();
 	}
@@ -27,7 +26,7 @@ public class CompilerException extends RuntimeException {
 	public CompilerException(Throwable cause) {
 		super(cause);
 	}
-	
+
 	@Override
 	public String getMessage() {
 		return problems.isEmpty() ? super.getMessage() : problems.toString();

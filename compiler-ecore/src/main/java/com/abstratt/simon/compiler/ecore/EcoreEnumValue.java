@@ -18,7 +18,7 @@ public class EcoreEnumValue extends EcoreValue<EEnum> implements Metamodel.Enume
 		EFactory factory = dataType.getEPackage().getEFactoryInstance();
 		return (EObject) factory.createFromString(dataType, null);
 	}
-	
+
 	@Override
 	public Object valueForName(String valueName) {
 		return wrapped.getEEnumLiteral(valueName);

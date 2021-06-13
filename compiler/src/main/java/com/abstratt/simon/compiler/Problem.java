@@ -4,6 +4,7 @@ public class Problem {
 	private int line;
 	private int column;
 	private String message;
+
 	public Problem(int line, int column, String message) {
 		this.line = line;
 		this.column = column;
@@ -13,7 +14,7 @@ public class Problem {
 	public int column() {
 		return column;
 	}
-	
+
 	int line() {
 		return line;
 	}
@@ -21,6 +22,7 @@ public class Problem {
 	String message() {
 		return message;
 	}
+
 	@Override
 	public String toString() {
 		return message + " - " + (line + "," + column);

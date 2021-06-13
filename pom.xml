@@ -37,8 +37,11 @@
 	</properties>
 	<modules>
 		<module>core</module>
+		<module>annotation-dsl</module>
+		<module>ecore</module>
 		<module>antlr-parser</module>		
 		<module>compiler</module>		
+		<module>compiler-ecore</module>		
 		<module>tests</module>	
 	</modules>
 	

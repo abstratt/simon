@@ -4,22 +4,21 @@ import java.util.List;
 
 import com.abstratt.simon.metamodel.dsl.Meta;
 
-
 @Meta.Package
 public interface UI {
-	
+
 	interface Named {
 		@Meta.Required(false)
 		@Meta.Name
 		@Meta.Attribute
 		String name();
 	}
-	
+
 	interface Labeled {
 		@Meta.Attribute
 		String label();
 	}
-	
+
 	static abstract class BaseNamed implements Named {
 		private String name;
 
@@ -33,12 +32,12 @@ public interface UI {
 		private Container parent;
 		private int index;
 
-		@Meta.Reference(opposite="children")
+		@Meta.Reference(opposite = "children")
 		@Meta.Required(false)
 		public Container parent() {
 			return parent;
 		}
-		
+
 		@Meta.Attribute
 		public int index() {
 			return index;
@@ -55,53 +54,51 @@ public interface UI {
 		public List<Component> children() {
 			return children;
 		}
-		
+
 		@Meta.Attribute
 		public PanelLayout getLayout() {
 			return layout;
 		}
 	}
-	
+
 	abstract class LabeledComponent extends Component implements Labeled {
 		private String label;
+
 		@Override
 		public String label() {
 			return label;
-		}	
+		}
 	}
-	
 
 	class Link extends LabeledComponent {
 		private Screen targetScreen;
-
 
 		@Meta.Reference
 		public Screen targetScreen() {
 			return targetScreen;
 		}
 
-
 	}
-	
+
 	class Screen extends Container {
 		private String screenName;
 		private Application application;
-		
+
 		@Meta.Attribute
 		public String screenName() {
 			return screenName;
 		}
-		
-		@Meta.Reference(opposite="screens")
+
+		@Meta.Reference(opposite = "screens")
 		public Application application() {
 			return application;
 		}
 	}
-	
+
 	@Meta.Composite(root = true)
 	class Application extends BaseNamed {
 		private List<Screen> screens;
-		
+
 		@Meta.Contained
 		@Meta.Typed(Screen.class)
 		public List<Screen> screens() {
@@ -109,7 +106,6 @@ public interface UI {
 		}
 	}
 
-	
 	class Button extends LabeledComponent {
 		private Color backgroundColor;
 		private Color foregroundColor;
@@ -124,9 +120,9 @@ public interface UI {
 			return foregroundColor;
 		}
 	}
-	
+
 	enum PanelLayout {
-	    Vertical, Horizontal
+		Vertical, Horizontal
 	}
 
 	@Meta.RecordType

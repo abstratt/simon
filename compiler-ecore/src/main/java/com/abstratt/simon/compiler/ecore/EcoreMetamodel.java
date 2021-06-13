@@ -2,33 +2,24 @@ package com.abstratt.simon.compiler.ecore;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
-import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.EEnum;
 import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.ETypedElement;
-import org.eclipse.emf.ecore.util.EcoreUtil;
 
 import com.abstratt.simon.metamodel.Metamodel;
 import com.abstratt.simon.metamodel.dsl.java2ecore.MetaEcoreHelper;
 
 public interface EcoreMetamodel extends Metamodel {
 
-//	@Override
-//	public Collection<ObjectType> rootTypes() {
-//		return ePackage.getEClassifiers().stream().filter(EcoreMetamodel::isRootEClass).map(ec -> (EClass) ec).map(EcoreObjectType::new).collect(Collectors.toList());
-//	}
-	
 	public static boolean isRootEClass(EClassifier classifier) {
-		return classifier instanceof EClass && ((EClass) classifier).eContainer() != null;
+		return classifier instanceof EClass && MetaEcoreHelper.isRootComposite((EClass) classifier);
 	}
 
 	public abstract static class EcoreSlotted<T extends EClass> extends EcoreType<T> implements Slotted {
@@ -69,7 +60,7 @@ public interface EcoreMetamodel extends Metamodel {
 		public N wrapped() {
 			return wrapped;
 		}
-		
+
 	}
 
 	static abstract class EcoreType<EC extends EClassifier> extends EcoreNamed<EC> implements Metamodel.Type {
@@ -89,24 +80,24 @@ public interface EcoreMetamodel extends Metamodel {
 				return new EcoreObjectType((EClass) classifier);
 			}
 			if (classifier instanceof EEnum) {
-				return new EcoreEnumValue((EEnum) classifier);	
+				return new EcoreEnumValue((EEnum) classifier);
 			}
 			return new EcorePrimitiveValue((EClass) classifier);
 		}
-		
+
 		@Override
 		public boolean isRoot() {
 			return isRootEClass(wrapped());
 		}
-		
+
 		public abstract EObject newModelElement();
 
 	}
 
-	static class EcoreTyped<TE extends ETypedElement, C extends EClassifier, T extends Type> extends EcoreNamed<TE>
-			implements Metamodel.Typed<T> {
+	static class EcoreFeature<TE extends ETypedElement, C extends EClassifier, T extends Type> extends EcoreNamed<TE>
+			implements Metamodel.Feature<T> {
 
-		public EcoreTyped(TE wrapped) {
+		public EcoreFeature(TE wrapped) {
 			super(wrapped);
 		}
 
@@ -125,9 +116,18 @@ public interface EcoreMetamodel extends Metamodel {
 			return (T) EcoreType.fromClassifier(wrapped().getEType());
 		}
 
+		public static <TE extends ETypedElement, T extends Type> Feature<T> create(TE feature) {
+			if (feature instanceof EAttribute)
+				return (Feature<T>) new EcoreSlot((EAttribute) feature);
+			if (feature instanceof EReference)
+				return (Feature<T>) new EcoreRelationship((EReference) feature);
+			assert false : feature;
+			return null;
+		}
+
 	}
 
-	static class EcoreRelationship extends EcoreTyped<EReference, EClass, ObjectType>
+	static class EcoreRelationship extends EcoreFeature<EReference, EClass, ObjectType>
 			implements Composition, Reference {
 
 		public EcoreRelationship(EReference wrapped) {
@@ -135,7 +135,7 @@ public interface EcoreMetamodel extends Metamodel {
 		}
 	}
 
-	static class EcoreSlot extends EcoreTyped<EAttribute, EClassifier, BasicType> implements Slot {
+	static class EcoreSlot extends EcoreFeature<EAttribute, EClassifier, BasicType> implements Slot {
 
 		public EcoreSlot(EAttribute wrapped) {
 			super(wrapped);
@@ -158,26 +158,31 @@ public interface EcoreMetamodel extends Metamodel {
 			return wrapped().getEAllReferences().stream().filter(ref -> !ref.isContainment() && !ref.isContainer())
 					.map(EcoreRelationship::new).collect(Collectors.toList());
 		}
-		
+
+		@Override
+		public Collection<Feature> features() {
+			return wrapped().getEAllStructuralFeatures().stream().map(EcoreFeature::create)
+					.collect(Collectors.toList());
+		}
+
 		@Override
 		public EObject newModelElement() {
 			EObject newModelElement = super.newModelElement();
 			if (MetaEcoreHelper.isRootComposite(wrapped())) {
-				//TODO-RC HACK! Finds all primitives in the metamodel and instatiate them here
-				//btw, these types are floating around
+				// TODO-RC HACK! Finds all primitives in the metamodel and instantiate them here
+				// btw, these types are floating around
+				// TODO-RC FIX ME this is not adding the instances anywhere
 				wrapped.getEPackage().getEClassifiers().stream() //
-					.filter(MetaEcoreHelper::isPrimitive)//
-					.map(it -> (EClass) it)//
-					.map(this::instantiateEClass)//
-					.forEach(e ->
-						MetaEcoreHelper.setName(e, e.eClass().getName())
-					);
+						.filter(MetaEcoreHelper::isPrimitive)//
+						.map(it -> (EClass) it)//
+						.map(t -> instantiateEClass(t))//
+						.filter(MetaEcoreHelper::isNamed).forEach(e -> EcoreHelper.setName(e, e.eClass().getName()));
 			}
 			return newModelElement;
 		}
 
 	}
-	
+
 	static class EcoreRecordType extends EcoreSlotted<EClass> implements Metamodel.RecordType {
 
 		public EcoreRecordType(EClass wrapped) {

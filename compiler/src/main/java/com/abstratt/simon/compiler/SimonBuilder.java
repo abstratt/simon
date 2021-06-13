@@ -45,18 +45,20 @@ public class SimonBuilder<T> extends SimonBaseListener {
 	class ElementInfo {
 		private T object;
 		private Slotted type;
+
 		public ElementInfo(T object, Slotted type) {
 			this.object = object;
 			this.type = type;
 		}
-		
+
 		public Slotted getType() {
 			return type;
 		}
-		
+
 		public T getObject() {
 			return object;
 		}
+
 		@Override
 		public String toString() {
 			return configurationProvider.nameQuerying().getName(object) + " : " + type.name();
@@ -72,42 +74,48 @@ public class SimonBuilder<T> extends SimonBaseListener {
 	private Deque<ElementInfo> currentScope = new LinkedList<>();
 	private List<Problem> problems = new LinkedList<>();
 	private List<ResolutionRequest> resolutionRequests = new LinkedList<>();
-	
+
 	interface Resolver<R> {
 		void resolve(R resolved);
 	}
-	
+
 	class ResolutionRequest {
 		private final ParserRuleContext context;
 		private final T scope;
 		private final String name;
 		private final Resolver<T> resolver;
 		private Type expectedType;
+
 		public ResolutionRequest(ParserRuleContext context, T scope, String name, Resolver<T> resolver) {
 			this.context = context;
 			this.scope = scope;
 			this.name = name;
 			this.resolver = resolver;
 		}
+
 		int getLine() {
 			return context.start.getLine();
 		}
+
 		int getColumn() {
 			return context.start.getCharPositionInLine();
 		}
 	}
 
-	public SimonBuilder(TypeSource typeSource, Configuration.Provider<? extends ObjectType,? extends Slotted, T> configurationProvider) {
+	public SimonBuilder(TypeSource typeSource,
+			Configuration.Provider<? extends ObjectType, ? extends Slotted, T> configurationProvider) {
 		this.typeSource = typeSource;
 		this.configurationProvider = (Provider<ObjectType, Slotted, T>) configurationProvider;
 	}
 
 	public T build() {
-		checkAbort();
 		resolve();
-		return currentScope.getFirst().getObject();
+		assert currentScope.size() == 1;
+		T built = currentScope.getFirst().getObject();
+		currentScope.clear();
+		return built;
 	}
-	
+
 	private void resolve() {
 		for (ResolutionRequest request : resolutionRequests) {
 			String name = request.name;
@@ -127,7 +135,7 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		String packageName = getIdentifier(ctx.languageName());
 		typeSource.use(packageName);
 	}
-	
+
 	boolean abort() {
 		return !problems.isEmpty();
 	}
@@ -139,11 +147,11 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		Type resolvedType = typeSource.resolveType(StringUtils.capitalize(typeName));
 		ObjectType asObjectType = (ObjectType) resolvedType;
 		if (asObjectType == null) {
-			throw new CompilerException("Unknown type: " + typeName);
+			throw new CompilerException("Unknown type: " + typeName + " on line " + object.start.getLine());
 		}
-		if (!asObjectType.isRoot()) {
-			throw new CompilerException("Not a root type: " + typeName);
-		}
+//		if (!asObjectType.isRoot()) {
+//			throw new CompilerException("Not a root type: " + typeName);
+//		}
 		Instantiation<ObjectType> instantiation = configurationProvider.instantiation();
 		T created = instantiation.createObject(asObjectType);
 		ObjectNameContext objectName = ctx.objectName();
@@ -152,10 +160,11 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		}
 		push(asObjectType, created);
 	}
-	
+
 	private String getTypeName(ObjectClassContext object) {
 		String text = object.getText();
-		if (text.indexOf('.') < 0) return text;
+		if (text.indexOf('.') < 0)
+			return text;
 		String[] components = text.split("\\.");
 		String typeName = components[0] + '.' + components[1];
 		return typeName;
@@ -165,13 +174,13 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		TerminalNode token = object.getToken(SimonParser.IDENT, 0);
 		return token.getText();
 	}
-	
+
 	private String getCharLiteral(ParserRuleContext object) {
 		TerminalNode token = object.getToken(SimonParser.CHAR_LITERAL, 0);
 		String text = token.getText();
 		return text.substring(1, text.length() - 1);
 	}
-	
+
 	@Override
 	public void exitLink(LinkContext ctx) {
 		ElementInfo parentInfo = peek().get();
@@ -179,9 +188,10 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		Reference reference = getObjectFeature(parentInfo, featureNameCtx, ObjectType::referenceByName);
 		Linking<T, Reference> linking = configurationProvider.linking();
 		String nameToResolve = ctx.objectNameRef().getText();
-		addResolver(nameToResolve, resolved -> linking.link(reference, parentInfo.object, resolved), ctx.objectNameRef());
+		addResolver(nameToResolve, resolved -> linking.link(reference, parentInfo.object, resolved),
+				ctx.objectNameRef());
 	}
-	
+
 	private void addResolver(String name, Resolver<T> resolver, ParserRuleContext context) {
 		resolutionRequests.add(new ResolutionRequest(context, currentScope.peek().getObject(), name, resolver));
 	}
@@ -204,7 +214,8 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		}
 	}
 
-	private <F extends Feature<ObjectType>> F getObjectFeature(ElementInfo featureOwnerInfo, ParserRuleContext featureNameCtx, BiFunction<ObjectType, String, F> getter) {
+	private <F extends Feature<ObjectType>> F getObjectFeature(ElementInfo featureOwnerInfo,
+			ParserRuleContext featureNameCtx, BiFunction<ObjectType, String, F> getter) {
 		Slotted parentType = featureOwnerInfo.getType();
 		if (!(parentType instanceof ObjectType)) {
 			reportFatalError(featureNameCtx, "This type cannot have components: " + parentType.name());
@@ -217,7 +228,7 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		}
 		return feature;
 	}
-	
+
 	private void reportFatalError(ParserRuleContext ctx, String message) {
 		reportError(true, ctx, message);
 	}
@@ -241,12 +252,12 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		debug("Removing record", peek());
 		pop();
 	}
-	
+
 	@Override
 	public void enterRecordLiteral(RecordLiteralContext ctx) {
 		SlotContext slotContext = findParent(ctx, SlotContext.class);
 		ElementInfo info = peek().get();
-		
+
 		String propertyName = getIdentifier(slotContext.featureName());
 		Slotted asSlotted = (Slotted) info.type;
 		Slot slot = asSlotted.slotByName(propertyName);
@@ -257,11 +268,11 @@ public class SimonBuilder<T> extends SimonBaseListener {
 			// no instance required
 			return;
 		}
-		RecordType asRecordType = (RecordType) slot.type(); 
+		RecordType asRecordType = (RecordType) slot.type();
 		T created = configurationProvider.instantiation().<T>createObject(asRecordType);
-		push(asRecordType, created);		
+		push(asRecordType, created);
 	}
-	
+
 	<PRC extends ParserRuleContext> PRC findParent(ParserRuleContext current, Class<? extends PRC> parentType) {
 		ParserRuleContext candidate = current.getParent();
 		while (candidate != null && !parentType.isInstance(candidate)) {
@@ -269,11 +280,11 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		}
 		return (PRC) candidate;
 	}
-	
+
 	@Override
 	public void exitSlot(SlotContext ctx) {
 		ElementInfo info = peek().get();
-		
+
 		T target = info.getObject();
 		parseSlotValue(ctx, info.getType(), (slot, value) -> {
 			configurationProvider.valueSetting().setValue(slot, target, value);
@@ -286,7 +297,7 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		if (slot == null) {
 			throw new CompilerException("Unknown property: " + propertyName + " in type " + slotOwner.name());
 		}
-		
+
 		Object slotValue = buildValue(ctx, slot);
 		consumer.accept(slot, slotValue);
 	}
@@ -312,9 +323,8 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		PropertiesContext properties = recordLiteralContext.properties();
 		List<SlotContext> slots = properties.slot();
 		for (SlotContext slotContext : slots) {
-			parseSlotValue(slotContext, recordType, (Slot slot, Object newValue) -> 
-				configurationProvider.valueSetting().setValue(slot, newRecord, (T) newValue)
-			);
+			parseSlotValue(slotContext, recordType, (Slot slot, Object newValue) -> configurationProvider.valueSetting()
+					.setValue(slot, newRecord, (T) newValue));
 		}
 		return newRecord;
 	}
@@ -331,37 +341,37 @@ public class SimonBuilder<T> extends SimonBaseListener {
 			break;
 		case Decimal:
 			slotValue = Double.parseDouble(literalText);
-			break;			
+			break;
 		case Boolean:
 			slotValue = Boolean.parseBoolean(literalText);
 			break;
 		case String:
-		case Other:			
+		case Other:
 			slotValue = literalText.substring(1, literalText.length() - 1);
 			break;
-		default: throw new IllegalStateException();
+		default:
+			throw new IllegalStateException();
 		}
 		return slotValue;
 	}
 
-	
 	private ElementInfo pop() {
-		return debug("pop (" + currentScope.size() +")" + currentScope, currentScope.removeFirst());
+		return debug("pop (" + currentScope.size() + ")" + currentScope, currentScope.removeFirst());
 	}
 
 	private <Z> Z debug(String tag, Z toDebug) {
-		System.out.println("\n" + tag +": " + toDebug);
+		System.out.println("\n" + tag + ": " + toDebug);
 		return toDebug;
 	}
 
 	private Optional<ElementInfo> peek() {
-		return debug("peekFirst (" + currentScope.size() +")", Optional.ofNullable(currentScope.peekFirst()));
+		return debug("peekFirst (" + currentScope.size() + ")", Optional.ofNullable(currentScope.peekFirst()));
 	}
-	
+
 	private void push(Slotted type, T created) {
 		ElementInfo newInfo = new ElementInfo(created, type);
 		String name = configurationProvider.nameQuerying().getName(newInfo.getObject());
-		currentScope.push(debug("Pushing (" + currentScope.size() +")" + currentScope, newInfo));
+		currentScope.push(debug("Pushing (" + currentScope.size() + ")" + currentScope, newInfo));
 	}
 
 	public void addProblem(Problem problem) {

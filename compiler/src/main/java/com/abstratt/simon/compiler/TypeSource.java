@@ -10,9 +10,9 @@ public interface TypeSource<T extends Type> {
 	 * @param typeName
 	 * @return the corresponding type instance
 	 */
-	T resolveType(String typeName);	
-	
-	default void use(String sourceName) {
+	T resolveType(String typeName);
+
+	default void use(String packageName) {
 		
 	}
 }

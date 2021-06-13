@@ -16,11 +16,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.antlr</groupId>
-			<artifactId>antlr4-runtime</artifactId>
-			<version>${antlr.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>com.abstratt</groupId>
 			<artifactId>simon-core</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
@@ -33,12 +28,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.11</version>
-		</dependency>
-		<dependency>
-			<groupId>org.reflections</groupId>
-			<artifactId>reflections</artifactId>
-			<version>0.9.11</version>
+			<version>3.10</version>
 		</dependency>
 	</dependencies>
 </project>
