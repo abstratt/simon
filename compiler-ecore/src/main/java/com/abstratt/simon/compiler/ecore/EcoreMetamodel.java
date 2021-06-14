@@ -168,16 +168,6 @@ public interface EcoreMetamodel extends Metamodel {
 		@Override
 		public EObject newModelElement() {
 			EObject newModelElement = super.newModelElement();
-			if (MetaEcoreHelper.isRootComposite(wrapped())) {
-				// TODO-RC HACK! Finds all primitives in the metamodel and instantiate them here
-				// btw, these types are floating around
-				// TODO-RC FIX ME this is not adding the instances anywhere
-				wrapped.getEPackage().getEClassifiers().stream() //
-						.filter(MetaEcoreHelper::isPrimitive)//
-						.map(it -> (EClass) it)//
-						.map(t -> instantiateEClass(t))//
-						.filter(MetaEcoreHelper::isNamed).forEach(e -> EcoreHelper.setName(e, e.eClass().getName()));
-			}
 			return newModelElement;
 		}
 

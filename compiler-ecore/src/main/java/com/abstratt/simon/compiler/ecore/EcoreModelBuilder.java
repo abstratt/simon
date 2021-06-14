@@ -9,6 +9,8 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 
 import com.abstratt.simon.compiler.Configuration;
 import com.abstratt.simon.compiler.Configuration.Instantiation;
@@ -16,6 +18,7 @@ import com.abstratt.simon.compiler.Configuration.Linking;
 import com.abstratt.simon.compiler.Configuration.NameQuerying;
 import com.abstratt.simon.compiler.Configuration.NameResolution;
 import com.abstratt.simon.compiler.Configuration.NameSetting;
+import com.abstratt.simon.compiler.Configuration.Operation;
 import com.abstratt.simon.compiler.Configuration.Parenting;
 import com.abstratt.simon.compiler.Configuration.ValueSetting;
 import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreObjectType;
@@ -26,6 +29,8 @@ import com.abstratt.simon.metamodel.dsl.java2ecore.MetaEcoreHelper;
 
 public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType, EcoreSlotted<?>, EObject> {
 
+	private ThreadLocal<Resource> currentResource = new ThreadLocal<Resource>();
+	
 	@Override
 	public NameResolution<EObject> nameResolution() {
 		return this::resolve;
@@ -61,8 +66,13 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 		return this::addChild;
 	}
 
-	public <E extends EObject> E createObject(EcoreSlotted<?> resolvedType) {
-		return (E) resolvedType.newModelElement();
+	public <E extends EObject> E createObject(boolean root, EcoreSlotted<?> resolvedType) {
+		E newElement = (E) resolvedType.newModelElement();
+		if (root) {
+			Resource resource = currentResource.get();
+			resource.getContents().add(newElement);
+		}
+		return newElement;
 	}
 
 	public EObject resolve(EObject scope, String... path) {
@@ -129,5 +139,16 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 			((List<EObject>) source.eGet(eReference)).add(target);
 		else
 			source.eSet(eReference, target);
+	}
+	
+	@Override
+	public <R> R runOperation(Operation<R> operation) {
+		Resource resource = new ResourceImpl();
+		currentResource.set(resource);
+		try {
+			return operation.run();
+		} finally {
+			currentResource.remove();
+		}
 	}
 }

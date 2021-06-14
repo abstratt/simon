@@ -54,7 +54,19 @@ public class CompilerTests {
 
 	@Test
 	void emptyApplication() {
-		emptyApplication("Application myApplication {}");
+		EObject application = emptyApplication("Application myApplication {}");
+		assertNotNull(application.eResource());
+	}
+	
+	@Test
+	void emptyApplications() {
+		List<Result<EObject>> results = compileProject(UI_PACKAGE, "Application myApplication1 {}", "Application myApplication2 {}");
+		EObject application1 = results.get(0).getRootObject();
+		EObject application2 = results.get(1).getRootObject();
+		assertEquals("myApplication1", TestHelper.getPrimitiveValue(application1, "name"));
+		assertEquals("myApplication2", TestHelper.getPrimitiveValue(application2, "name"));
+		assertNotNull(application1.eResource());
+		assertSame(application1.eResource(), application2.eResource());
 	}
 	
 	@Test
@@ -101,9 +113,10 @@ public class CompilerTests {
 
 	}
 
-	private void emptyApplication(String toParse) {
+	private EObject emptyApplication(String toParse) {
 		EObject application = compileUI(toParse);
 		assertEquals("myApplication", TestHelper.getPrimitiveValue(application, "name"));
+		return application;
 	}
 
 	private static EObject compileUI(String toParse) {

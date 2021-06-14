@@ -104,16 +104,27 @@ public class SimonCompiler<T> {
 	public List<Result<T>> compile(String... toParse) {
 		Stream<String> stream = Arrays.stream(toParse);
 		Stream<StringReader> readers = stream.map(StringReader::new);
-		Stream<ContentProvider> providers = readers.map(it -> () -> CharStreams.fromReader(it));
-		return compile(providers).collect(Collectors.toList());
+		Stream<ContentProvider> contentProviders = readers.map(it -> () -> CharStreams.fromReader(it));
+		return compile(contentProviders);
 	}
 	
 	private Result<T> compile(ContentProvider input) {
-		return compile(Stream.of(input)).findFirst().get();
+		return compile(Stream.of(input)).get(0);
 	}
 	
-	private Stream<Result<T>> compile(Stream<ContentProvider> inputs) {
+	public List<Result<T>> compile(Stream<ContentProvider> inputs) {
 		SimonBuilder<T> builder = new SimonBuilder<T>(typeSource, configurationProvider);
+		return configurationProvider.runOperation(new Configuration.Operation<List<Result<T>>>() {
+			@Override
+			public List<Result<T>> run() {
+				Stream<Result<T>> compiled = doCompile(inputs, builder);
+				return compiled.collect(Collectors.toList());
+			}
+		});
+	}
+	
+
+	private Stream<Result<T>> doCompile(Stream<ContentProvider> inputs, SimonBuilder<T> builder) {
 		return inputs.map(input -> { 
 			try {
 				parse(input.getContents(), builder);

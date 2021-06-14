@@ -7,6 +7,10 @@ import com.abstratt.simon.metamodel.Metamodel.Slot;
 import com.abstratt.simon.metamodel.Metamodel.Slotted;
 
 public interface Configuration {
+	interface Operation<R> {
+		R run();
+	}
+	
 	interface Provider<O extends ObjectType, S extends Slotted, M> {
 		NameSetting<M> nameSetting();
 
@@ -21,10 +25,12 @@ public interface Configuration {
 		<F extends Reference> Linking<M, F> linking();
 
 		<C extends Composition> Parenting<M, C> parenting();
+		
+		<R> R runOperation(Operation<R> operation);
 	}
 
 	interface Instantiation<S extends Slotted> {
-		<OBJ> OBJ createObject(S basicType);
+		<OBJ> OBJ createObject(boolean root, S basicType);
 	}
 
 	interface NameSetting<M> {

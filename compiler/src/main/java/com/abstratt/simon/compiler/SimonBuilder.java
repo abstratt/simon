@@ -153,7 +153,7 @@ public class SimonBuilder<T> extends SimonBaseListener {
 //			throw new CompilerException("Not a root type: " + typeName);
 //		}
 		Instantiation<ObjectType> instantiation = configurationProvider.instantiation();
-		T created = instantiation.createObject(asObjectType);
+		T created = instantiation.createObject(asObjectType.isRoot(), asObjectType);
 		ObjectNameContext objectName = ctx.objectName();
 		if (objectName != null) {
 			configurationProvider.nameSetting().setName(created, getIdentifier(objectName));
@@ -269,7 +269,7 @@ public class SimonBuilder<T> extends SimonBaseListener {
 			return;
 		}
 		RecordType asRecordType = (RecordType) slot.type();
-		T created = configurationProvider.instantiation().<T>createObject(asRecordType);
+		T created = configurationProvider.instantiation().<T>createObject(asRecordType.isRoot(), asRecordType);
 		push(asRecordType, created);
 	}
 
@@ -319,7 +319,7 @@ public class SimonBuilder<T> extends SimonBaseListener {
 	}
 
 	private Object parseRecordLiteral(RecordType recordType, RecordLiteralContext recordLiteralContext) {
-		T newRecord = configurationProvider.instantiation().createObject(recordType);
+		T newRecord = configurationProvider.instantiation().createObject(recordType.isRoot(), recordType);
 		PropertiesContext properties = recordLiteralContext.properties();
 		List<SlotContext> slots = properties.slot();
 		for (SlotContext slotContext : slots) {
