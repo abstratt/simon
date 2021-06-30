@@ -1,4 +1,4 @@
-package com.abstratt.simon.compiler.ecore;
+package com.abstratt.simon.metamodel.ecore;
 
 import org.eclipse.emf.ecore.EEnum;
 import org.eclipse.emf.ecore.EFactory;

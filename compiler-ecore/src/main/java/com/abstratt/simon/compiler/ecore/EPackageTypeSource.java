@@ -4,7 +4,7 @@ import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EPackage;
 
 import com.abstratt.simon.compiler.TypeSource;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreType;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 
 public class EPackageTypeSource implements TypeSource<EcoreType<? extends EClassifier>> {
 	private final EPackage ePackage;

@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.eclipse.emf.ecore.EClassifier;
 import org.junit.jupiter.api.Test;
 
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreType;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 
 public class TypeSourceTests {
 	@Test

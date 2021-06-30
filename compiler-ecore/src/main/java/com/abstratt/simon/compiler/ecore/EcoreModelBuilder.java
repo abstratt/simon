@@ -21,11 +21,11 @@ import com.abstratt.simon.compiler.Configuration.NameSetting;
 import com.abstratt.simon.compiler.Configuration.Operation;
 import com.abstratt.simon.compiler.Configuration.Parenting;
 import com.abstratt.simon.compiler.Configuration.ValueSetting;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreObjectType;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreRelationship;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlot;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlotted;
 import com.abstratt.simon.metamodel.dsl.java2ecore.MetaEcoreHelper;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreObjectType;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreRelationship;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreSlot;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreSlotted;
 
 public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType, EcoreSlotted<?>, EObject> {
 

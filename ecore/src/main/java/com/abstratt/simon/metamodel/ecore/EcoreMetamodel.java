@@ -1,4 +1,4 @@
-package com.abstratt.simon.compiler.ecore;
+package com.abstratt.simon.metamodel.ecore;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
