@@ -125,10 +125,13 @@ See an example Simon program describing a user-interface:
 }
 ```
 
-### Ecore-based implementation
+## Java/Ecore-based implementation
 
 #### Decisions
 
 1. primitive values are stored as EObjects that contain one `value` feature
 
+### Module structure
 
+* core (a.k.a _metamodel_) - defines the metamodel behind Simon
+* gen-utils - utilities used by Simon but not tied to the Simon API

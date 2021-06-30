@@ -1,0 +1,12 @@
+@language Kirra
+
+namespace kirra {
+    primitives {
+	    primitive StringValue
+		primitive BooleanValue
+		primitive DecimalValue
+		primitive DateValue
+		primitive DateTimeValue
+		primitive TimeValue
+    }
+}

@@ -4,12 +4,17 @@ grammar Simon;
     package com.abstratt.simon.parser.antlr;
 }
 
-program: (rootObject | scopedRootObjects) EOF;
+program: declarations rootObjects EOF;
 
-scopedRootObjects: 
-'@' languageName OPEN_BRACKET rootObjects CLOSE_BRACKET;
+languageName: IDENT;
 
-languageName: IDENT; 
+declarations: declaration*;
+
+declaration: (languageDeclaration | importDeclaration);
+
+languageDeclaration: '@language' IDENT;
+
+importDeclaration: '@import' CHAR_LITERAL;
 
 rootObjects: rootObject*;
 

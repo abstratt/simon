@@ -1,33 +1,29 @@
 package com.abstratt.simon.compiler;
 
-import static com.abstratt.simon.compiler.ecore.EcoreHelper.findByFeature;
-import static com.abstratt.simon.compiler.ecore.EcoreHelper.getValue;
-import static com.abstratt.simon.testing.TestHelper.UI_PACKAGE;
-import static com.abstratt.simon.testing.TestHelper.KIRRA_PACKAGE;
-import static com.abstratt.simon.testing.TestHelper.compileResourceToEObject;
-import static com.abstratt.simon.testing.TestHelper.uiClassFor;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.*;
+import static com.abstratt.simon.testing.TestHelper.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EEnumLiteral;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.junit.jupiter.api.Test;
 
-import com.abstratt.simon.compiler.Configuration.Provider;
 import com.abstratt.simon.compiler.SimonCompiler.Result;
-import com.abstratt.simon.compiler.ecore.EPackageTypeSource;
-import com.abstratt.simon.compiler.ecore.EcoreHelper;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreObjectType;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlotted;
+import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrImpl;
+import com.abstratt.simon.compiler.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.ecore.EcoreModelBuilder;
-import com.abstratt.simon.examples.UI;
-import com.abstratt.simon.metamodel.Metamodel.Type;
-import com.abstratt.simon.testing.TestHelper;
+import com.abstratt.simon.examples.ui.UI;
 
 public class CompilerTests {
 	private static EClass applicationClass = uiClassFor(UI.Application.class);
@@ -38,41 +34,198 @@ public class CompilerTests {
 
 	@Test
 	void metamodelResolveType() {
-		TypeSource<?> metamodel = new EPackageTypeSource(UI_PACKAGE);
-		Type resolved = metamodel.resolveType("Application");
-		assertNotNull(resolved);
-	}
-
-	@Test
-	void metamodelResolvePrimitive() {
-		EPackageTypeSource metamodel = new EPackageTypeSource(KIRRA_PACKAGE);
-		EPackage package_ = metamodel.getPackage();
-		Type resolved = metamodel.resolveType("StringValue");
-		EcoreHelper.tree(package_).forEach(System.out::println);
+		var metamodel = new EPackageMetamodelSource.Factory(UI_PACKAGE).build();
+		var resolved = metamodel.resolveType("Application");
 		assertNotNull(resolved);
 	}
 
 	@Test
 	void emptyApplication() {
-		EObject application = emptyApplication("Application myApplication {}");
+		var application = emptyApplication("Application myApplication {}");
 		assertNotNull(application.eResource());
 	}
 	
 	@Test
 	void emptyApplications() {
-		List<Result<EObject>> results = compileProject(UI_PACKAGE, "Application myApplication1 {}", "Application myApplication2 {}");
+		List<Result<EObject>> results = compileValidProject(UI_PACKAGE, "Application myApplication1 {}", "Application myApplication2 {}");
 		EObject application1 = results.get(0).getRootObject();
 		EObject application2 = results.get(1).getRootObject();
-		assertEquals("myApplication1", TestHelper.getPrimitiveValue(application1, "name"));
-		assertEquals("myApplication2", TestHelper.getPrimitiveValue(application2, "name"));
+		assertEquals("myApplication1", getPrimitiveValue(application1, "name"));
+		assertEquals("myApplication2", getPrimitiveValue(application2, "name"));
 		assertNotNull(application1.eResource());
 		assertSame(application1.eResource(), application2.eResource());
 	}
 	
 	@Test
-	void importApplication() {
-		emptyApplication("Application myApplication {}");
+	void typeReference() {
+		var source = """
+				Namespace customers {
+				  entities {
+				    Entity Customer
+				    Entity Order {
+				      relationships {
+				        relationship { type: Customer }
+				      }
+				    }
+				  }
+				}
+				""";
+		EObject namespace = compile(KIRRA_PACKAGE, source);
+		List<EObject> entities = getValue(namespace, "entities");
+		assertEquals("Customer", getPrimitiveValue(entities.get(0), "name"));
+		assertEquals("Order", getPrimitiveValue(entities.get(1), "name"));
 	}
+	
+	@Test
+	void crossFileReference() {
+		doCrossFileReference(0,1);
+	}
+	@Test
+	void crossFileReferenceReverseOrder() {
+		doCrossFileReference(1,0);
+	}
+	void doCrossFileReference(int... order) {
+		String customersSource = """
+				namespace customers {
+						entities {
+							entity Customer
+						}
+				}
+				""";
+		String ordersSource = """
+				namespace orders {
+						entities { 
+								entity Order { 
+										relationships { 
+												relationship customer { type: customers.Customer } 
+										} 
+								}
+						}
+				}
+				""";
+		String[] sources = { customersSource, ordersSource };
+		var results = compileValidProject(KIRRA_PACKAGE,
+				sources[order[0]],
+				sources[order[1]]
+		);
+		var customersNamespace = results.get(order[0]).getRootObject();
+		var ordersNamespace = results.get(order[1]).getRootObject();
+		assertEquals("customers", getPrimitiveValue(customersNamespace, "name"));
+		assertEquals("orders", getPrimitiveValue(ordersNamespace, "name"));
+		var orderEntity = findChildByAttributeValue(ordersNamespace, "name", "Order");
+		var customerRelationship = findChildByAttributeValue(orderEntity, "name", "customer");
+		assertNotNull(customerRelationship);
+	}
+
+	@Test
+	void unresolvedReference() {
+		var results = compileProject(KIRRA_PACKAGE,
+				Collections.singletonList("orders"),
+				Collections.singletonMap("orders",
+				"""
+				Namespace orders {
+						entities { 
+								Entity Order { 
+										relationships { 
+												relationship { type: customers.Customer } 
+										} 
+								}
+						}
+				}
+				""")
+		);
+
+		var problems = results.get(0).getProblems();
+		assertNotEquals(0, problems.size());
+	}
+
+	@Test
+	void imports() {
+		var customers =
+				"""
+                namespace customers
+                """;
+		var orders =
+				"""
+                @import 'customers'
+                namespace orders
+                """;
+
+		var allSources = new HashMap<String, String>();
+		allSources.put("customers", customers);
+		allSources.put("orders", orders);
+		var results = compileValidProject(
+				KIRRA_PACKAGE,
+				Collections.singletonList("orders"),
+				allSources
+		);
+		assertEquals(2, results.size());
+		var ordersNamespace = results.get(0).getRootObject();
+		var customersNamespace = results.get(1).getRootObject();
+		assertEquals("orders", getPrimitiveValue(ordersNamespace, "name"));
+		assertNotNull(ordersNamespace.eResource());
+		assertSame(ordersNamespace.eResource(), customersNamespace.eResource());
+	}
+
+	@Test
+	void importBuiltIn() {
+		var orders =
+				"""
+                @import 'kirra'
+                namespace orders
+                """;
+
+		var results = compileValidProject(
+				KIRRA_PACKAGE,
+				Collections.singletonList("orders"),
+				Collections.singletonMap("orders", orders)
+		);
+		assertEquals(2, results.size());
+		var namespace = results.get(0).getRootObject();
+		assertEquals("orders", getPrimitiveValue(namespace, "name"));
+		assertNotNull(results.get(0).getRootObject().eResource());
+		assertSame(results.get(0).getRootObject().eResource(), results.get(1).getRootObject().eResource());
+	}
+
+
+
+	@Test
+	void crossFileReferenceViaImport() {
+		var customers =
+			"""
+			namespace customers {
+					entities {
+						entity Customer
+					}
+			}
+			""";
+		var orders =
+			"""
+			@import 'customers'
+			namespace orders {
+					entities { 
+							entity Order { 
+									relationships { 
+											relationship { type: customers.Customer } 
+									} 
+							}
+					}
+			}
+			""";
+
+		var allSources = new HashMap<String, String>();
+		allSources.put("customers", customers);
+		allSources.put("orders", orders);
+		var results = compileValidProject(
+				KIRRA_PACKAGE,
+				Collections.singletonList("orders"),
+				allSources
+		);
+		assertEquals(2, results.size());
+		var ordersNamespace = results.get(0).getRootObject();
+		assertEquals("orders", getPrimitiveValue(ordersNamespace, "name"));
+	}
+
 
 	@Test
 	void emptyApplication_metaclassCapitalization() {
@@ -87,35 +240,69 @@ public class CompilerTests {
 	@Test
 	void numericalSlot() {
 		EObject button = compileUI("Button (index = 3)");
-		int buttonIndex = (int) TestHelper.getPrimitiveValue(button, "index");
+		int buttonIndex = (int) getPrimitiveValue(button, "index");
 		assertEquals(3, buttonIndex);
+	}
+	
+	@Test
+	void namespaceWithTwoEntities() {
+		var namespace1 = compile(KIRRA_PACKAGE, 
+				"""
+				Namespace myapp { 
+						entities { 
+								Entity Customer 
+								Entity Order 
+						} 
+				}
+				""" 
+		);
+		List<EObject> entities = getValue(namespace1, "entities");
+		assertEquals("Customer", getPrimitiveValue(entities.get(0), "name"));
+		assertEquals("Order", getPrimitiveValue(entities.get(1), "name"));
 	}
 
 	@Test // issue https://github.com/abstratt/simon/issues/3
 	void primitiveTypes() {
-		String toParse = "Namespace { entities { Entity Product { properties { Property description { type = StringValue } } } } }";
-		EObject namespace = compileKirra(toParse);
+		var toParse = """
+   			@import 'kirra'
+			namespace { 
+				entities { 
+					Entity Product { 
+						properties { 
+							Property description { type = kirra.StringValue } 
+						} 
+					} 
+				} 
+			}""";
+		var namespace = compileKirra(toParse);
 		List<EObject> entities = getValue(namespace, "entities");
 		assertEquals(1, entities.size());
 		EObject productEntity = entities.get(0);
-		EObject descriptionProperty = findByFeature(getValue(productEntity, "properties"), "name", "description");
-		assertEquals("StringValue", TestHelper.getPrimitiveValue(descriptionProperty, "type"));
+		assertNotNull(productEntity);
+		assertEquals("Product", getPrimitiveValue(productEntity, "name"));
+		Collection<EObject> properties = getValue(productEntity, "properties");
+		var descriptionProperty = findByFeature(properties, "name", "description");
+		assertNotNull(descriptionProperty);
+		var typeReference = findStructuralFeature(descriptionProperty, "type");
+		EObject descriptionPropertyType = getValue(descriptionProperty, "type");
+		assertEquals("Primitive", descriptionPropertyType.eClass().getName());
+		assertEquals("StringValue", getPrimitiveValue(descriptionPropertyType, "name"));
 	}
 
 	@Test
 	void recordSlot() {
-		EObject rootObject = compileUI("Button (backgroundColor = #(red = 100 blue = 50))");
-		EObject backgroundColor = (EObject) getValue(rootObject, "backgroundColor");
+		var rootObject = compileUI("Button (backgroundColor = #(red = 100 blue = 50))");
+		var backgroundColor = (EObject) getValue(rootObject, "backgroundColor");
 		assertNotNull(backgroundColor);
-		assertEquals(100, (int) TestHelper.getPrimitiveValue(backgroundColor, "red"));
-		assertEquals(50, (int) TestHelper.getPrimitiveValue(backgroundColor, "blue"));
-		assertEquals(0, (int) TestHelper.getPrimitiveValue(backgroundColor, "green"));
+		assertEquals(100, (int) getPrimitiveValue(backgroundColor, "red"));
+		assertEquals(50, (int) getPrimitiveValue(backgroundColor, "blue"));
+		assertEquals(0, (int) getPrimitiveValue(backgroundColor, "green"));
 
 	}
 
 	private EObject emptyApplication(String toParse) {
 		EObject application = compileUI(toParse);
-		assertEquals("myApplication", TestHelper.getPrimitiveValue(application, "name"));
+		assertEquals("myApplication", getPrimitiveValue(application, "name"));
 		return application;
 	}
 
@@ -128,19 +315,28 @@ public class CompilerTests {
 	}
 
 	private static EObject compile(EPackage package_, String toParse) {
-		List<Result<EObject>> models = compileProject(package_, toParse);
-		assertEquals(1, models.size());
+		var models = compileValidProject(package_, toParse);
 		assertNotNull(models.get(0));
 		return models.get(0).getRootObject();
 	}
 
-	private static List<Result<EObject>> compileProject(EPackage package_, String... toParse) {
-		EPackageTypeSource typeSource = new EPackageTypeSource(package_);
-		Provider<EcoreObjectType, EcoreSlotted<?>, EObject> modelBuilder = new EcoreModelBuilder();
-		SimonCompiler<EObject> compiler = new SimonCompiler<EObject>(typeSource, modelBuilder);
-		List<Result<EObject>> results = compiler.compile(toParse);
+	private static List<Result<EObject>> compileValidProject(EPackage package_, String... toParse) {
+		int[] index = {0};
+		Map<String, String> allSources = Arrays.stream(toParse).collect(Collectors.toMap(it -> "source" + index[0]++, it -> it));
+		return compileValidProject(package_, new ArrayList(allSources.keySet()), allSources);
+	}
+
+	private static List<Result<EObject>> compileValidProject(EPackage package_, List<String> entryPoints, Map<String, String> toParse) {
+		List<Result<EObject>> results = compileProject(package_, entryPoints, toParse);
 		results.forEach(CompilerTests::ensureSuccess);
 		return results;
+	}
+
+	private static List<Result<EObject>> compileProject(EPackage package_, List<String> entryPoints, Map<String, String> toParse) {
+		var typeSourceFactory = new EPackageMetamodelSource.Factory(package_);
+		var modelBuilder = new EcoreModelBuilder();
+		var compiler = new SimonCompilerAntlrImpl<>(typeSourceFactory, modelBuilder);
+		return compiler.compile(entryPoints, new SimpleSourceProvider(toParse));
 	}
 
 	private static void ensureSuccess(Result<?> result) {
@@ -149,48 +345,50 @@ public class CompilerTests {
 
 	@Test
 	void applicationWithScreens() {
-		EObject myApplication = compileUI(
-				"Application myApplication { screens { Screen screen1 {} Screen screen2 {} Screen screen3 {} } }");
+		var myApplication = compileUI(
+			"""
+				Application myApplication {
+						screens {
+							Screen screen1 {} 
+							Screen screen2 {} 
+							Screen screen3 {} 
+						} 
+				}
+			""");
 		assertNotNull(myApplication);
 		assertSame(applicationClass, myApplication.eClass());
 		@SuppressWarnings("unchecked")
 		List<EObject> screens = (List<EObject>) getValue(myApplication, "screens");
 		assertEquals(3, screens.size());
 		for (int i = 0; i < screens.size(); i++) {
-			assertEquals("screen" + (i + 1), TestHelper.getPrimitiveValue(screens.get(i), "name"));
+			assertEquals("screen" + (i + 1), getPrimitiveValue(screens.get(i), "name"));
 		}
 	}
-
+	
 	@Test
-	void kirraProgram() {
-		EObject namespace = compileResourceToEObject("/kirra-sample.simon");
-		List<EObject> entities = (List<EObject>) getValue(namespace, "entities");
-		assertEquals(5, entities.size());
-		EObject memberEntity = findByFeature(entities, "name", "Member");
-		EObject memberEntityNameProperty = findByFeature(getValue(memberEntity, "properties"), "name", "name");
-		assertEquals("StringValue", TestHelper.getPrimitiveValue(memberEntityNameProperty, "type"));
-	}
-
-	@Test
-	void uiProgram() {
-		EObject application = compileResourceToEObject("/ui-sample.simon");
+	void fullyQualifiedReferences() {
+	    var application = compileUI("""
+			@language UI
+			
+			  application myApplication { 
+			      screens { 
+			        screen screen1 {
+			          children {
+			            link {
+			                targetScreen: myApplication.screen2
+			            }
+		              }
+			        } 
+			        screen screen2 {} 
+			      } 
+			  }
+		""");
 		List<EObject> screens = (List<EObject>) getValue(application, "screens");
-		assertEquals(3, screens.size());
+		assertEquals(2, screens.size());
 		EObject firstScreen = screens.get(0);
-		EEnumLiteral layout = (EEnumLiteral) getValue(firstScreen, "layout");
-		assertEquals(UI.PanelLayout.Vertical.name(), layout.getLiteral());
 		List<EObject> screenComponents = (List<EObject>) getValue(firstScreen, "children");
-		assertEquals(3, screenComponents.size());
-		EObject firstButton = screenComponents.get(0);
-		assertEquals("Ok", TestHelper.getPrimitiveValue(firstButton, "label"));
-		EObject secondButton = screenComponents.get(1);
-		assertEquals("Cancel", TestHelper.getPrimitiveValue(secondButton, "label"));
-		EObject backgroundColor = (EObject) getValue(secondButton, "backgroundColor");
-		assertNotNull(backgroundColor);
-		assertEquals(100, (int) TestHelper.getPrimitiveValue(backgroundColor, "red"));
-
-		EObject link = screenComponents.get(2);
+		assertEquals(1, screenComponents.size());
+		EObject link = screenComponents.get(0);
 		assertEquals(screens.get(1), getValue(link, "targetScreen"));
-
 	}
 }

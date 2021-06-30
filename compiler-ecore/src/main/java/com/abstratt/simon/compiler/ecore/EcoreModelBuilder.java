@@ -1,9 +1,8 @@
 package com.abstratt.simon.compiler.ecore;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
+import java.util.stream.Stream;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
@@ -12,25 +11,29 @@ import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 
-import com.abstratt.simon.compiler.Configuration;
-import com.abstratt.simon.compiler.Configuration.Instantiation;
-import com.abstratt.simon.compiler.Configuration.Linking;
-import com.abstratt.simon.compiler.Configuration.NameQuerying;
-import com.abstratt.simon.compiler.Configuration.NameResolution;
-import com.abstratt.simon.compiler.Configuration.NameSetting;
-import com.abstratt.simon.compiler.Configuration.Operation;
-import com.abstratt.simon.compiler.Configuration.Parenting;
-import com.abstratt.simon.compiler.Configuration.ValueSetting;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreObjectType;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreRelationship;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlot;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlotted;
-import com.abstratt.simon.metamodel.dsl.java2ecore.MetaEcoreHelper;
+import com.abstratt.simon.compiler.ModelHandling;
+import com.abstratt.simon.compiler.ModelHandling.Declaration;
+import com.abstratt.simon.compiler.ModelHandling.Instantiation;
+import com.abstratt.simon.compiler.ModelHandling.Linking;
+import com.abstratt.simon.compiler.ModelHandling.NameQuerying;
+import com.abstratt.simon.compiler.ModelHandling.NameResolution;
+import com.abstratt.simon.compiler.ModelHandling.NameSetting;
+import com.abstratt.simon.compiler.ModelHandling.Operation;
+import com.abstratt.simon.compiler.ModelHandling.Parenting;
+import com.abstratt.simon.compiler.ModelHandling.ValueSetting;
+import com.abstratt.simon.genutils.Traversal;
+import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
+import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreObjectType;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreRelationship;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreSlot;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreSlotted;
+import com.abstratt.simon.metamodel.ecore.EcorePrimitiveValue;
 
-public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType, EcoreSlotted<?>, EObject> {
+public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType, EcoreSlotted<?>, EObject> {
 
 	private ThreadLocal<Resource> currentResource = new ThreadLocal<Resource>();
-	
+
 	@Override
 	public NameResolution<EObject> nameResolution() {
 		return this::resolve;
@@ -40,6 +43,11 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 	public Instantiation<EcoreSlotted<?>> instantiation() {
 		return this::createObject;
 	}
+	
+	@Override
+	public Declaration<EcorePrimitiveValue> declaration() {
+		return this::declarePrimitive;
+	}
 
 	@Override
 	public Linking<EObject, EcoreRelationship> linking() {
@@ -48,7 +56,7 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 
 	@Override
 	public NameSetting<EObject> nameSetting() {
-		return EcoreHelper::setName;
+		return this::setName;
 	}
 
 	@Override
@@ -65,34 +73,39 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 	public Parenting<EObject, EcoreRelationship> parenting() {
 		return this::addChild;
 	}
+	
+	private <E extends EObject> E declarePrimitive(EcorePrimitiveValue primitiveType) {
+		var newPrimitive = (E) primitiveType.newModelElement();
+		setName(newPrimitive, primitiveType.name());
+		addToResource(newPrimitive);
+		return newPrimitive;
+	}
 
 	public <E extends EObject> E createObject(boolean root, EcoreSlotted<?> resolvedType) {
 		E newElement = (E) resolvedType.newModelElement();
-		if (root) {
-			Resource resource = currentResource.get();
-			resource.getContents().add(newElement);
-		}
+		if (root)
+			addToResource(newElement);
 		return newElement;
+	}
+
+	private <E extends EObject> void addToResource(E newElement) {
+		Resource resource = currentResource.get();
+		var contents = resource.getContents();
+		contents.add(newElement);
+		assert newElement.eResource() != null;
 	}
 
 	public EObject resolve(EObject scope, String... path) {
 		EAttribute nameAttribute = EcoreHelper.findFeatureInHierarchy(scope, "name");
-		EObject resolved = Traversal.search(nameAttribute, path).hop(scope);
-//		if (resolved == null) {
-//			// maybe a meta-reference? TODO-RC hacked together for hackathon, does this make sense at all for primitive types? probably not!
-//			ENamedElement metaStart = scope.eClass().getEPackage();
-//			resolved = Traversal.search(EcorePackage.Literals.ENAMED_ELEMENT__NAME, path).hop(metaStart);
-//			if (resolved == null) {
-//				EObject root = Traversal.root().hop(scope);
-//				EcoreHelper.tree(root).forEach(System.out::println);
-//			}
-//		}
-		EObject finalResolved = resolved;
-		System.out.println("Resolved " + Arrays.asList(path) + " to " + Optional.ofNullable(resolved)
-				.map(it -> getName(it) + " : " + finalResolved.eClass().getName()).orElse(null));
+		Traversal<EObject> search = EObjectTraversalProvider.INSTANCE.search(nameAttribute, path);
+		EObject resolved = search.hop(scope);
 		return resolved;
 	}
 
+	public void setName(EObject unnamed, String newName) {
+		EcoreHelper.setName(unnamed, newName);
+	}
+	
 	public String getName(EObject named) {
 		EStructuralFeature nameProperty = MetaEcoreHelper.getNameAttribute(named);
 		if (nameProperty == null) {
@@ -132,8 +145,8 @@ public class EcoreModelBuilder implements Configuration.Provider<EcoreObjectType
 	private void setOrAddReference(EObject source, EObject target, EcoreRelationship relationship) {
 		if (target == null)
 			return;
-		System.out.println("Setting reference from a " + source.eClass().getName() + "." + relationship.name() + " to "
-				+ target.eClass().getName());
+		//System.out.println("Setting reference from a " + source.eClass().getName() + "." + relationship.name() + " to "
+		//		+ target.eClass().getName());
 		EReference eReference = relationship.wrapped();
 		if (eReference.isMany())
 			((List<EObject>) source.eGet(eReference)).add(target);

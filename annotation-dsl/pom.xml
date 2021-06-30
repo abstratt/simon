@@ -13,7 +13,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.abstratt</groupId>
-			<artifactId>simon-core</artifactId>
+			<artifactId>simon-metamodel-core</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>

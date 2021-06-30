@@ -1,11 +1,12 @@
 package com.abstratt.simon.compiler.ecore;
 
-import static com.abstratt.simon.compiler.ecore.Traversal.search;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static com.abstratt.simon.testing.TestHelper.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+import com.abstratt.simon.examples.ui.UI;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.SimonCompiler.Result;
+import com.abstratt.simon.genutils.Traversal;
+import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
 import com.abstratt.simon.testing.TestHelper;
 
 public class TraversalTests {
@@ -27,15 +30,17 @@ public class TraversalTests {
 	private static EObject link;
 	private static EObject button2a;
 	private static EAttribute nameAttribute;
+	private static List<Result<EObject>> setupResults;
 
 	public static <O> O getValue(EObject eObject, String featureName) {
 		return Objects.requireNonNull(EcoreHelper.getValue(eObject, featureName));
 	}
 
 	@BeforeAll
-	static void setup() {
-		Result<EObject> result = TestHelper.compileResource("/ui-sample.simon");
-		application = result.getRootObject();
+	static void setup() throws Exception {
+		List<Result<EObject>> results = compileResource(UI.class, "/ui-sample.simon");
+		setupResults = results;
+		application = results.get(0).getRootObject();
 		screen1 = ((EList<EObject>) getValue(application, "screens")).get(0);
 		screen2 = ((EList<EObject>) getValue(application, "screens")).get(1);
 		button1a = ((EList<EObject>) getValue(screen1, "children")).get(0);
@@ -47,103 +52,126 @@ public class TraversalTests {
 	}
 
 	@Test
+	void setupChecks() {
+		TestHelper.ensureSuccess(setupResults);
+	}
+
+	@Test
 	void bubbleUp() {
-		assertSame(screen2, Traversal.bubbleUp(Traversal.indexedFeature("screens", 1)).hop(button1a));
+		assertSame(screen2, provider().bubbleUp(provider().indexedFeature("screens", 1)).hop(button1a));
+		assertSame(button1a, provider().bubbleUp(provider().self()).hop(button1a));
 	}
 
 	@Test
 	void bubbleUpSimple() {
-		Traversal traversal = Traversal.bubbleUp(Traversal.named("myApplication"));
+		Traversal traversal = provider().bubbleUp(provider().named("myApplication"));
 		assertSame(application, traversal.hop(screen1));
 		assertSame(application, traversal.hop(button1a));
 	}
 
 	@Test
 	void condition() {
-		assertSame(screen1, Traversal.condition(it -> true).hop(screen1));
-		assertNull(Traversal.condition(it -> false).hop(screen1));
+		assertSame(screen1, provider().condition(it -> true).hop(screen1));
+		assertNull(provider().condition(it -> false).hop(screen1));
 	}
 
 	@Test
 	void named() {
-		assertSame(screen1, Traversal.named("screen1").hop(screen1));
-		assertNull(Traversal.named("screen2").hop(screen1));
+		assertSame(screen1, provider().named("screen1").hop(screen1));
+		assertNull(provider().named("screen2").hop(screen1));
+		assertSame(application, provider().named("myApplication").hop(application));
 	}
-
+	
 	@Test
 	void container() {
-		assertSame(application, Traversal.container().hop(screen1));
+		assertSame(application, provider().container().hop(screen1));
 	}
 
 	@Test
 	void grandContainer() {
-		assertSame(application, Traversal.compose(Traversal.container(), Traversal.container()).hop(button1a));
+		assertSame(application, provider().compose(provider().container(), provider().container()).hop(button1a));
 	}
 
 	@Test
 	void any() {
-		assertSame(screen1, Traversal.any(Traversal.list("foobar", e -> false), Traversal.list("screens", e -> true))
+		assertSame(screen1, provider().any(provider().list("foobar", e -> false), provider().list("screens", e -> true))
 				.hop(application));
 	}
 
 	@Test
 	void then() {
-		assertSame(button2a, Traversal.self().then(Traversal.to(button2a)).hop(button1a));
-		assertSame(button1a, Traversal.self().then(Traversal.self()).hop(button1a));
-		assertSame(button1a, Traversal.self().then(Traversal.indexedFeature("children", 0)).hop(screen1));
-		assertSame(screen1, Traversal.to(button1a).then(Traversal.feature("parent")).hop(application));
+		assertSame(button2a, provider().self().then(provider().to(button2a)).hop(button1a));
+		assertSame(button1a, provider().self().then(provider().self()).hop(button1a));
+		assertSame(button1a, provider().self().then(provider().indexedFeature("children", 0)).hop(screen1));
+		assertSame(screen1, provider().to(button1a).then(provider().feature("parent")).hop(application));
 	}
 
 	@Test
 	void compose() {
-		assertSame(button1a, Traversal.compose(Traversal.to(button1a)).hop(application));
-		assertSame(screen1, Traversal.compose(Traversal.to(button1a), Traversal.feature("parent")).hop(application));
-		assertSame(screen1, Traversal.compose(Traversal.to(button1a), Traversal.feature("parent"),
-				Traversal.indexedFeature("children", 1), Traversal.feature("parent")).hop(application));
-		assertSame(button1b, Traversal
-				.compose(Traversal.to(button1a), Traversal.feature("parent"), Traversal.indexedFeature("children", 1))
+		assertSame(button1a, provider().compose(provider().to(button1a)).hop(application));
+		assertSame(screen1, provider().compose(provider().to(button1a), provider().feature("parent")).hop(application));
+		assertSame(screen1, provider().compose(provider().to(button1a), provider().feature("parent"),
+				provider().indexedFeature("children", 1), provider().feature("parent")).hop(application));
+		assertSame(button1b, provider()
+				.compose(provider().to(button1a), provider().feature("parent"), provider().indexedFeature("children", 1))
 				.hop(application));
 	}
 
 	@Test
 	void simple() {
-		assertSame(button1a, Traversal.self().hop(button1a));
-		assertSame(button2a, Traversal.to(button2a).hop(button1a));
+		assertSame(button1a, provider().self().hop(button1a));
+		assertSame(button2a, provider().to(button2a).hop(button1a));
+	}
+
+	@Test
+	void childWithAttributeValued() {
+		assertSame(screen1, provider().childWithAttributeValued(nameAttribute, "screen1").hop(application));
+		assertSame(button1a, provider().childWithAttributeValued(nameAttribute, "btn1a").hop(screen1));
 	}
 
 	@Test
 	void attributeValued() {
-		assertSame(screen1, Traversal.childWithAttributeValued(nameAttribute, "screen1").hop(application));
-		assertSame(button1a, Traversal.childWithAttributeValued(nameAttribute, "btn1a").hop(screen1));
+		assertSame(application, provider().attributeValued(nameAttribute, "myApplication").hop(application));
+		assertNull(provider().attributeValued(nameAttribute, "myApplication2").hop(application));
 	}
 
 	@Test
 	void indexedFeature() {
-		assertSame(screen1, Traversal.indexedFeature("screens", 0).hop(application));
-		assertSame(button1b, Traversal.indexedFeature("children", 1).hop(screen1));
+		assertSame(screen1, provider().indexedFeature("screens", 0).hop(application));
+		assertSame(button1b, provider().indexedFeature("children", 1).hop(screen1));
 	}
 
 	@Test
 	void feature() {
-		assertSame(screen1, Traversal.feature("parent").hop(button1a));
-		assertSame(application, Traversal.feature("application").hop(screen1));
+		assertSame(screen1, provider().feature("parent").hop(button1a));
+		assertSame(application, provider().feature("application").hop(screen1));
 	}
 
 	@Test
 	void listFeature() {
 		assertSame(screen2,
-				Traversal.list("screens", e -> "screen2".equals(TestHelper.getPrimitiveValue(e, "name"))).hop(application));
-		assertNull(Traversal.list("screens", e -> "screen999".equals(getValue(e, "name"))).hop(application));
+				provider().list("screens", e -> "screen2".equals(TestHelper.getPrimitiveValue(e, "name"))).hop(application));
+		assertNull(provider().list("screens", e -> "screen999".equals(getValue(e, "name"))).hop(application));
 	}
 
 	@Test
 	void hierarchy() {
-		assertEquals(Arrays.asList(application), EcoreHelper.hierarchy(application).collect(Collectors.toList()));
-		assertEquals(Arrays.asList(screen1, application), EcoreHelper.hierarchy(screen1).collect(Collectors.toList()));
+		assertEquals(Arrays.asList(application), provider().hierarchy(application).collect(Collectors.toList()));
+		assertEquals(Arrays.asList(screen1, application), provider().hierarchy(screen1).collect(Collectors.toList()));
 		assertEquals(Arrays.asList(button1a, screen1, application),
-				EcoreHelper.hierarchy(button1a).collect(Collectors.toList()));
+				provider().hierarchy(button1a).collect(Collectors.toList()));
 		assertEquals(Arrays.asList(button2a, screen2, application),
-				EcoreHelper.hierarchy(button2a).collect(Collectors.toList()));
+				provider().hierarchy(button2a).collect(Collectors.toList()));
+	}
+
+	@Test
+	void children() {
+		assertEquals(Collections.emptyList(), provider().children().enumerate(button1a).collect(Collectors.toList()));
+	}
+
+	@Test
+	void roots() {
+		assertEquals(Collections.singletonList(application), provider().roots().enumerate(button1a).collect(Collectors.toList()));
 	}
 
 	@Test
@@ -159,6 +187,10 @@ public class TraversalTests {
 	void searchingUp() {
 		assertSame(screen2, search(nameAttribute, "screen2").hop(screen1));
 		assertSame(screen2, search(nameAttribute, "screen2").hop(button1b));
+		assertSame(screen2, search(nameAttribute, "screen2").hop(screen2));
+		assertSame(application, search(nameAttribute, "myApplication").hop(application));
+		assertSame(application, search(nameAttribute, "myApplication").hop(screen1));
+		assertSame(application, search(nameAttribute, "myApplication").hop(button1b));
 	}
 
 	@Test
@@ -172,7 +204,21 @@ public class TraversalTests {
 	void searchingDeep() {
 		assertSame(button1b, search(nameAttribute, "screen1", "btn1b").hop(screen1));
 		assertSame(button1b, search(nameAttribute, "screen1", "btn1b").hop(button1b));
+		assertSame(button1b, search(nameAttribute, "screen1", "btn1b").hop(screen2));
 		assertSame(button1b, search(nameAttribute, "screen1", "btn1b").hop(application));
 		assertNull(search(nameAttribute, "btn2b").hop(screen1));
+	}
+
+	@Test
+	void searchingGrandChildren() {
+		assertSame(button1b, provider().children().then(search(nameAttribute, "btn1b")).hop(application));
+		assertSame(button2a, provider().children().then(search(nameAttribute, "btn2a")).hop(application));
+	}
+	
+	private Traversal.Provider<EObject, EAttribute> provider() {
+		return EObjectTraversalProvider.INSTANCE;
+	}
+	private Traversal<EObject> search(EAttribute nameAttribute, Object... values) {
+		return provider().search(nameAttribute, values);
 	}
 }

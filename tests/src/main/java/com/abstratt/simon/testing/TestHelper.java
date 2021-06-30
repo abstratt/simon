@@ -3,27 +3,32 @@ package com.abstratt.simon.testing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.net.URL;
+import com.abstratt.simon.compiler.Problem;
+import com.abstratt.simon.compiler.URISourceProvider;
 
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EStructuralFeature;
 
-import com.abstratt.simon.compiler.SimonCompiler;
-import com.abstratt.simon.compiler.TypeSource;
-import com.abstratt.simon.compiler.Configuration.Provider;
 import com.abstratt.simon.compiler.SimonCompiler.Result;
-import com.abstratt.simon.compiler.ecore.EPackageTypeSource;
-import com.abstratt.simon.compiler.ecore.EcoreDynamicTypeSource;
-import com.abstratt.simon.compiler.ecore.EcoreHelper;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreObjectType;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlotted;
+import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrImpl;
+import com.abstratt.simon.compiler.ecore.EPackageMetamodelSource;
+import com.abstratt.simon.compiler.ecore.EcoreDynamicMetamodelSource;
 import com.abstratt.simon.compiler.ecore.EcoreModelBuilder;
-import com.abstratt.simon.examples.Kirra;
-import com.abstratt.simon.examples.UI;
-import com.abstratt.simon.metamodel.dsl.java2ecore.Java2EcoreMapper;
-import com.abstratt.simon.metamodel.dsl.java2ecore.MetaEcoreHelper;
+import com.abstratt.simon.examples.kirra.Kirra;
+import com.abstratt.simon.examples.ui.UI;
+import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
+import com.abstratt.simon.metamodel.ecore.java2ecore.Java2EcoreMapper;
+import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
 
 public class TestHelper {
 
@@ -45,43 +50,51 @@ public class TestHelper {
 	}
 
 	public static EObject compileUI(String toParse) {
-		EPackageTypeSource typeSource = new EPackageTypeSource(UI_PACKAGE);
-		return compile(typeSource, toParse);
+		EPackageMetamodelSource.Factory typeSourceFactory = new EPackageMetamodelSource.Factory(UI_PACKAGE);
+		return compile(typeSourceFactory, toParse);
 	}
 
-	private static EObject compile(EPackageTypeSource typeSource, String toParse) {
-		Provider<EcoreObjectType, EcoreSlotted<?>, EObject> modelBuilder = new EcoreModelBuilder();
-		SimonCompiler<EObject> compiler = new SimonCompiler<EObject>(typeSource, modelBuilder);
-		Result<EObject> result = compiler.compile(toParse);
+	private static EObject compile(EPackageMetamodelSource.Factory typeSourceFactory, String toParse) {
+		var modelBuilder = new EcoreModelBuilder();
+		var compiler = new SimonCompilerAntlrImpl<>(typeSourceFactory, modelBuilder);
+		var result = compiler.compile(toParse);
 		ensureSuccess(result);
 		EObject rootObject = result.getRootObject();
 		assertNotNull(rootObject);
 		return rootObject;
 	}
 
-	public static EObject compileResourceToEObject(String path) {
-		Result<EObject> result = compileResource(path);
-		ensureSuccess(result);
-		EObject rootObject = result.getRootObject();
+	public static EObject compileResourceToEObject(Class<?> packageClass, String path) throws Exception {
+		List<Result<EObject>> results = compileResource(packageClass, path);
+		ensureSuccess(results);
+		EObject rootObject = results.get(0).getRootObject();
 		assertNotNull(rootObject);
 		return rootObject;
 	}
 
-	public static Result<EObject> compileResource(String path) {
-		URL resourceUrl = TestHelper.class.getResource(path);
+	public static List<Result<EObject>> compileResource(Class<?> packageClass, String path) throws URISyntaxException {
+		var resourceUrl = TestHelper.class.getResource(path).toURI();
 		assertNotNull(resourceUrl, () -> "Resource not found: " + path);
-		Provider<EcoreObjectType, EcoreSlotted<?>, EObject> modelBuilder = new EcoreModelBuilder();
-		TypeSource<?> typeSource = new EcoreDynamicTypeSource();
-		SimonCompiler<EObject> compiler = new SimonCompiler<EObject>(typeSource, modelBuilder);
-		Result<EObject> result = compiler.compile(resourceUrl);
-		return result;
+		var baseURL = resourceUrl.resolve(".");
+		var sourceName = FilenameUtils.removeExtension(baseURL.relativize(resourceUrl).getPath());
+		var modelBuilder = new EcoreModelBuilder();
+		var typeSource = new EcoreDynamicMetamodelSource.Factory(packageClass.getPackageName());
+		var compiler = new SimonCompilerAntlrImpl<>(typeSource, modelBuilder);
+		var results = compiler.compile(Arrays.asList(sourceName), new URISourceProvider(baseURL, "simon"));
+		return results;
 	}
 
-	private static void ensureSuccess(Result<EObject> result) {
+	public static void ensureSuccess(Result<EObject> result) {
 		assertEquals(0, result.getProblems().size(), result.getProblems()::toString);
 	}
-	
+	public static void ensureSuccess(List<Result<EObject>> results) {
+		var allProblems = new ArrayList<Problem>();
+		results.stream().map(Result::getProblems).forEach(allProblems::addAll);
+		assertEquals(0, allProblems.size(), allProblems::toString);
+	}
+
 	public static <P> P getPrimitiveValue(EObject element, String primitiveFeatureName) {
+		Objects.requireNonNull(element);
 		EObject value = EcoreHelper.getValue(element, primitiveFeatureName);
 		if (value == null) {
 			EStructuralFeature feature = EcoreHelper.findStructuralFeature(element, primitiveFeatureName);

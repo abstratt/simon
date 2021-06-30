@@ -16,7 +16,7 @@ import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.junit.jupiter.api.Test;
 
-import com.abstratt.simon.metamodel.dsl.java2ecore.Context;
+import com.abstratt.simon.metamodel.ecore.java2ecore.Context;
 
 public class ContextTest {
 	@Test

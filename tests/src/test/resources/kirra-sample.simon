@@ -1,10 +1,12 @@
-@Kirra {
-  namespace communications {
+@language Kirra
+@import 'kirra'
+
+namespace communications {
     entities {
     
       entity Member {
         properties {
-          property name{type: StringValue}
+          property name{type: kirra.StringValue}
         }      
         relationships {
           relationship group { 
@@ -24,9 +26,9 @@
     
     entity Message {
       properties {
-        property sent { type: DateValue }
-        property subject { type: StringValue }
-        property memo { type: StringValue }
+        property sent { type: kirra.DateValue }
+        property subject { type: kirra.StringValue }
+        property memo { type: kirra.StringValue }
       }
       relationships {
         relationship group { type: Group } 
@@ -35,7 +37,7 @@
     
     entity Group {
       properties {
-        property name{type: StringValue}
+        property name{type: kirra.StringValue}
       }
       relationships {
         relationship members(multiple: true) { type: Member }
@@ -48,6 +50,5 @@
         }
       }    
     }
-  }
   }
 }
