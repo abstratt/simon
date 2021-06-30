@@ -27,8 +27,9 @@
 		<module>annotation-dsl</module>
 		<module>ecore</module>
 		<module>antlr-parser</module>		
+		<module>compiler-core</module>			
 		<module>compiler</module>		
-		<module>compiler-ecore</module>		
+		<module>compiler-ecore</module>	
 		<module>tests</module>	
 	</modules>
 	
