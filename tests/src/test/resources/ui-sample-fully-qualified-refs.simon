@@ -1,0 +1,13 @@
+@UI {
+  application myApplication { 
+      screens { 
+        screen screen1 {
+          children {
+            link {
+                targetScreen: myApplication.screen2
+            }
+        } 
+        screen screen2 {} 
+      } 
+  }
+}

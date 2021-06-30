@@ -19,14 +19,16 @@ import org.eclipse.emf.ecore.EPackage;
 import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.Configuration.Provider;
+import com.abstratt.simon.compiler.SimonCompiler;
 import com.abstratt.simon.compiler.SimonCompiler.Result;
+import com.abstratt.simon.compiler.antlr.SimonCompilerImpl;
 import com.abstratt.simon.compiler.ecore.EPackageTypeSource;
 import com.abstratt.simon.compiler.ecore.EcoreHelper;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreObjectType;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreSlotted;
 import com.abstratt.simon.compiler.ecore.EcoreModelBuilder;
 import com.abstratt.simon.examples.UI;
 import com.abstratt.simon.metamodel.Metamodel.Type;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreObjectType;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreSlotted;
 import com.abstratt.simon.testing.TestHelper;
 
 public class CompilerTests {
@@ -70,8 +72,26 @@ public class CompilerTests {
 	}
 	
 	@Test
-	void importApplication() {
-		emptyApplication("Application myApplication {}");
+	void typeReference() {
+		EObject namespace1 = compile(KIRRA_PACKAGE, 
+				"Namespace customers { entities { Entity Customer Entity Order { relationships { relationship (type = [customers.Customer]) } } } }" 
+		);
+		List<EObject> entities = getValue(namespace1, "entities");
+		assertEquals("customers", TestHelper.getPrimitiveValue(entities.get(0), "name"));
+		assertEquals("orders", TestHelper.getPrimitiveValue(entities.get(1), "name"));
+	}
+	
+	@Test
+	void imports() {
+		//TODO-RC cannot find a `type` slot, possibly because type references are not slots, but references? 
+		List<Result<EObject>> results = compileProject(KIRRA_PACKAGE, 
+				"Namespace customers { entities { Entity Customer } }", 
+				"Namespace orders { entities { Entity Order { relationships { relationship (type = [customers.Customer]) } } } }"
+		);
+		EObject application1 = results.get(0).getRootObject();
+		EObject application2 = results.get(1).getRootObject();
+		assertEquals("customers", TestHelper.getPrimitiveValue(application1, "name"));
+		assertEquals("orders", TestHelper.getPrimitiveValue(application2, "name"));
 	}
 
 	@Test
@@ -89,6 +109,16 @@ public class CompilerTests {
 		EObject button = compileUI("Button (index = 3)");
 		int buttonIndex = (int) TestHelper.getPrimitiveValue(button, "index");
 		assertEquals(3, buttonIndex);
+	}
+	
+	@Test
+	void namespaceWithTwoEntities() {
+		EObject namespace1 = compile(KIRRA_PACKAGE, 
+				"Namespace myapp { entities { Entity Customer Entity Order } }" 
+		);
+		List<EObject> entities = getValue(namespace1, "entities");
+		assertEquals("Customer", TestHelper.getPrimitiveValue(entities.get(0), "name"));
+		assertEquals("Order", TestHelper.getPrimitiveValue(entities.get(1), "name"));
 	}
 
 	@Test // issue https://github.com/abstratt/simon/issues/3
@@ -137,7 +167,7 @@ public class CompilerTests {
 	private static List<Result<EObject>> compileProject(EPackage package_, String... toParse) {
 		EPackageTypeSource typeSource = new EPackageTypeSource(package_);
 		Provider<EcoreObjectType, EcoreSlotted<?>, EObject> modelBuilder = new EcoreModelBuilder();
-		SimonCompiler<EObject> compiler = new SimonCompiler<EObject>(typeSource, modelBuilder);
+		SimonCompiler<EObject> compiler = new SimonCompilerImpl<>(typeSource, modelBuilder);
 		List<Result<EObject>> results = compiler.compile(toParse);
 		results.forEach(CompilerTests::ensureSuccess);
 		return results;
@@ -160,6 +190,7 @@ public class CompilerTests {
 			assertEquals("screen" + (i + 1), TestHelper.getPrimitiveValue(screens.get(i), "name"));
 		}
 	}
+	
 
 	@Test
 	void kirraProgram() {
@@ -192,5 +223,17 @@ public class CompilerTests {
 		EObject link = screenComponents.get(2);
 		assertEquals(screens.get(1), getValue(link, "targetScreen"));
 
+	}
+	
+	@Test
+	void fullyQualifiedReferences() {
+		EObject application = compileResourceToEObject("/ui-sample-fully-qualified-refs.simon");
+		List<EObject> screens = (List<EObject>) getValue(application, "screens");
+		assertEquals(2, screens.size());
+		EObject firstScreen = screens.get(0);
+		List<EObject> screenComponents = (List<EObject>) getValue(firstScreen, "children");
+		assertEquals(1, screenComponents.size());
+		EObject link = screenComponents.get(0);
+		assertEquals(screens.get(1), getValue(link, "targetScreen"));
 	}
 }

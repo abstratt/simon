@@ -1,4 +1,4 @@
-package com.abstratt.simon.compiler;
+package com.abstratt.simon.compiler.antlr;
 
 import java.util.ArrayList;
 import java.util.Deque;
@@ -7,11 +7,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.StringUtils;
 
+import com.abstratt.simon.compiler.AbortCompilationException;
+import com.abstratt.simon.compiler.CompilerException;
+import com.abstratt.simon.compiler.Configuration;
+import com.abstratt.simon.compiler.Problem;
+import com.abstratt.simon.compiler.TypeSource;
 import com.abstratt.simon.compiler.Configuration.Instantiation;
 import com.abstratt.simon.compiler.Configuration.Linking;
 import com.abstratt.simon.compiler.Configuration.Parenting;
@@ -40,7 +46,7 @@ import com.abstratt.simon.parser.antlr.SimonParser.RecordLiteralContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ScopedRootObjectsContext;
 import com.abstratt.simon.parser.antlr.SimonParser.SlotContext;
 
-public class SimonBuilder<T> extends SimonBaseListener {
+class SimonBuilder<T> extends SimonBaseListener {
 
 	class ElementInfo {
 		private T object;
@@ -262,7 +268,8 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		Slotted asSlotted = (Slotted) info.type;
 		Slot slot = asSlotted.slotByName(propertyName);
 		if (slot == null) {
-			throw new CompilerException("Unknown property: " + propertyName + " in type " + info.type.name());
+			List<String> slotNames = asSlotted.slots().stream().map(Slot::name).collect(Collectors.toList());
+			throw new CompilerException("Unknown property: " + propertyName + " in type " + asSlotted.name() + " - slots are: " + slotNames);			
 		}
 		if (!(slot.type() instanceof RecordType)) {
 			// no instance required
@@ -295,7 +302,8 @@ public class SimonBuilder<T> extends SimonBaseListener {
 		String propertyName = getIdentifier(ctx.featureName());
 		Slot slot = slotOwner.slotByName(propertyName);
 		if (slot == null) {
-			throw new CompilerException("Unknown property: " + propertyName + " in type " + slotOwner.name());
+			List<String> slotNames = slotOwner.slots().stream().map(Slot::name).collect(Collectors.toList());
+			throw new CompilerException("Unknown property: " + propertyName + " in element " + slotOwner.name() + " - slots are: " + slotNames);
 		}
 
 		Object slotValue = buildValue(ctx, slot);

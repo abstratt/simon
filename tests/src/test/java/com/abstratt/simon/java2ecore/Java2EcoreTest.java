@@ -31,13 +31,13 @@ import org.eclipse.emf.ecore.util.EcoreValidator;
 import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.ecore.EPackageTypeSource;
-import com.abstratt.simon.compiler.ecore.EcoreMetamodel.EcoreType;
 import com.abstratt.simon.examples.Kirra;
 import com.abstratt.simon.examples.UI;
 import com.abstratt.simon.examples.UI.Application;
 import com.abstratt.simon.examples.UI.PanelLayout;
 import com.abstratt.simon.metamodel.dsl.java2ecore.Java2EcoreMapper;
 import com.abstratt.simon.metamodel.dsl.java2ecore.MetaEcoreHelper;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 
 public class Java2EcoreTest {
 
@@ -288,6 +288,17 @@ public class Java2EcoreTest {
 		assertNotNull(name);
 		EDataType nameEType = MetaEcoreHelper.getValueType(name);
 		assertSame(EcorePackage.Literals.ESTRING, nameEType);
+	}
+	
+	@Test
+	void inheritedReferences() {
+		EClass relationshipEclass = build(Kirra.Relationship.class);
+		assertNotNull(relationshipEclass.getEPackage());
+		EReference typeReference = find(relationshipEclass.getEAllReferences(), e -> e.getName().equals("type"));
+		assertNotNull(typeReference);
+		EClass typeReferenceEClass = typeReference.getEReferenceType();
+		assertEquals("Type", typeReferenceEClass.getName());
+		assertSame(relationshipEclass.getEPackage(), typeReferenceEClass.getEPackage());
 	}
 
 	@Test

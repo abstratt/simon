@@ -1,15 +1,9 @@
-package com.abstratt.simon.compiler;
+package com.abstratt.simon.compiler.antlr;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Path;
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,60 +15,30 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.UnbufferedTokenStream;
 import org.antlr.v4.runtime.tree.pattern.RuleTagToken;
 
+import com.abstratt.simon.compiler.AbortCompilationException;
+import com.abstratt.simon.compiler.SimonCompiler;
+import com.abstratt.simon.compiler.Configuration;
+import com.abstratt.simon.compiler.Problem;
+import com.abstratt.simon.compiler.TypeSource;
+import com.abstratt.simon.compiler.Configuration.Operation;
 import com.abstratt.simon.compiler.Configuration.Provider;
 import com.abstratt.simon.metamodel.Metamodel.ObjectType;
 import com.abstratt.simon.metamodel.Metamodel.Slotted;
 import com.abstratt.simon.parser.antlr.SimonLexer;
 import com.abstratt.simon.parser.antlr.SimonParser;
 
-public class SimonCompiler<T> {
-	private TypeSource<?> typeSource;
+public class SimonCompilerImpl<T> implements SimonCompiler<T>{
+	public TypeSource<?> typeSource;
 
-	private Configuration.Provider<? extends ObjectType, ? extends Slotted, T> configurationProvider;
+	public Configuration.Provider<? extends ObjectType, ? extends Slotted, T> configurationProvider;
 
-	interface ContentProvider {
-		CharStream getContents() throws IOException;
-	}
-	
-	public static class Result<T> {
-		private final T rootObject;
-		private final List<Problem> problems;
-
-		public Result(T rootObject, List<Problem> problems) {
-			this.rootObject = rootObject;
-			this.problems = problems;
-		}
-
-		public T getRootObject() {
-			return rootObject;
-		}
-
-		public List<Problem> getProblems() {
-			return problems;
-		}
-	}
-
-	public SimonCompiler(TypeSource<?> typeSource,
+	public SimonCompilerImpl(TypeSource<?> typeSource,
 			Provider<? extends ObjectType, ? extends Slotted, T> configurationProvider) {
 		this.typeSource = typeSource;
 		this.configurationProvider = configurationProvider;
 	}
 
-	public Result<T> compile(URI uri) {
-		try {
-			return compile(uri.toURL());
-		} catch (MalformedURLException e) {
-			throw new CompilerException(e);
-		}
-	}
-
-	public Result<T> compile(URL url) {
-		try (InputStream contents = url.openStream()) {
-			return compile(() -> CharStreams.fromStream(contents));
-		} catch (IOException e) {
-			throw new CompilerException(e);
-		}
-	}
+	
 	
 //	/**
 //	 * Compiles a project made of multiple compilation units.
@@ -92,39 +56,13 @@ public class SimonCompiler<T> {
 //		}
 //	}
 
-
-	public Result<T> compile(Path toParse) {
-		return compile(() -> CharStreams.fromPath(toParse));
-	}
-
-	public Result<T> compile(String toParse) {
-		return compile(() -> CharStreams.fromReader(new StringReader(toParse)));
-	}
-	
-	public List<Result<T>> compile(String... toParse) {
-		Stream<String> stream = Arrays.stream(toParse);
-		Stream<StringReader> readers = stream.map(StringReader::new);
-		Stream<ContentProvider> contentProviders = readers.map(it -> () -> CharStreams.fromReader(it));
-		return compile(contentProviders);
-	}
-	
-	private Result<T> compile(ContentProvider input) {
-		return compile(Stream.of(input)).get(0);
-	}
-	
+	@Override
 	public List<Result<T>> compile(Stream<ContentProvider> inputs) {
 		SimonBuilder<T> builder = new SimonBuilder<T>(typeSource, configurationProvider);
-		return configurationProvider.runOperation(new Configuration.Operation<List<Result<T>>>() {
-			@Override
-			public List<Result<T>> run() {
-				Stream<Result<T>> compiled = doCompile(inputs, builder);
-				return compiled.collect(Collectors.toList());
-			}
-		});
+		return configurationProvider.runOperation(() -> doCompile(inputs, builder));
 	}
 	
-
-	private Stream<Result<T>> doCompile(Stream<ContentProvider> inputs, SimonBuilder<T> builder) {
+	public List<Result<T>> doCompile(Stream<ContentProvider> inputs, SimonBuilder<T> builder) {
 		return inputs.map(input -> { 
 			try {
 				parse(input.getContents(), builder);
@@ -132,7 +70,11 @@ public class SimonCompiler<T> {
 				return new Result<T>(null, Arrays.asList(new Problem(-1, -1, e.toString())));
 			} 
 			return new Result<>(builder.build(), builder.getProblems());
-		});
+		}).collect(Collectors.toList());
+	}
+
+	private void parse(Reader contents, SimonBuilder<T> builder) throws IOException {
+		parse(CharStreams.fromReader(contents), builder);
 	}
 
 	private void parse(CharStream input, SimonBuilder<T> builder) {
