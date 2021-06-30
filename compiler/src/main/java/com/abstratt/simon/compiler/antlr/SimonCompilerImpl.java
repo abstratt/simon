@@ -59,10 +59,10 @@ public class SimonCompilerImpl<T> implements SimonCompiler<T>{
 	@Override
 	public List<Result<T>> compile(Stream<ContentProvider> inputs) {
 		SimonBuilder<T> builder = new SimonBuilder<T>(typeSource, configurationProvider);
-		return doCompile(inputs, builder).collect(Collectors.toList());
+		return configurationProvider.runOperation(() -> doCompile(inputs, builder));
 	}
 	
-	public Stream<Result<T>> doCompile(Stream<ContentProvider> inputs, SimonBuilder<T> builder) {
+	public List<Result<T>> doCompile(Stream<ContentProvider> inputs, SimonBuilder<T> builder) {
 		return inputs.map(input -> { 
 			try {
 				parse(input.getContents(), builder);
@@ -70,14 +70,12 @@ public class SimonCompilerImpl<T> implements SimonCompiler<T>{
 				return new Result<T>(null, Arrays.asList(new Problem(-1, -1, e.toString())));
 			} 
 			return new Result<>(builder.build(), builder.getProblems());
-		});
+		}).collect(Collectors.toList());
 	}
 
 	private void parse(Reader contents, SimonBuilder<T> builder) throws IOException {
 		parse(CharStreams.fromReader(contents), builder);
 	}
-
-
 
 	private void parse(CharStream input, SimonBuilder<T> builder) {
 		SimonLexer lexer = new SimonLexer(input);
