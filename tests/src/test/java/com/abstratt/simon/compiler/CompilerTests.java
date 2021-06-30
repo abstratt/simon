@@ -190,6 +190,7 @@ public class CompilerTests {
 			assertEquals("screen" + (i + 1), TestHelper.getPrimitiveValue(screens.get(i), "name"));
 		}
 	}
+	
 
 	@Test
 	void kirraProgram() {
@@ -222,5 +223,17 @@ public class CompilerTests {
 		EObject link = screenComponents.get(2);
 		assertEquals(screens.get(1), getValue(link, "targetScreen"));
 
+	}
+	
+	@Test
+	void fullyQualifiedReferences() {
+		EObject application = compileResourceToEObject("/ui-sample-fully-qualified-refs.simon");
+		List<EObject> screens = (List<EObject>) getValue(application, "screens");
+		assertEquals(2, screens.size());
+		EObject firstScreen = screens.get(0);
+		List<EObject> screenComponents = (List<EObject>) getValue(firstScreen, "children");
+		assertEquals(1, screenComponents.size());
+		EObject link = screenComponents.get(0);
+		assertEquals(screens.get(1), getValue(link, "targetScreen"));
 	}
 }

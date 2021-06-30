@@ -34,5 +34,19 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 			</plugin>
 		</plugins>
+				<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<!-- Don't bother updating to 11+ until https://github.com/abstratt/simon/issues/4 is fixed -->
+						<source>1.8</source>
+						<target>1.8</target>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		
 	</build>
+	
 </project>
