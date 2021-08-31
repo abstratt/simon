@@ -5,7 +5,7 @@
 	<artifactId>simon-metamodel-ecore</artifactId>
 
 	<parent>
-		<groupId>com.abstratt</groupId>
+		<groupId>com.abstratt.simon</groupId>
 		<artifactId>simon-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
@@ -27,7 +27,7 @@
 			<version>2.21.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.abstratt</groupId>
+			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-annotation-dsl</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

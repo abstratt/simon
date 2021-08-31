@@ -5,7 +5,7 @@
 	<artifactId>simon-metamodel-core</artifactId>
 
 	<parent>
-		<groupId>com.abstratt</groupId>
+		<groupId>com.abstratt.simon</groupId>
 		<artifactId>simon-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>

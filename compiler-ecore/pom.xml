@@ -5,7 +5,7 @@
 	<artifactId>simon-compiler-ecore</artifactId>
 
 	<parent>
-		<groupId>com.abstratt</groupId>
+		<groupId>com.abstratt.simon</groupId>
 		<artifactId>simon-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
@@ -16,17 +16,17 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.abstratt</groupId>
+			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-gen-utils</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.abstratt</groupId>
+			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-compiler-antlr</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.abstratt</groupId>
+			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-metamodel-ecore</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

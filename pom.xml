@@ -2,7 +2,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.abstratt</groupId>
+	<groupId>com.abstratt.simon</groupId>
 	<artifactId>simon-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
@@ -38,6 +38,35 @@
 	</modules>
 	
 	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.3.0</version>
+				<configuration>
+					<!-- Default configuration for all reports -->
+					<noqualifier>all</noqualifier>
+					<destDir>javadoc</destDir>
+					<failOnError>false</failOnError>
+				</configuration>
+				<executions>
+					<execution>
+						<id>aggregate</id>
+						<goals>
+							<goal>aggregate</goal>
+						</goals>
+						<configuration>
+							<!-- Specific configuration for the aggregate report -->
+							<reportOutputDirectory>${user.dir}/documents</reportOutputDirectory>
+							<destDir>javadoc</destDir>
+							<failOnError>false</failOnError>
+							<header>Simon - Reference Implementation</header>
+							<footer>Simon - Reference Implementation</footer>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 		<pluginManagement>
 			<plugins>
 				<plugin>

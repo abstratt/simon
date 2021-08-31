@@ -18,7 +18,7 @@ The first reference implementation happens to be implemented in Java.
 
 ### Simon's metamodel
 
-You can read more about Simon's metamodel by checking out the documentation generated from  the reference implementation ([javadoc](https://abstratt.github.io/simon)).  
+You can read more about Simon's metamodel by checking out the documentation generated from  the reference implementation ([javadoc](https://abstratt.github.io/simon/com/abstratt/simon/metamodel/package-summary.html)).  
 
 ### The general syntax for Simon-based programs
 
@@ -28,9 +28,8 @@ You can read more about Simon's metamodel by checking out the documentation gene
 Every Simon program starts with a language declaration (`@<language-name>`). 
 
 ```
-@<language-name> {
-   ...
-}
+@language <language-name>
+...
 ```
 
 #### Program elements
@@ -40,22 +39,20 @@ Every program element is declared by specifying the kind of element, an optional
 These are all valid Simon programs:
 
 ```
-@UI {
-  application myApplication { }
-}
+@language UI
+application myApplication { }
 ```
 
 
 ```
-@UI {
-  application myApplication
-}
+@language UI
+application myApplication
+
 ```
 
 ```
-@UI {
-  application {}
-}
+@language UI
+application {}
 ```
 
 #### Element properties
@@ -99,29 +96,28 @@ screen screen1 (layout : Vertical) {
 See an example Simon program describing a user-interface:
 
 ```
-@UI {
-  application myApplication { 
-	  screens { 
-	    screen screen1 (layout : Vertical) {
-	        children {
-	            button btn1a (label : 'Ok')
-	            button btn1b (
-	                label : 'Cancel' 
-	                backgroundColor : #(red : 100 green : 50)
-            	)
-            	link(label: 'To screen 2') {
-            	  targetScreen: screen2
-            	}
-	        }
-	    } 
-	    screen screen2 {
-	        children {
-	            button btn2a (label : 'Ok')
-	        }
-	    } 
-	    screen screen3 {} 
-	  } 
-  }
+@language UI
+application myApplication { 
+  screens { 
+    screen screen1 (layout : Vertical) {
+        children {
+            button btn1a (label : 'Ok')
+            button btn1b (
+                label : 'Cancel' 
+                backgroundColor : #(red : 100 green : 50)
+            )
+            link(label: 'To screen 2') {
+              targetScreen: screen2
+            }
+        }
+    } 
+    screen screen2 {
+        children {
+            button btn2a (label : 'Ok')
+        }
+    } 
+    screen screen3 {} 
+  } 
 }
 ```
 
@@ -133,5 +129,12 @@ See an example Simon program describing a user-interface:
 
 ### Module structure
 
-* core (a.k.a _metamodel_) - defines the metamodel behind Simon
 * gen-utils - utilities used by Simon but not tied to the Simon API
+* metamodel-core - defines the metamodel behind Simon
+* compiler-core - the basic API for the Java-based Simon compiler
+* parser-antlr - the ANTLR-based generic parser for all Simon-based DSLs
+* compiler-antlr - the ANTLR-based generic compiler
+* compiler-ecore - a backend for the Simon compiler which produces EMF-based models
+* annotation-dsl - an annotation-based DSL for defining a Simon metamodel
+* metamodel-ecore - an implementation of the Simon metamodel on top of Ecore metamodels and pure Java-based metamodels   
+* tests - all tests live here 
