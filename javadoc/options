@@ -1,0 +1,32 @@
+--class-path
+'/home/rafael/source/simon/gen-utils/target/classes:/home/rafael/source/simon/metamodel-core/target/classes:/home/rafael/source/simon/annotation-dsl/target/classes:/home/rafael/source/simon/compiler-core/target/classes:/home/rafael/source/simon/metamodel-ecore/target/classes:/home/rafael/source/simon/antlr-parser/target/classes:/home/rafael/source/simon/antlr-compiler/target/classes:/home/rafael/source/simon/compiler-ecore/target/classes:/home/rafael/source/simon/tests/target/classes:/home/rafael/.m2/repository/org/apache/commons/commons-lang3/3.10/commons-lang3-3.10.jar:/home/rafael/.m2/repository/commons-io/commons-io/2.11.0/commons-io-2.11.0.jar:/home/rafael/.m2/repository/org/eclipse/emf/org.eclipse.emf.ecore/2.21.0/org.eclipse.emf.ecore-2.21.0.jar:/home/rafael/.m2/repository/org/eclipse/emf/org.eclipse.emf.common/2.23.0/org.eclipse.emf.common-2.23.0.jar:/home/rafael/.m2/repository/org/antlr/antlr4-runtime/4.8/antlr4-runtime-4.8.jar:/home/rafael/.m2/repository/io/github/classgraph/classgraph/4.8.115/classgraph-4.8.115.jar:/home/rafael/.m2/repository/org/junit/jupiter/junit-jupiter/5.6.1/junit-jupiter-5.6.1.jar:/home/rafael/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.6.1/junit-jupiter-api-5.6.1.jar:/home/rafael/.m2/repository/org/apiguardian/apiguardian-api/1.1.0/apiguardian-api-1.1.0.jar:/home/rafael/.m2/repository/org/opentest4j/opentest4j/1.2.0/opentest4j-1.2.0.jar:/home/rafael/.m2/repository/org/junit/platform/junit-platform-commons/1.6.1/junit-platform-commons-1.6.1.jar:/home/rafael/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.6.1/junit-jupiter-params-5.6.1.jar'
+-encoding
+'UTF-8'
+-protected
+-source
+'15'
+-sourcepath
+'/home/rafael/source/simon/gen-utils/src/main/java:/home/rafael/source/simon/metamodel-core/src/main/java:/home/rafael/source/simon/annotation-dsl/src/main/java:/home/rafael/source/simon/compiler-core/src/main/java:/home/rafael/source/simon/metamodel-ecore/src/main/java:/home/rafael/source/simon/antlr-parser/target/generated-sources/antlr4/com/abstratt/simon/parser/antlr:/home/rafael/source/simon/antlr-compiler/src/main/java:/home/rafael/source/simon/compiler-ecore/src/main/java:/home/rafael/source/simon/tests/src/main/java'
+-author
+-bottom
+'Copyright &#169; 2021 <a href="https://abstratt.com">Abstratt Technologies and Contributors</a>. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'/home/rafael/source/simon/target/site/apidocs/javadoc'
+-docencoding
+'UTF-8'
+-doctitle
+'simon-parent 0.0.1-SNAPSHOT API'
+-footer
+'Simon - Reference Implementation'
+-header
+'Simon - Reference Implementation'
+-linkoffline
+'https://docs.oracle.com/en/java/javase/15/docs/api' '/home/rafael/source/simon/target/javadoc-bundle-options'
+-noqualifier
+'all'
+-use
+-version
+-windowtitle
+'simon-parent 0.0.1-SNAPSHOT API'
