@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>simon-compiler-ecore</artifactId>
+
+	<parent>
+		<groupId>com.abstratt</groupId>
+		<artifactId>simon-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<properties>
+		<antlr.version>4.8</antlr.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.abstratt</groupId>
+			<artifactId>simon-gen-utils</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.abstratt</groupId>
+			<artifactId>simon-compiler-antlr</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.abstratt</groupId>
+			<artifactId>simon-metamodel-ecore</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.classgraph</groupId>
+			<artifactId>classgraph</artifactId>
+			<version>4.8.115</version>
+		</dependency>
+	</dependencies>
+</project>
