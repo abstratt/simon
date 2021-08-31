@@ -1,0 +1,11 @@
+com.abstratt.simon.genutils
+com.abstratt.simon.metamodel
+com.abstratt.simon.metamodel.dsl
+com.abstratt.simon.compiler
+com.abstratt.simon.metamodel.ecore
+com.abstratt.simon.metamodel.ecore.java2ecore
+com.abstratt.simon.compiler.antlr
+com.abstratt.simon.compiler.ecore
+com.abstratt.simon.examples.kirra
+com.abstratt.simon.examples.ui
+com.abstratt.simon.testing
