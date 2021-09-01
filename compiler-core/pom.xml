@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.abstratt.simon</groupId>
 		<artifactId>simon-parent</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.1</version>
 	</parent>
 
 	<properties>
@@ -18,7 +18,7 @@
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-metamodel-core</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -28,7 +28,7 @@
         <dependency>
             <groupId>com.abstratt.simon</groupId>
             <artifactId>simon-gen-utils</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
