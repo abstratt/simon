@@ -1,0 +1,2 @@
+name: Java Maven release
+uses: qcastel/github-actions-maven-release@v1.12.12
