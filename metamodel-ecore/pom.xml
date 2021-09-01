@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.abstratt.simon</groupId>
 		<artifactId>simon-parent</artifactId>
-		<version>0.0.1</version>
+		<version>0.0.2-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -29,7 +29,7 @@
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-annotation-dsl</artifactId>
-			<version>0.0.1</version>
+			<version>0.0.2-SNAPSHOT</version>
 		</dependency>
 		
 	</dependencies>
