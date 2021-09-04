@@ -18,7 +18,7 @@ The first reference implementation happens to be implemented in Java.
 
 ### Simon's metamodel
 
-You can read more about Simon's metamodel by checking out the documentation generated from  the reference implementation ([javadoc](https://abstratt.github.io/simon)).  
+You can read more about Simon's metamodel by checking out the documentation generated from  the reference implementation ([javadoc](https://abstratt.github.io/simon/com/abstratt/simon/metamodel/package-summary.html)).  
 
 ### The general syntax for Simon-based programs
 
@@ -30,7 +30,6 @@ Every Simon program starts with a language declaration (`@<language-name>`).
 ```
 @language <language-name>
 ...
-
 ```
 
 #### Program elements
@@ -48,6 +47,7 @@ application myApplication { }
 ```
 @language UI
 application myApplication
+
 ```
 
 ```
@@ -97,35 +97,31 @@ See an example Simon program describing a user-interface:
 
 ```
 @language UI
-
-  application myApplication { 
-	  screens { 
-	    screen screen1 (layout : Vertical) {
-	        children {
-	            button btn1a (label : 'Ok')
-	            button btn1b (
-	                label : 'Cancel' 
-	                backgroundColor : #(red : 100 green : 50)
-            	)
-            	link(label: 'To screen 2') {
-            	  targetScreen: screen2
-            	}
-	        }
-	    } 
-	    screen screen2 {
-	        children {
-	            button btn2a (label : 'Ok')
-	        }
-	    } 
-	    screen screen3 {} 
-	  } 
-  }
-
+application myApplication { 
+  screens { 
+    screen screen1 (layout : Vertical) {
+        children {
+            button btn1a (label : 'Ok')
+            button btn1b (
+                label : 'Cancel' 
+                backgroundColor : #(red : 100 green : 50)
+            )
+            link(label: 'To screen 2') {
+              targetScreen: screen2
+            }
+        }
+    } 
+    screen screen2 {
+        children {
+            button btn2a (label : 'Ok')
+        }
+    } 
+    screen screen3 {} 
+  } 
+}
 ```
 
-## Java/Ecore-based implementation info
-
-[![codecov](https://codecov.io/gh/abstratt/simon/branch/master/graph/badge.svg?token=E4NN8983JO)](https://codecov.io/gh/abstratt/simon)
+## Java/Ecore-based implementation
 
 #### Decisions
 
@@ -133,6 +129,12 @@ See an example Simon program describing a user-interface:
 
 ### Module structure
 
-* core (a.k.a _metamodel_) - defines the metamodel behind Simon
 * gen-utils - utilities used by Simon but not tied to the Simon API
-* 
+* metamodel-core - defines the metamodel behind Simon
+* compiler-core - the basic API for the Java-based Simon compiler
+* parser-antlr - the ANTLR-based generic parser for all Simon-based DSLs
+* compiler-antlr - the ANTLR-based generic compiler
+* compiler-ecore - a backend for the Simon compiler which produces EMF-based models
+* annotation-dsl - an annotation-based DSL for defining a Simon metamodel
+* metamodel-ecore - an implementation of the Simon metamodel on top of Ecore metamodels and pure Java-based metamodels   
+* tests - all tests live here 
