@@ -20,7 +20,7 @@ public interface Traversal<T> {
 	T hop(T context);
 
 	default Stream<T> enumerate(T context) {
-		return Optional.ofNullable(hop(context)).map(Stream::of).orElseGet(Stream::empty);
+		return Optional.ofNullable(hop(context)).stream();
 	}
 	
 	static <T> T debug(String message, T result) {
@@ -209,9 +209,9 @@ public interface Traversal<T> {
 
 		@Override
 		public T hop(T context) {
-			//System.out.println(description + " - hopping from " + context);
+			System.out.println(description + " - hopping from " + context);
 			T result = base.hop(context);
-			//System.out.println(description + " - hopping from " + context + "\n\tresult: " + result);
+			System.out.println(description + " - hopping from " + context + "\n\tresult: " + result);
 			return result;
 		}
 

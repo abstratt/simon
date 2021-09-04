@@ -1,6 +1,5 @@
 package com.abstratt.simon.compiler;
 
-import java.io.StringReader;
 import java.util.Map;
 import java.util.Optional;
 

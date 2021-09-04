@@ -1,5 +1,7 @@
 package com.abstratt.simon.metamodel.ecore.java2ecore;
 
+import com.abstratt.simon.metamodel.dsl.Meta;
+import com.abstratt.simon.metamodel.dsl.Meta.Required;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -7,7 +9,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -17,10 +18,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
@@ -37,9 +37,6 @@ import org.eclipse.emf.ecore.ETypedElement;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.util.EcoreUtil;
-
-import com.abstratt.simon.metamodel.dsl.Meta;
-import com.abstratt.simon.metamodel.dsl.Meta.Required;
 
 
 /**
@@ -249,8 +246,8 @@ public class Java2EcoreMapper {
 	}
 
 	private void addClassifierToCurrentPackage(Context context, EClass eClass) {
-		assert !context.currentScope.isEmpty();
-		ENamedElement parent = context.currentScope.peek();
+		assert context.inScope();
+		var parent = context.currentScope();
 		assert parent != null;
 		assert parent instanceof EPackage;
 		((EPackage) parent).getEClassifiers().add(eClass);

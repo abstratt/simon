@@ -1,8 +1,7 @@
 package com.abstratt.simon.metamodel;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Describes a metamodel.
@@ -111,7 +110,7 @@ public interface Metamodel {
 	/** A record is a model element that can contain basic values. */
 	interface RecordType extends Slotted, BasicType, Featured {
 		default Collection<Feature> features() {
-			return slots().stream().collect(Collectors.toList());
+			return new ArrayList<>(slots());
 		}
 	}
 

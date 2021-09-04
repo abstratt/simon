@@ -85,7 +85,7 @@ public class Context {
 	/**
 	 * Keeps a stack of current packages.
 	 */
-	Deque<ENamedElement> currentScope = new LinkedList<>();
+	private final Deque<ENamedElement> currentScope = new LinkedList<>();
 
 	/**
 	 * Requests a type to be resolved in the context of mapping a Java element to a
@@ -194,7 +194,6 @@ public class Context {
 
 	public void runWithScope(ENamedElement parent, String description, ContextConsumer action) {
 		Objects.requireNonNull(parent);
-		assert parent != null : description;
 		runWithScope(parent, new SimpleAction(description, false, action));
 	}
 
@@ -210,8 +209,7 @@ public class Context {
 	 * @param request
 	 */
 	public void addPendingRequest(Supplier<String> identifier, Action request) {
-		ENamedElement parent = currentScope();
-		assert parent != null || request.isRoot() : identifier.get() + " - " + request;
+		var parent = currentScope(!request.isRoot());
 		pendingRequests.add(new DelayedRequest(identifier, parent, request));
 	}
 
@@ -221,7 +219,17 @@ public class Context {
 	}
 
 	public ENamedElement currentScope() {
-		return currentScope.peek();
+		return currentScope(false);
+	}
+
+	public ENamedElement currentScope(boolean required) {
+		var currentScopeOrNull = currentScope.peek();
+		assert !required || currentScopeOrNull != null;
+		return currentScopeOrNull;
+	}
+
+	public boolean inScope() {
+		return !currentScope.isEmpty();
 	}
 
 	public void enterScope(ENamedElement package_) {

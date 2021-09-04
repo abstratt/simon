@@ -4,7 +4,6 @@ import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.*;
 import static com.abstratt.simon.testing.TestHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -357,7 +356,6 @@ public class CompilerTests {
 			""");
 		assertNotNull(myApplication);
 		assertSame(applicationClass, myApplication.eClass());
-		@SuppressWarnings("unchecked")
 		List<EObject> screens = getValue(myApplication, "screens");
 		assertEquals(3, screens.size());
 		for (int i = 0; i < screens.size(); i++) {

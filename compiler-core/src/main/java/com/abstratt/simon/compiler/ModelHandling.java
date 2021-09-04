@@ -1,6 +1,5 @@
 package com.abstratt.simon.compiler;
 
-import com.abstratt.simon.genutils.Traversal;
 import com.abstratt.simon.metamodel.Metamodel.Composition;
 import com.abstratt.simon.metamodel.Metamodel.ObjectType;
 import com.abstratt.simon.metamodel.Metamodel.Reference;

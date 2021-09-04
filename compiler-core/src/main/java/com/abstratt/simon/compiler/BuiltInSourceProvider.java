@@ -1,7 +1,6 @@
 package com.abstratt.simon.compiler;
 
 import java.io.InputStreamReader;
-import java.util.Optional;
 
 public class BuiltInSourceProvider implements SimonCompiler.SourceProvider {
     private final Class<?> referenceClass;

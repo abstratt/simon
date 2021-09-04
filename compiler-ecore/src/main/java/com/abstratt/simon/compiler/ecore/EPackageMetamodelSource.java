@@ -28,7 +28,7 @@ public class EPackageMetamodelSource implements MetamodelSource<EcoreType<? exte
 
 	@Override
 	public EcoreType<? extends EClassifier> resolveType(String typeName) {
-		EClassifier classifier = EcoreHelper.findClassifierByName(ePackage, typeName);
+		var classifier = EcoreHelper.findClassifierByName(ePackage, typeName);
 		return classifier == null ? null : EcoreType.fromClassifier(classifier);
 	}
 

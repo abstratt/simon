@@ -51,7 +51,7 @@ public interface EcoreMetamodel extends Metamodel {
 	}
 
 	abstract class EcoreNamed<N extends ENamedElement> implements Metamodel.Named {
-		protected N wrapped;
+		protected final N wrapped;
 
 		public EcoreNamed(N wrapped) {
 			this.wrapped = wrapped;

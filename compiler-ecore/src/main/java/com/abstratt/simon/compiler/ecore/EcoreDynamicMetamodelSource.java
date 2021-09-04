@@ -24,7 +24,7 @@ import io.github.classgraph.ScanResult;
 
 public class EcoreDynamicMetamodelSource implements MetamodelSource<EcoreType<EClassifier>> {
 
-	Map<String, EPackage> packages;
+	private final Map<String, EPackage> packages;
 	private final ScanResult scanResult;
 
 	private EcoreDynamicMetamodelSource(String javaPackage) {
@@ -42,7 +42,7 @@ public class EcoreDynamicMetamodelSource implements MetamodelSource<EcoreType<EC
 
 	@Override
 	public SimonCompiler.SourceProvider builtInSources() {
-		var builtIns = packages.values().stream().map(p -> p.getEAnnotation("simon/builtIns")).filter(Objects::nonNull).map(EAnnotation::getDetails).map(EMap::map).collect(Collectors.reducing(new LinkedHashMap<String, String>(), (a, b) -> { a.putAll(b); return a;}));
+		var builtIns = packages.values().stream().map(p -> p.getEAnnotation("simon/builtIns")).filter(Objects::nonNull).map(EAnnotation::getDetails).map(EMap::map).reduce(new LinkedHashMap<>(), (a, b) -> { a.putAll(b); return a;});
 		return new SimpleSourceProvider(builtIns);
 	}
 

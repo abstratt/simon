@@ -2,7 +2,6 @@ package com.abstratt.simon.compiler.ecore;
 
 import java.util.stream.Stream;
 
-import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -15,7 +14,7 @@ public interface EObjectTraversalProvider extends Traversal.Provider<EObject, EA
 	default Multiple<EObject> roots() {
 		return context -> {
 			var resource = context.eResource();
-			EList<EObject> roots = resource.getContents();
+			var roots = resource.getContents();
 			Traversal.debug("roots: " + roots, roots);
 			return roots.stream();
 		};

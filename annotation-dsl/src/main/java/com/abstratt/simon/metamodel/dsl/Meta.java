@@ -1,6 +1,6 @@
 package com.abstratt.simon.metamodel.dsl;
 
-import com.abstratt.simon.metamodel.Metamodel;
+import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
@@ -38,13 +38,11 @@ public @interface Meta {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    @interface Contained {
-    }
+    @interface Contained {}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    @interface Parent {
-    }
+    @interface Parent {}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
@@ -55,8 +53,7 @@ public @interface Meta {
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     @Inherited
-    @interface Attribute {
-    }
+    @interface Attribute {}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
@@ -74,8 +71,7 @@ public @interface Meta {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    @interface Name {
-    }
+    @interface Name {}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
@@ -90,8 +86,7 @@ public @interface Meta {
     @Retention(RetentionPolicy.RUNTIME)
     @Inherited
     @Type(Type.Nature.Object)
-    @interface ObjectType {
-    }
+    @interface ObjectType {}
 
     /**
      * A record is an structured data type that can only hold primitives,
@@ -100,8 +95,7 @@ public @interface Meta {
     @Retention(RetentionPolicy.RUNTIME)
     @Inherited
     @Type(Type.Nature.Record)
-    @interface RecordType {
-    }
+    @interface RecordType {}
 
     /**
      * For enums only? No, for classes as well. (i.e. either enum values or regular
@@ -111,6 +105,6 @@ public @interface Meta {
     @Target(ElementType.TYPE)
     @Type(Type.Nature.Primitive)
     @interface PrimitiveType {
-        Metamodel.PrimitiveKind value();
+        PrimitiveKind value();
     }
 }

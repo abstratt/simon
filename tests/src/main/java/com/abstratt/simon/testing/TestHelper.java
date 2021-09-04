@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
@@ -32,8 +30,8 @@ import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
 
 public class TestHelper {
 
-	public static EPackage UI_PACKAGE = new Java2EcoreMapper().map(UI.class);
-	public static EPackage KIRRA_PACKAGE = new Java2EcoreMapper().map(Kirra.class);
+	public static final EPackage UI_PACKAGE = new Java2EcoreMapper().map(UI.class);
+	public static final EPackage KIRRA_PACKAGE = new Java2EcoreMapper().map(Kirra.class);
 
 	public static EClass uiClassFor(Class<?> clazz) {
 		EPackage package_ = UI_PACKAGE;
@@ -73,10 +71,11 @@ public class TestHelper {
 	}
 
 	public static List<Result<EObject>> compileResource(Class<?> packageClass, String path) throws URISyntaxException {
-		var resourceUrl = TestHelper.class.getResource(path).toURI();
+		var resourceUrl = TestHelper.class.getResource(path);
 		assertNotNull(resourceUrl, () -> "Resource not found: " + path);
-		var baseURL = resourceUrl.resolve(".");
-		var sourceName = FilenameUtils.removeExtension(baseURL.relativize(resourceUrl).getPath());
+		var resourceUri = resourceUrl.toURI();
+		var baseURL = resourceUri.resolve(".");
+		var sourceName = FilenameUtils.removeExtension(baseURL.relativize(resourceUri).getPath());
 		var modelBuilder = new EcoreModelBuilder();
 		var typeSource = new EcoreDynamicMetamodelSource.Factory(packageClass.getPackageName());
 		var compiler = new SimonCompilerAntlrImpl<>(typeSource, modelBuilder);

@@ -2,12 +2,9 @@ package com.abstratt.simon.compiler.ecore;
 
 import java.util.List;
 
-import java.util.stream.Stream;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EReference;
-import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 
@@ -82,14 +79,14 @@ public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType
 	}
 
 	public <E extends EObject> E createObject(boolean root, EcoreSlotted<?> resolvedType) {
-		E newElement = (E) resolvedType.newModelElement();
+		var newElement = (E) resolvedType.newModelElement();
 		if (root)
 			addToResource(newElement);
 		return newElement;
 	}
 
 	private <E extends EObject> void addToResource(E newElement) {
-		Resource resource = currentResource.get();
+		var resource = currentResource.get();
 		var contents = resource.getContents();
 		contents.add(newElement);
 		assert newElement.eResource() != null;
@@ -98,7 +95,7 @@ public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType
 	public EObject resolve(EObject scope, String... path) {
 		EAttribute nameAttribute = EcoreHelper.findFeatureInHierarchy(scope, "name");
 		Traversal<EObject> search = EObjectTraversalProvider.INSTANCE.search(nameAttribute, path);
-		EObject resolved = search.hop(scope);
+		var resolved = search.hop(scope);
 		return resolved;
 	}
 
@@ -107,17 +104,16 @@ public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType
 	}
 	
 	public String getName(EObject named) {
-		EStructuralFeature nameProperty = MetaEcoreHelper.getNameAttribute(named);
+		var nameProperty = MetaEcoreHelper.getNameAttribute(named);
 		if (nameProperty == null) {
 			return null;
 		}
-		Object nameValue = named.eGet(nameProperty);
-		if (nameValue == null || !(nameValue instanceof EObject)) {
+		var nameValue = named.eGet(nameProperty);
+		if (!(nameValue instanceof EObject))
 			return (String) nameValue;
-		}
-		EObject nameAsValue = (EObject) nameValue;
-		EStructuralFeature valueFeature = MetaEcoreHelper.getValueFeature(nameAsValue.eClass());
-		return nameAsValue == null ? null : (String) nameAsValue.eGet(valueFeature);
+		var nameAsValue = (EObject) nameValue;
+		var valueFeature = MetaEcoreHelper.getValueFeature(nameAsValue.eClass());
+		return (String) nameAsValue.eGet(valueFeature);
 	}
 
 	public void link(EcoreRelationship reference, EObject referrer, EObject referred) {
@@ -133,7 +129,7 @@ public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType
 	}
 
 	public void setValue(EcoreSlot slot, EObject target, Object value) {
-		EAttribute eAttribute = slot.wrapped();
+		var eAttribute = slot.wrapped();
 		EObject valueAsEObject;
 		if (MetaEcoreHelper.isPrimitive(eAttribute.getEType()))
 			valueAsEObject = EcoreHelper.wrappedPrimitiveValue((EClass) eAttribute.getEType(), value);
@@ -147,7 +143,7 @@ public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType
 			return;
 		//System.out.println("Setting reference from a " + source.eClass().getName() + "." + relationship.name() + " to "
 		//		+ target.eClass().getName());
-		EReference eReference = relationship.wrapped();
+		var eReference = relationship.wrapped();
 		if (eReference.isMany())
 			((List<EObject>) source.eGet(eReference)).add(target);
 		else

@@ -1,9 +1,11 @@
 package com.abstratt.simon.compiler;
 
+import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
 
 public class CompilerException extends RuntimeException {
+	@Serial
 	private static final long serialVersionUID = 1L;
 	private List<Problem> problems = Collections.emptyList();
 

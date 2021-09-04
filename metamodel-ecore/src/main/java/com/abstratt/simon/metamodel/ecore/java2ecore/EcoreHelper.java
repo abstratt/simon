@@ -151,8 +151,7 @@ public class EcoreHelper {
 	 */
 	public static Stream<EObject> hierarchy(EObject start) {
 		final Iterator<EObject> iterator = new Iterator<EObject>() {
-			@SuppressWarnings("unchecked")
-			EObject t = NONE;
+			private EObject t = NONE;
 
 			@Override
 			public boolean hasNext() {

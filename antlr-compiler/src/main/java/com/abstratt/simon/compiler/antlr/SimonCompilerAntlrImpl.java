@@ -32,9 +32,9 @@ import com.abstratt.simon.parser.antlr.SimonParser;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
-	public MetamodelSource.Factory<?> typeSourceFactory;
+	public final MetamodelSource.Factory<?> typeSourceFactory;
 
-	public ModelHandling.Provider<? extends ObjectType, ? extends Slotted, T> modelHandling;
+	public final ModelHandling.Provider<? extends ObjectType, ? extends Slotted, T> modelHandling;
 
 	public SimonCompilerAntlrImpl(MetamodelSource.Factory<?> typeSourceFactory,
 			Provider<? extends ObjectType, ? extends Slotted, T> configurationProvider) {
@@ -73,7 +73,7 @@ public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 		while (!toParse.isEmpty()) {
 			var thisBatch = toParse;
 			var contentProviders = thisBatch.stream().map(it -> Pair.of(it, sources.access(it)));
-			var batchResults = contentProviders.map(input -> parseUnit((SimonBuilder<T>) builder, input.getKey(), input.getValue()));
+			var batchResults = contentProviders.map(input -> parseUnit(builder, input.getKey(), input.getValue()));
 			batchResults.forEach(it -> results.put(it.getSource(), it));
 			alreadyParsed.addAll(thisBatch);
 			List<String> imports = builder.collectImports();
@@ -122,7 +122,7 @@ public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 
 
 class ProblemHandler implements Problem.Handler {
-	private Map<String, List<Problem>> problems = new LinkedHashMap<>();
+	private final Map<String, List<Problem>> problems = new LinkedHashMap<>();
 	private boolean hasFatalProblem = false;
 
 

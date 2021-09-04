@@ -1,5 +1,6 @@
 package com.abstratt.simon.compiler.antlr;
 
+import com.abstratt.simon.compiler.AbortCompilationException;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -47,8 +48,8 @@ class SimonBuilder<T> extends SimonBaseListener {
 
     class ElementInfo {
         private String sourceName;
-        private T object;
-        private Slotted type;
+        private final T object;
+        private final Slotted type;
 
         public ElementInfo(String sourceName, T object, Slotted type) {
             this.object = object;
@@ -77,15 +78,15 @@ class SimonBuilder<T> extends SimonBaseListener {
         }
     }
 
-    private Problem.Handler problemHandler;
-    private ModelHandling.Provider<ObjectType, Slotted, T> modelHandling;
-    private MetamodelSource<?> metamodelSource;
+    private final Problem.Handler problemHandler;
+    private final ModelHandling.Provider<ObjectType, Slotted, T> modelHandling;
+    private final MetamodelSource<?> metamodelSource;
     /**
      * Scopes can be nested.
      */
-    private Deque<ElementInfo> currentScope = new LinkedList<>();
-    private List<ResolutionRequest> resolutionRequests = new LinkedList<>();
-	private List<String> imports = new ArrayList<>();
+    private final Deque<ElementInfo> currentScope = new LinkedList<>();
+    private final List<ResolutionRequest> resolutionRequests = new LinkedList<>();
+	private final List<String> imports = new ArrayList<>();
 	private String sourceName;
 
     interface Resolver<R> {
@@ -233,8 +234,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private void requestResolution(String name, Resolver<T> resolver, ParserRuleContext context) {
-        ElementInfo currentScope = this.currentScope.peek();
-        resolutionRequests.add(new ResolutionRequest(context, sourceName, currentScope.getObject(), name, resolver));
+        resolutionRequests.add(new ResolutionRequest(context, sourceName, this.currentScope().get().getObject(), name, resolver));
     }
 
     @Override
@@ -262,26 +262,28 @@ class SimonBuilder<T> extends SimonBaseListener {
     private <F extends Feature<ObjectType>> F getObjectFeature(ElementInfo featureOwnerInfo,
                                                                ParserRuleContext featureNameCtx, BiFunction<ObjectType, String, F> getter) {
         Slotted parentType = featureOwnerInfo.getType();
-        if (!(parentType instanceof ObjectType)) {
+        if (!(parentType instanceof ObjectType))
             reportError(Problem.Severity.Fatal, featureOwnerInfo.getSourceName(), featureNameCtx, "This type cannot have components: " + parentType.name());
-        }
         ObjectType parentTypeAsObjectType = (ObjectType) parentType;
         String featureName = getIdentifier(featureNameCtx);
         F feature = getter.apply(parentTypeAsObjectType, featureName);
-        if (feature == null) {
+        if (feature == null)
             reportError(Problem.Severity.Fatal, featureOwnerInfo.getSourceName(), featureNameCtx, "No feature '" + featureName + "' in " + parentType.name());
-        }
         return feature;
     }
 
-    private void reportError(Problem.Severity severity, String sourceName, ParserRuleContext ctx, String message) {
+    private Problem reportError(Problem.Severity severity, String sourceName, ParserRuleContext ctx, String message) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        reportError(severity, sourceName, line, column, message);
+        return reportError(severity, sourceName, line, column, message);
     }
 
-    void reportError(Problem.Severity severity, String source, int line, int column, String message) {
-        problemHandler.handleProblem(new Problem(source, line, column, message, severity));
+    Problem reportError(Problem.Severity severity, String source, int line, int column, String message) {
+        var problem = new Problem(source, line, column, message, severity);
+        problemHandler.handleProblem(problem);
+        if (severity == Problem.Severity.Fatal)
+            throw new AbortCompilationException();
+        return problem;
     }
 
     @Override
@@ -297,7 +299,7 @@ class SimonBuilder<T> extends SimonBaseListener {
         ElementInfo info = currentScope().get();
 
         String propertyName = getIdentifier(slotContext.featureName());
-        Slotted asSlotted = (Slotted) info.type;
+        Slotted asSlotted = info.type;
         Slot slot = asSlotted.slotByName(propertyName);
         if (slot == null) {
             List<String> slotNames = asSlotted.slots().stream().map(Slot::name).collect(Collectors.toList());
@@ -308,7 +310,7 @@ class SimonBuilder<T> extends SimonBaseListener {
             return;
         }
         RecordType asRecordType = (RecordType) slot.type();
-        T created = modelHandling.instantiation().<T>createObject(asRecordType.isRoot(), asRecordType);
+        T created = modelHandling.instantiation().createObject(asRecordType.isRoot(), asRecordType);
         newScope(asRecordType, created);
     }
 
