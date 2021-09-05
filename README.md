@@ -131,10 +131,13 @@ application myApplication {
 
 * gen-utils - utilities used by Simon but not tied to the Simon API
 * metamodel-core - defines the metamodel behind Simon
+* annotation-dsl - an annotation-based DSL for defining a Simon metamodel
+* compiler-core-source - API for compiler sources
+* compiler-core-target - API for compiler targets
 * compiler-core - the basic API for the Java-based Simon compiler
 * parser-antlr - the ANTLR-based generic parser for all Simon-based DSLs
 * compiler-antlr - the ANTLR-based generic compiler
-* compiler-ecore - a backend for the Simon compiler which produces EMF-based models
-* annotation-dsl - an annotation-based DSL for defining a Simon metamodel
+* compiler-source-ecore - a source implementation for the Simon compiler which consumes Ecore metamodels
+* compiler-target-ecore - a backend for the Simon compiler which produces EMF-based models
 * metamodel-ecore - an implementation of the Simon metamodel on top of Ecore metamodels and pure Java-based metamodels   
 * tests - all tests live here 
