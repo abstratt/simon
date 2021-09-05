@@ -29,7 +29,17 @@ import com.abstratt.simon.metamodel.ecore.EcorePrimitiveValue;
 
 public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType, EcoreSlotted<?>, EObject> {
 
-	private final ThreadLocal<Resource> currentResource = new ThreadLocal<Resource>();
+	private final ThreadLocal<Resource> currentResource = new ThreadLocal<>();
+
+	@Override
+	public <R> R runOperation(Operation<R> operation) {
+		currentResource.set(new ResourceImpl());
+		try {
+			return operation.run();
+		} finally {
+			currentResource.remove();
+		}
+	}
 
 	@Override
 	public NameResolution<EObject> nameResolution() {
@@ -37,7 +47,7 @@ public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType
 	}
 
 	@Override
-	public Instantiation<EcoreSlotted<?>> instantiation() {
+	public Instantiation<EcoreSlotted<EClass>> instantiation() {
 		return this::createObject;
 	}
 	
@@ -78,7 +88,7 @@ public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType
 		return newPrimitive;
 	}
 
-	public <E extends EObject> E createObject(boolean root, EcoreSlotted<?> resolvedType) {
+	private <E extends EObject> E createObject(boolean root, EcoreSlotted<?> resolvedType) {
 		var newElement = (E) resolvedType.newModelElement();
 		if (root)
 			addToResource(newElement);
@@ -92,18 +102,18 @@ public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType
 		assert newElement.eResource() != null;
 	}
 
-	public EObject resolve(EObject scope, String... path) {
+	private EObject resolve(EObject scope, String... path) {
 		EAttribute nameAttribute = EcoreHelper.findFeatureInHierarchy(scope, "name");
 		Traversal<EObject> search = EObjectTraversalProvider.INSTANCE.search(nameAttribute, path);
 		var resolved = search.hop(scope);
 		return resolved;
 	}
 
-	public void setName(EObject unnamed, String newName) {
+	private void setName(EObject unnamed, String newName) {
 		EcoreHelper.setName(unnamed, newName);
 	}
 	
-	public String getName(EObject named) {
+	private String getName(EObject named) {
 		var nameProperty = MetaEcoreHelper.getNameAttribute(named);
 		if (nameProperty == null) {
 			return null;
@@ -116,19 +126,19 @@ public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType
 		return (String) nameAsValue.eGet(valueFeature);
 	}
 
-	public void link(EcoreRelationship reference, EObject referrer, EObject referred) {
+	private void link(EcoreRelationship reference, EObject referrer, EObject referred) {
 		setOrAddReference(referrer, referred, reference);
 	}
 
-	public void addChild(EcoreRelationship composition, EObject parent, EObject child) {
+	private void addChild(EcoreRelationship composition, EObject parent, EObject child) {
 		setOrAddReference(parent, child, composition);
 	}
 
-	public void setParent(EcoreRelationship composition, EObject child, EObject parent) {
+	private void setParent(EcoreRelationship composition, EObject child, EObject parent) {
 		child.eSet(composition.wrapped(), parent);
 	}
 
-	public void setValue(EcoreSlot slot, EObject target, Object value) {
+	private void setValue(EcoreSlot slot, EObject target, Object value) {
 		var eAttribute = slot.wrapped();
 		EObject valueAsEObject;
 		if (MetaEcoreHelper.isPrimitive(eAttribute.getEType()))
@@ -148,16 +158,5 @@ public class EcoreModelBuilder implements ModelHandling.Provider<EcoreObjectType
 			((List<EObject>) source.eGet(eReference)).add(target);
 		else
 			source.eSet(eReference, target);
-	}
-	
-	@Override
-	public <R> R runOperation(Operation<R> operation) {
-		Resource resource = new ResourceImpl();
-		currentResource.set(resource);
-		try {
-			return operation.run();
-		} finally {
-			currentResource.remove();
-		}
 	}
 }
