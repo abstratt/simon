@@ -1,7 +1,7 @@
-package com.abstratt.simon.compiler.ecore;
+package com.abstratt.simon.compiler.source.ecore;
 
-import com.abstratt.simon.compiler.SimonCompiler;
-import com.abstratt.simon.compiler.SimpleSourceProvider;
+import com.abstratt.simon.compiler.source.SimpleSourceProvider;
+import com.abstratt.simon.compiler.source.SourceProvider;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -13,7 +13,7 @@ import org.eclipse.emf.ecore.EAnnotation;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EPackage;
 
-import com.abstratt.simon.compiler.MetamodelSource;
+import com.abstratt.simon.compiler.source.MetamodelSource;
 import com.abstratt.simon.metamodel.dsl.Meta;
 import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
 import com.abstratt.simon.metamodel.ecore.java2ecore.Java2EcoreMapper;
@@ -36,12 +36,12 @@ public class EcoreDynamicMetamodelSource implements MetamodelSource<EcoreType<EC
 		var packageImplementations = scanResult.getClassesWithAnnotation(Meta.Package.class);
 		var mapper = new Java2EcoreMapper();
 		this.packages = packageImplementations.loadClasses().stream()
-				.collect(Collectors.toMap(Class::getName, packageClass -> mapper.map(packageClass)));
+				.collect(Collectors.toMap(Class::getName, mapper::map));
 		//System.out.println("*** Packages:\n" + packages);
 	}
 
 	@Override
-	public SimonCompiler.SourceProvider builtInSources() {
+	public SourceProvider builtInSources() {
 		var builtIns = packages.values().stream().map(p -> p.getEAnnotation("simon/builtIns")).filter(Objects::nonNull).map(EAnnotation::getDetails).map(EMap::map).reduce(new LinkedHashMap<>(), (a, b) -> { a.putAll(b); return a;});
 		return new SimpleSourceProvider(builtIns);
 	}
@@ -57,7 +57,7 @@ public class EcoreDynamicMetamodelSource implements MetamodelSource<EcoreType<EC
 		return packages //
 				.stream() //
 				.map(ePackage -> EcoreHelper.findClassifierByName(ePackage, typeName)) //
-				.filter(it -> it != null) //
+				.filter(Objects::nonNull) //
 				.map(eClass -> (EcoreType<EClassifier>) EcoreType.fromClassifier(eClass)) //
 				.findAny().orElse(null);
 	}
@@ -67,7 +67,7 @@ public class EcoreDynamicMetamodelSource implements MetamodelSource<EcoreType<EC
 		var packages = this.packages.values();
 		return packages //
 				.stream() //
-				.flatMap(ePackage -> EcoreHelper.findAllClassifiers(ePackage)) //
+				.flatMap(EcoreHelper::findAllClassifiers) //
 				.map(eClass -> (EcoreType<EClassifier>) EcoreType.fromClassifier(eClass));
 	}
 

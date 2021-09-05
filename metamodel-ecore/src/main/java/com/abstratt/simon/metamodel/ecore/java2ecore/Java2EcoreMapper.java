@@ -11,6 +11,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -345,7 +346,7 @@ public class Java2EcoreMapper {
 
 	private Stream<Method> getMethodsWithAnnotation(Class<?> clazz, Class<? extends Annotation> annotationClass) {
 		return Arrays.stream(clazz.getDeclaredMethods()).filter(m -> m.getAnnotation(annotationClass) != null)
-				.sorted((m1, m2) -> m1.getName().compareTo(m2.getName()));
+				.sorted(Comparator.comparing(Method::getName));
 	}
 
 	private Consumer<EReference> referenceConnector(String oppositeName) {
@@ -369,7 +370,7 @@ public class Java2EcoreMapper {
 	}
 
 	private EReference buildContainmentReference(Context context, Method accessor) {
-		return doBuildReference(context, accessor, reference -> markReferenceAsContainment(reference));
+		return doBuildReference(context, accessor, this::markReferenceAsContainment);
 	}
 
 	private void markReferenceAsContainment(EReference reference) {
@@ -414,10 +415,8 @@ public class Java2EcoreMapper {
 	}
 
 	private <EC extends ENamedElement> Consumer<EC> debug(String tag, Consumer<EC> toDebug) {
-		return (value) -> {
-			//System.out.println(tag + " - " + value);
-			toDebug.accept(value);
-		};
+		//System.out.println(tag + " - " + value);
+		return toDebug::accept;
 	}
 
 	private void markOptional(Method accessor, EStructuralFeature feature) {

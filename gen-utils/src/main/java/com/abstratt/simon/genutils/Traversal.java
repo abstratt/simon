@@ -229,7 +229,7 @@ public interface Traversal<T> {
 	}
 
 	default Traversal<T> debugged(String description) {
-		return new DebuggedTraversal<T>(description, this);
+		return new DebuggedTraversal<>(description, this);
 
 	}
 

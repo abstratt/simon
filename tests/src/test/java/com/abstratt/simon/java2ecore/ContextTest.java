@@ -70,7 +70,7 @@ public class ContextTest {
 		Class<ContextTest> someClass = ContextTest.class;
 		Context context = new Context();
 		List<EcorePackage> collected = new ArrayList<>();
-		Consumer<EcorePackage> consumer = built -> collected.add(built);
+		Consumer<EcorePackage> consumer = collected::add;
 		BiFunction<Context, Class<?>, EcorePackage> builder = (ctx, clazz) -> EcorePackage.eINSTANCE;
 		context.resolve(new Context.ResolutionAction<>("id1", someClass, consumer, builder, true));
 		assertEquals(emptyList(), collected);

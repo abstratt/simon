@@ -38,11 +38,14 @@
 		<module>gen-utils</module>
 		<module>metamodel-core</module>
 		<module>annotation-dsl</module>
+		<module>compiler-source</module>
+		<module>compiler-target</module>
 		<module>compiler-core</module>			
+		<module>antlr-parser</module>
+		<module>antlr-compiler</module>
 		<module>metamodel-ecore</module>
-		<module>antlr-parser</module>		
-		<module>antlr-compiler</module>		
-		<module>compiler-ecore</module>	
+		<module>compiler-source-ecore</module>
+		<module>compiler-target-ecore</module>
 		<module>tests</module>	
 	</modules>
 	
@@ -81,7 +84,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.22.2</version>
+					<version>3.0.0-M5</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>

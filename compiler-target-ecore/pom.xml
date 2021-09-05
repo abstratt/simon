@@ -2,7 +2,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>simon-compiler-ecore</artifactId>
+	<artifactId>simon-compiler-target-ecore</artifactId>
 
 	<parent>
 		<groupId>com.abstratt.simon</groupId>
@@ -18,7 +18,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
-			<artifactId>simon-compiler-antlr</artifactId>
+			<artifactId>simon-compiler-target</artifactId>
 			<version>0.0.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>

@@ -150,7 +150,7 @@ public class EcoreHelper {
 	 * root container.
 	 */
 	public static Stream<EObject> hierarchy(EObject start) {
-		final Iterator<EObject> iterator = new Iterator<EObject>() {
+		final Iterator<EObject> iterator = new Iterator<>() {
 			private EObject t = NONE;
 
 			@Override

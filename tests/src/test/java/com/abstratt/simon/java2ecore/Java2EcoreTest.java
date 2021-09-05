@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -24,7 +25,6 @@ import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EcoreValidator;
 import org.junit.jupiter.api.Test;
 
-import com.abstratt.simon.compiler.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.examples.kirra.Kirra;
 import com.abstratt.simon.examples.ui.UI;
 import com.abstratt.simon.examples.ui.UI.Application;
@@ -346,6 +346,6 @@ public class Java2EcoreTest {
 		var diagnostic = new BasicDiagnostic();
 		EcoreValidator.INSTANCE.validate(built, diagnostic, diagContext);
 		var severity = diagnostic.getSeverity();
-		assertTrue(severity < Diagnostic.ERROR, () -> diagnostic.toString());
+		assertTrue(severity < Diagnostic.ERROR, diagnostic::toString);
 	}
 }

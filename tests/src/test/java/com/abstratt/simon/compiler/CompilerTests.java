@@ -4,6 +4,8 @@ import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.*;
 import static com.abstratt.simon.testing.TestHelper.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.abstratt.simon.compiler.source.SimpleSourceProvider;
+import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,10 +20,8 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.junit.jupiter.api.Test;
 
-import com.abstratt.simon.compiler.SimonCompiler.Result;
 import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrImpl;
-import com.abstratt.simon.compiler.ecore.EPackageMetamodelSource;
-import com.abstratt.simon.compiler.ecore.EcoreModelBuilder;
+import com.abstratt.simon.compiler.target.ecore.EcoreModelBuilder;
 import com.abstratt.simon.examples.ui.UI;
 
 public class CompilerTests {
@@ -263,16 +263,16 @@ public class CompilerTests {
 	@Test // issue https://github.com/abstratt/simon/issues/3
 	void primitiveTypes() {
 		var toParse = """
-   			@import 'kirra'
-			namespace { 
-				entities { 
-					Entity Product { 
-						properties { 
-							Property description { type = kirra.StringValue } 
-						} 
-					} 
-				} 
-			}""";
+               @import 'kirra'
+            namespace { 
+                entities { 
+                    Entity Product { 
+                        properties { 
+                            Property description { type = kirra.StringValue } 
+                        } 
+                    } 
+                } 
+            }""";
 		var namespace = compileKirra(toParse);
 		List<EObject> entities = getValue(namespace, "entities");
 		assertEquals(1, entities.size());

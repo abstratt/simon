@@ -18,8 +18,28 @@
 		</dependency>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
-			<artifactId>simon-compiler-ecore</artifactId>
+			<artifactId>simon-compiler-antlr</artifactId>
 			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.abstratt.simon</groupId>
+			<artifactId>simon-annotation-dsl</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.abstratt.simon</groupId>
+			<artifactId>simon-compiler-source-ecore</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.abstratt.simon</groupId>
+			<artifactId>simon-compiler-target-ecore</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-text</artifactId>
+			<version>1.9</version>
 		</dependency>
 	</dependencies>
 

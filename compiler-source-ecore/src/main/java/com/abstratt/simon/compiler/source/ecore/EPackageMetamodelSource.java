@@ -1,11 +1,11 @@
-package com.abstratt.simon.compiler.ecore;
+package com.abstratt.simon.compiler.source.ecore;
 
-import com.abstratt.simon.compiler.SimonCompiler;
-import com.abstratt.simon.compiler.SimpleSourceProvider;
+import com.abstratt.simon.compiler.source.SimpleSourceProvider;
+import com.abstratt.simon.compiler.source.SourceProvider;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EPackage;
 
-import com.abstratt.simon.compiler.MetamodelSource;
+import com.abstratt.simon.compiler.source.MetamodelSource;
 import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 
@@ -19,10 +19,10 @@ public class EPackageMetamodelSource implements MetamodelSource<EcoreType<? exte
 	}
 
 	@Override
-	public SimonCompiler.SourceProvider builtInSources() {
+	public SourceProvider builtInSources() {
 		var builtIns = ePackage.getEAnnotation("simon/builtIns");
 		if (builtIns == null)
-			return SimonCompiler.SourceProvider.NULL;
+			return SourceProvider.NULL;
 		return new SimpleSourceProvider(builtIns.getDetails().map());
 	}
 

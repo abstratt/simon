@@ -1,5 +1,8 @@
 package com.abstratt.simon.compiler;
 
+import com.abstratt.simon.compiler.source.ContentProvider;
+import com.abstratt.simon.compiler.source.ContentProviderSourceProvider;
+import com.abstratt.simon.compiler.source.SourceProvider;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -10,7 +13,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -28,74 +30,6 @@ import java.util.List;
  * @param <T> the type of model being built
  */
 public interface SimonCompiler<T> {
-
-	/**
-	 * The result of compiling a compilation unit.
-	 */
-	class Result<T> {
-		private final String source;
-		private final T rootObject;
-		private final List<Problem> problems;
-
-		public Result(String source, T rootObject, List<Problem> problems) {
-			this.source = source;
-			this.rootObject = rootObject;
-			this.problems = new ArrayList<>(problems);
-		}
-
-		public static Result failure(String source) {
-			return new Result(source, null, new ArrayList<>());
-		}
-
-		public T getRootObject() {
-			return rootObject;
-		}
-
-		public List<Problem> getProblems() {
-			return problems;
-		}
-
-		public String getSource() {
-			return source;
-		}
-	}
-
-	/**
-	 * A content provider can supply a reader to the the contents on demand.
-	 * 
-	 * Since reading contents can potentially fail, a content provider is
-	 * essentially a provider for a reader that can fail.
-	 */
-	interface ContentProvider {
-		/**
-		 * Opens a reader to the contents. The caller is responsible for closing the
-		 * reader.
-		 */
-		Reader getContents() throws IOException;
-		
-		/**
-		 * Adapts an already created reader as a content provider.
-		 * 
-		 * @param reader
-		 * @return
-		 */
-		static ContentProvider provideContents(Reader reader) {
-			return () -> reader;
-		}
-
-	}
-	
-	interface SourceProvider {
-		SourceProvider NULL = source -> null;
-
-		/**
-		 * Requests access to a source with the given name.
-		 * 
-		 * @param sourceName
-		 * @return a content provider for accessing such source, or null if one could not be found
-		 */
-		ContentProvider access(String sourceName);
-	}
 
 	List<Result<T>> compile(List<String> entryPoints, SourceProvider sources);
 

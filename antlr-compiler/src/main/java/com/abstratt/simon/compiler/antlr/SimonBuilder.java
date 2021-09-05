@@ -15,12 +15,11 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.StringUtils;
 
 import com.abstratt.simon.compiler.CompilerException;
-import com.abstratt.simon.compiler.ModelHandling;
 import com.abstratt.simon.compiler.Problem;
-import com.abstratt.simon.compiler.MetamodelSource;
-import com.abstratt.simon.compiler.ModelHandling.Linking;
-import com.abstratt.simon.compiler.ModelHandling.Parenting;
-import com.abstratt.simon.compiler.ModelHandling.Provider;
+import com.abstratt.simon.compiler.source.MetamodelSource;
+import com.abstratt.simon.compiler.target.Linking;
+import com.abstratt.simon.compiler.target.Parenting;
+import com.abstratt.simon.compiler.target.Target;
 import com.abstratt.simon.metamodel.Metamodel.BasicType;
 import com.abstratt.simon.metamodel.Metamodel.Composition;
 import com.abstratt.simon.metamodel.Metamodel.Enumerated;
@@ -79,7 +78,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private final Problem.Handler problemHandler;
-    private final ModelHandling.Provider<ObjectType, Slotted, T> modelHandling;
+    private final Target<ObjectType, Slotted, T> modelHandling;
     private final MetamodelSource<?> metamodelSource;
     /**
      * Scopes can be nested.
@@ -125,10 +124,10 @@ class SimonBuilder<T> extends SimonBaseListener {
     public SimonBuilder(
             Problem.Handler problemHandler,
             MetamodelSource metamodelSource,
-            ModelHandling.Provider<? extends ObjectType, ? extends Slotted, T> modelHandling) {
+            Target<? extends ObjectType, ? extends Slotted, T> modelHandling) {
         this.problemHandler = problemHandler;
         this.metamodelSource = metamodelSource;
-        this.modelHandling = (Provider<ObjectType, Slotted, T>) modelHandling;
+        this.modelHandling = (Target<ObjectType, Slotted, T>) modelHandling;
     }
 
 
@@ -327,9 +326,7 @@ class SimonBuilder<T> extends SimonBaseListener {
         ElementInfo info = currentScope().get();
 
         T target = info.getObject();
-        parseSlotValue(ctx, info.getType(), (slot, value) -> {
-            modelHandling.valueSetting().setValue(slot, target, value);
-        });
+        parseSlotValue(ctx, info.getType(), (slot, value) -> modelHandling.valueSetting().setValue(slot, target, value));
     }
 
     private void parseSlotValue(SlotContext ctx, Slotted slotOwner, BiConsumer<Slot, Object> consumer) {
@@ -376,25 +373,13 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private Object parsePrimitiveLiteral(Primitive slotType, String literalText) {
-        Object slotValue;
-        switch (slotType.kind()) {
-            case Integer:
-                slotValue = Integer.parseInt(literalText);
-                break;
-            case Decimal:
-                slotValue = Double.parseDouble(literalText);
-                break;
-            case Boolean:
-                slotValue = Boolean.parseBoolean(literalText);
-                break;
-            case String:
-            case Other:
-                slotValue = literalText.substring(1, literalText.length() - 1);
-                break;
-            default:
-                throw new IllegalStateException();
-        }
-        return slotValue;
+        return switch (slotType.kind()) {
+            case Integer -> Integer.parseInt(literalText);
+            case Decimal -> Double.parseDouble(literalText);
+            case Boolean -> Boolean.parseBoolean(literalText);
+            case String, Other -> literalText.substring(1, literalText.length() - 1);
+            default -> throw new IllegalStateException();
+        };
     }
 
     private ElementInfo dropScope() {

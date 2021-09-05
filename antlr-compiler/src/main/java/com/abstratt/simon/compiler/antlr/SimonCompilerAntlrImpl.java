@@ -1,6 +1,9 @@
 package com.abstratt.simon.compiler.antlr;
 
-import com.abstratt.simon.compiler.SourceProviderChain;
+import com.abstratt.simon.compiler.source.ContentProvider;
+import com.abstratt.simon.compiler.Result;
+import com.abstratt.simon.compiler.source.SourceProvider;
+import com.abstratt.simon.compiler.source.SourceProviderChain;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -21,10 +24,9 @@ import org.antlr.v4.runtime.UnbufferedTokenStream;
 import org.antlr.v4.runtime.tree.pattern.RuleTagToken;
 
 import com.abstratt.simon.compiler.SimonCompiler;
-import com.abstratt.simon.compiler.ModelHandling;
 import com.abstratt.simon.compiler.Problem;
-import com.abstratt.simon.compiler.MetamodelSource;
-import com.abstratt.simon.compiler.ModelHandling.Provider;
+import com.abstratt.simon.compiler.source.MetamodelSource;
+import com.abstratt.simon.compiler.target.Target;
 import com.abstratt.simon.metamodel.Metamodel.ObjectType;
 import com.abstratt.simon.metamodel.Metamodel.Slotted;
 import com.abstratt.simon.parser.antlr.SimonLexer;
@@ -34,10 +36,10 @@ import org.apache.commons.lang3.tuple.Pair;
 public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 	public final MetamodelSource.Factory<?> typeSourceFactory;
 
-	public final ModelHandling.Provider<? extends ObjectType, ? extends Slotted, T> modelHandling;
+	public final Target<? extends ObjectType, ? extends Slotted, T> modelHandling;
 
 	public SimonCompilerAntlrImpl(MetamodelSource.Factory<?> typeSourceFactory,
-			Provider<? extends ObjectType, ? extends Slotted, T> configurationProvider) {
+			Target<? extends ObjectType, ? extends Slotted, T> configurationProvider) {
 		this.typeSourceFactory = typeSourceFactory;
 		this.modelHandling = configurationProvider;
 	}
@@ -55,7 +57,7 @@ public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 
 	private ArrayList<Result<T>> doCompile(List<String> entryPoints, SourceProvider sources, MetamodelSource<?> typeSource) {
 		var problemHandler = new ProblemHandler();
-		var builder = new SimonBuilder<T>(problemHandler, typeSource, modelHandling);
+		var builder = new SimonBuilder<>(problemHandler, typeSource, modelHandling);
 		var results = modelHandling.runOperation(() -> parseUnits(sources, entryPoints, builder));
 		builder.resolve();
 		problemHandler.getAllProblems().forEach((source, problem) -> {
@@ -85,12 +87,12 @@ public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 
 	private Result<T> parseUnit(SimonBuilder<T> builder, String name, ContentProvider input) {
 		if (input == null) {
-			return new Result<T>(name, null, Arrays.asList(new Problem(name, -1, -1, "No source found for '" + name + "'", Problem.Severity.Fatal)));
+			return new Result<>(name, null, Arrays.asList(new Problem(name, -1, -1, "No source found for '" + name + "'", Problem.Severity.Fatal)));
 		}
 		try {
 			doParse(name, input.getContents(), builder);
 		} catch (IOException e) {
-			return new Result<T>(name, null, Arrays.asList(new Problem(name, -1, -1, e.toString(), Problem.Severity.Fatal)));
+			return new Result<>(name, null, Arrays.asList(new Problem(name, -1, -1, e.toString(), Problem.Severity.Fatal)));
 		}
 		T root = builder.build();
 		return new Result(name, root, Collections.emptyList());
@@ -139,6 +141,5 @@ class ProblemHandler implements Problem.Handler {
 		List<Problem> sourceProblems = this.problems.computeIfAbsent(source, it -> new ArrayList<>());
 		sourceProblems.add(toHandle);
 		hasFatalProblem = hasFatalProblem || toHandle.category() == Problem.Severity.Fatal;
-
 	}
 }

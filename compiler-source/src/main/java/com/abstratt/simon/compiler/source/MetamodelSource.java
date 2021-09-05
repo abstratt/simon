@@ -1,4 +1,4 @@
-package com.abstratt.simon.compiler;
+package com.abstratt.simon.compiler.source;
 
 import com.abstratt.simon.metamodel.Metamodel.Type;
 
@@ -19,10 +19,10 @@ public interface MetamodelSource<T extends Type> extends AutoCloseable {
 
 	Stream<T> enumerate();
 
-	default SimonCompiler.SourceProvider builtInSources() {
-		return SimonCompiler.SourceProvider.NULL;
+	default SourceProvider builtInSources() {
+		return SourceProvider.NULL;
 	}
-	
+
 	default void close() {
 	}
 

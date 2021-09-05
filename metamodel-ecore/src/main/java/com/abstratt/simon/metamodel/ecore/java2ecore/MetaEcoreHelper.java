@@ -104,18 +104,13 @@ public interface MetaEcoreHelper {
 	}
 
 	static EDataType getPrimitiveEType(PrimitiveKind primitiveKind) {
-		switch (primitiveKind) {
-		case Boolean:
-			return EcorePackage.Literals.EBOOLEAN;
-		case Integer:
-			return EcorePackage.Literals.EINT;
-		case Decimal:
-			return EcorePackage.Literals.EBIG_DECIMAL;
-		case String:
-		case Other:
-			return EcorePackage.Literals.ESTRING;
-		}
-		throw new IllegalArgumentException(primitiveKind.name());
+		return switch (primitiveKind) {
+			case Boolean -> EcorePackage.Literals.EBOOLEAN;
+			case Integer -> EcorePackage.Literals.EINT;
+			case Decimal -> EcorePackage.Literals.EBIG_DECIMAL;
+			case String, Other -> EcorePackage.Literals.ESTRING;
+			default -> throw new IllegalArgumentException(primitiveKind.name());
+		};
 	}
 
 	static EDataType getPrimitiveEType(Class<?> clazz) {
