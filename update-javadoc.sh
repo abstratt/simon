@@ -1,7 +1,8 @@
 # Credit: https://vaadin.com/blog/host-your-javadoc-s-online-in-github
 set -x 
-mvn clean install
 mvn clean javadoc:javadoc javadoc:aggregate
+mvn com.github.ferstl:depgraph-maven-plugin:aggregate  "-Dincludes=com.abstratt.simon:*"
+dot -Tpng target/dependency-graph.dot -o target/site/apidocs/javadoc/dependencies.png
 cd target/site/apidocs/javadoc/
 git init
 git remote add javadoc git@github.com:abstratt/simon.git

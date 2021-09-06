@@ -141,3 +141,5 @@ application myApplication {
 * compiler-backend-ecore - a backend for the Simon compiler which produces EMF-based models
 * metamodel-ecore - an implementation of the Simon metamodel on top of Ecore metamodels and pure Java-based metamodels   
 * tests - all tests live here 
+
+![alt text](https://abstratt.github.io/simon/dependencies.png)
