@@ -132,8 +132,8 @@ application myApplication {
 * gen-utils - utilities used by Simon but not tied to the Simon API
 * metamodel - defines the metamodel behind Simon
 * annotation-dsl - an annotation-based DSL for defining a Simon metamodel
-* compiler-core-source - API for compiler sources
-* compiler-core-backend - API for compiler backends
+* compiler-source - API for compiler sources
+* compiler-backend - API for compiler backends
 * compiler - the basic API for the Java-based Simon compiler
 * parser-antlr - the ANTLR-based generic parser for all Simon-based DSLs
 * compiler-antlr - the ANTLR-based generic compiler
