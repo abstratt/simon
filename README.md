@@ -130,11 +130,11 @@ application myApplication {
 ### Module structure
 
 * gen-utils - utilities used by Simon but not tied to the Simon API
-* metamodel-core - defines the metamodel behind Simon
+* metamodel - defines the metamodel behind Simon
 * annotation-dsl - an annotation-based DSL for defining a Simon metamodel
 * compiler-core-source - API for compiler sources
 * compiler-core-backend - API for compiler backends
-* compiler-core - the basic API for the Java-based Simon compiler
+* compiler - the basic API for the Java-based Simon compiler
 * parser-antlr - the ANTLR-based generic parser for all Simon-based DSLs
 * compiler-antlr - the ANTLR-based generic compiler
 * compiler-source-ecore - a source implementation for the Simon compiler which consumes Ecore metamodels
