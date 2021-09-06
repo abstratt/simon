@@ -181,19 +181,18 @@ public class Java2EcoreMapper {
 		return eClass;
 	}
 
-	private EEnum buildEnumType(Context context, Class<?> clazz) {
-		String className = clazz.getSimpleName();
+	private <T extends Enum<T>> EEnum buildEnumType(Context context, Class<T> clazz) {
+		var className = clazz.getSimpleName();
 		//System.out.println("Building enum type " + className);
-		EEnum eEnum = EcoreFactory.eINSTANCE.createEEnum();
+		var eEnum = EcoreFactory.eINSTANCE.createEEnum();
 		eEnum.setName(className);
-		Object[] enumConstants = clazz.getEnumConstants();
-		for (Object object : enumConstants) {
-			EEnumLiteral literal = EcoreFactory.eINSTANCE.createEEnumLiteral();
-			Enum asJavaEnum = (Enum) object;
-			String valueAsStr = asJavaEnum.name();
+		var enumConstants = clazz.getEnumConstants();
+		for (T it : enumConstants) {
+			var literal = EcoreFactory.eINSTANCE.createEEnumLiteral();
+			var valueAsStr = it.name();
 			literal.setName(valueAsStr);
 			literal.setLiteral(valueAsStr);
-			literal.setValue((asJavaEnum.ordinal()));
+			literal.setValue(it.ordinal());
 			eEnum.getELiterals().add(literal);
 		}
 		return eEnum;
