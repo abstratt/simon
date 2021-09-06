@@ -123,10 +123,6 @@ application myApplication {
 
 ## Java/Ecore-based implementation
 
-#### Decisions
-
-1. primitive values are stored as EObjects that contain one `value` feature
-
 ### Module structure
 
 * gen-utils - utilities used by Simon but not tied to the Simon API
