@@ -1,16 +1,15 @@
 package com.abstratt.simon.java2ecore;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
+import com.abstratt.simon.examples.kirra.Kirra;
+import com.abstratt.simon.examples.ui.UI;
+import com.abstratt.simon.examples.ui.UI.Application;
+import com.abstratt.simon.examples.ui.UI.PanelLayout;
+import com.abstratt.simon.metamodel.ecore.java2ecore.Java2EcoreMapper;
+import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
 import org.eclipse.emf.common.util.BasicDiagnostic;
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.ecore.EClass;
@@ -25,12 +24,7 @@ import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EcoreValidator;
 import org.junit.jupiter.api.Test;
 
-import com.abstratt.simon.examples.kirra.Kirra;
-import com.abstratt.simon.examples.ui.UI;
-import com.abstratt.simon.examples.ui.UI.Application;
-import com.abstratt.simon.examples.ui.UI.PanelLayout;
-import com.abstratt.simon.metamodel.ecore.java2ecore.Java2EcoreMapper;
-import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Explores building Ecore-based metamodels (remember, Ecore is the meta-metamodel) from annotated Java models.

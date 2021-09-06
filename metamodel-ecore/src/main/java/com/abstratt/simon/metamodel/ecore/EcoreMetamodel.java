@@ -1,8 +1,9 @@
 package com.abstratt.simon.metamodel.ecore;
 
+import com.abstratt.simon.metamodel.Metamodel;
+import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
 import java.util.Collection;
 import java.util.stream.Collectors;
-
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
@@ -12,9 +13,6 @@ import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.ETypedElement;
-
-import com.abstratt.simon.metamodel.Metamodel;
-import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
 
 public interface EcoreMetamodel extends Metamodel {
 

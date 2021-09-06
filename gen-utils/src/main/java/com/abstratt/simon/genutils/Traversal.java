@@ -1,13 +1,13 @@
 package com.abstratt.simon.genutils;
 
-import static java.util.Arrays.stream;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import static java.util.Arrays.*;
 
 
 public interface Traversal<T> {

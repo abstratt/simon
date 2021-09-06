@@ -1,18 +1,16 @@
 package com.abstratt.simon.compiler;
 
-import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.*;
-import static com.abstratt.simon.testing.TestHelper.*;
-import static org.junit.jupiter.api.Assertions.*;
-
+import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrImpl;
 import com.abstratt.simon.compiler.source.SimpleSourceProvider;
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
+import com.abstratt.simon.compiler.target.ecore.EcoreModelBuilder;
+import com.abstratt.simon.examples.ui.UI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.eclipse.emf.ecore.EClass;
@@ -20,9 +18,9 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.junit.jupiter.api.Test;
 
-import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrImpl;
-import com.abstratt.simon.compiler.target.ecore.EcoreModelBuilder;
-import com.abstratt.simon.examples.ui.UI;
+import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.*;
+import static com.abstratt.simon.testing.TestHelper.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CompilerTests {
 	private static final EClass applicationClass = uiClassFor(UI.Application.class);

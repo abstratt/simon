@@ -1,7 +1,5 @@
 package com.abstratt.simon.compiler.source;
 
-import com.abstratt.simon.compiler.source.ContentProvider;
-import com.abstratt.simon.compiler.source.SourceProvider;
 import java.io.InputStreamReader;
 
 public class BuiltInSourceProvider implements SourceProvider {

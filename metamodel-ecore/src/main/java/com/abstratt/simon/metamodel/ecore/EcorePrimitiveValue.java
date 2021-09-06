@@ -1,14 +1,13 @@
 package com.abstratt.simon.metamodel.ecore;
 
+import com.abstratt.simon.metamodel.Metamodel;
+import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
+import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.EFactory;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EcorePackage;
-
-import com.abstratt.simon.metamodel.Metamodel;
-import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
-import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
 
 public class EcorePrimitiveValue extends EcoreValue<EClass> implements Metamodel.Primitive {
 

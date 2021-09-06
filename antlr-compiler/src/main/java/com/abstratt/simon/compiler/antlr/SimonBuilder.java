@@ -1,19 +1,6 @@
 package com.abstratt.simon.compiler.antlr;
 
 import com.abstratt.simon.compiler.AbortCompilationException;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
-
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.apache.commons.lang3.StringUtils;
-
 import com.abstratt.simon.compiler.CompilerException;
 import com.abstratt.simon.compiler.Problem;
 import com.abstratt.simon.compiler.source.MetamodelSource;
@@ -42,6 +29,17 @@ import com.abstratt.simon.parser.antlr.SimonParser.ObjectHeaderContext;
 import com.abstratt.simon.parser.antlr.SimonParser.PropertiesContext;
 import com.abstratt.simon.parser.antlr.SimonParser.RecordLiteralContext;
 import com.abstratt.simon.parser.antlr.SimonParser.SlotContext;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.commons.lang3.StringUtils;
 
 class SimonBuilder<T> extends SimonBaseListener {
 

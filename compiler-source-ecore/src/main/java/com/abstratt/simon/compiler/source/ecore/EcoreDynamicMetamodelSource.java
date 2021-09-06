@@ -1,26 +1,23 @@
 package com.abstratt.simon.compiler.source.ecore;
 
+import com.abstratt.simon.compiler.source.MetamodelSource;
 import com.abstratt.simon.compiler.source.SimpleSourceProvider;
 import com.abstratt.simon.compiler.source.SourceProvider;
+import com.abstratt.simon.metamodel.dsl.Meta;
+import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
+import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
+import com.abstratt.simon.metamodel.ecore.java2ecore.Java2EcoreMapper;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.eclipse.emf.common.util.EMap;
 import org.eclipse.emf.ecore.EAnnotation;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EPackage;
-
-import com.abstratt.simon.compiler.source.MetamodelSource;
-import com.abstratt.simon.metamodel.dsl.Meta;
-import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
-import com.abstratt.simon.metamodel.ecore.java2ecore.Java2EcoreMapper;
-import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
-
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ScanResult;
 
 public class EcoreDynamicMetamodelSource implements MetamodelSource<EcoreType<EClassifier>> {
 

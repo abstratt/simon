@@ -3,16 +3,14 @@ package com.abstratt.simon.compiler;
 import com.abstratt.simon.examples.kirra.Kirra;
 import com.abstratt.simon.examples.ui.UI;
 import com.abstratt.simon.testing.TestHelper;
+import java.util.List;
 import org.eclipse.emf.ecore.EEnumLiteral;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
 import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.*;
 import static com.abstratt.simon.testing.TestHelper.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class RegressionTests {
 

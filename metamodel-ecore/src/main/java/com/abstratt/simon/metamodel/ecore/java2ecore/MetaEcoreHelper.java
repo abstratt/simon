@@ -1,7 +1,10 @@
 package com.abstratt.simon.metamodel.ecore.java2ecore;
 
+import com.abstratt.simon.metamodel.Metamodel;
+import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
+import com.abstratt.simon.metamodel.dsl.Meta;
+import com.abstratt.simon.metamodel.dsl.Meta.Type;
 import java.util.Arrays;
-
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
@@ -12,11 +15,6 @@ import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.ETypedElement;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.util.EcoreUtil;
-
-import com.abstratt.simon.metamodel.Metamodel;
-import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
-import com.abstratt.simon.metamodel.dsl.Meta;
-import com.abstratt.simon.metamodel.dsl.Meta.Type;
 
 public interface MetaEcoreHelper {
 	String ROOT_COMPOSITE_VALUE = "rootComposite";

@@ -1,7 +1,6 @@
 package com.abstratt.simon.compiler.source;
 
 import com.abstratt.simon.metamodel.Metamodel.Type;
-
 import java.util.stream.Stream;
 
 /**

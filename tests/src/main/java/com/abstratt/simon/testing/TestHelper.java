@@ -1,12 +1,17 @@
 package com.abstratt.simon.testing;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import com.abstratt.simon.compiler.Problem;
+import com.abstratt.simon.compiler.Result;
+import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrImpl;
 import com.abstratt.simon.compiler.source.URISourceProvider;
-
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
+import com.abstratt.simon.compiler.source.ecore.EcoreDynamicMetamodelSource;
+import com.abstratt.simon.compiler.target.ecore.EcoreModelBuilder;
+import com.abstratt.simon.examples.kirra.Kirra;
+import com.abstratt.simon.examples.ui.UI;
+import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
+import com.abstratt.simon.metamodel.ecore.java2ecore.Java2EcoreMapper;
+import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,15 +23,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EStructuralFeature;
 
-import com.abstratt.simon.compiler.Result;
-import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrImpl;
-import com.abstratt.simon.compiler.source.ecore.EcoreDynamicMetamodelSource;
-import com.abstratt.simon.compiler.target.ecore.EcoreModelBuilder;
-import com.abstratt.simon.examples.kirra.Kirra;
-import com.abstratt.simon.examples.ui.UI;
-import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
-import com.abstratt.simon.metamodel.ecore.java2ecore.Java2EcoreMapper;
-import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestHelper {
 
