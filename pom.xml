@@ -39,13 +39,13 @@
 		<module>metamodel-core</module>
 		<module>annotation-dsl</module>
 		<module>compiler-source</module>
-		<module>compiler-target</module>
+		<module>compiler-backend</module>
 		<module>compiler-core</module>			
 		<module>antlr-parser</module>
 		<module>antlr-compiler</module>
 		<module>metamodel-ecore</module>
 		<module>compiler-source-ecore</module>
-		<module>compiler-target-ecore</module>
+		<module>compiler-backend-ecore</module>
 		<module>tests</module>	
 	</modules>
 	

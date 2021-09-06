@@ -7,7 +7,7 @@ import com.abstratt.simon.compiler.source.ContentProvider;
 import com.abstratt.simon.compiler.source.MetamodelSource;
 import com.abstratt.simon.compiler.source.SourceProvider;
 import com.abstratt.simon.compiler.source.SourceProviderChain;
-import com.abstratt.simon.compiler.target.Target;
+import com.abstratt.simon.compiler.backend.Backend;
 import com.abstratt.simon.metamodel.Metamodel.ObjectType;
 import com.abstratt.simon.metamodel.Metamodel.Slotted;
 import com.abstratt.simon.parser.antlr.SimonLexer;
@@ -34,10 +34,10 @@ import org.apache.commons.lang3.tuple.Pair;
 public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 	public final MetamodelSource.Factory<?> typeSourceFactory;
 
-	public final Target<? extends ObjectType, ? extends Slotted, T> modelHandling;
+	public final Backend<? extends ObjectType, ? extends Slotted, T> modelHandling;
 
 	public SimonCompilerAntlrImpl(MetamodelSource.Factory<?> typeSourceFactory,
-			Target<? extends ObjectType, ? extends Slotted, T> configurationProvider) {
+			Backend<? extends ObjectType, ? extends Slotted, T> configurationProvider) {
 		this.typeSourceFactory = typeSourceFactory;
 		this.modelHandling = configurationProvider;
 	}

@@ -6,7 +6,7 @@ import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrImpl;
 import com.abstratt.simon.compiler.source.URISourceProvider;
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.EcoreDynamicMetamodelSource;
-import com.abstratt.simon.compiler.target.ecore.EcoreModelBuilder;
+import com.abstratt.simon.compiler.backend.ecore.EcoreModelBuilder;
 import com.abstratt.simon.examples.kirra.Kirra;
 import com.abstratt.simon.examples.ui.UI;
 import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;

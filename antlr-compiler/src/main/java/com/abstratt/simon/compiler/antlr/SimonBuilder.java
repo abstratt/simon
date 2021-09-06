@@ -4,9 +4,9 @@ import com.abstratt.simon.compiler.AbortCompilationException;
 import com.abstratt.simon.compiler.CompilerException;
 import com.abstratt.simon.compiler.Problem;
 import com.abstratt.simon.compiler.source.MetamodelSource;
-import com.abstratt.simon.compiler.target.Linking;
-import com.abstratt.simon.compiler.target.Parenting;
-import com.abstratt.simon.compiler.target.Target;
+import com.abstratt.simon.compiler.backend.Linking;
+import com.abstratt.simon.compiler.backend.Parenting;
+import com.abstratt.simon.compiler.backend.Backend;
 import com.abstratt.simon.metamodel.Metamodel.BasicType;
 import com.abstratt.simon.metamodel.Metamodel.Composition;
 import com.abstratt.simon.metamodel.Metamodel.Enumerated;
@@ -76,7 +76,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private final Problem.Handler problemHandler;
-    private final Target<ObjectType, Slotted, T> modelHandling;
+    private final Backend<ObjectType, Slotted, T> modelHandling;
     private final MetamodelSource<?> metamodelSource;
     /**
      * Scopes can be nested.
@@ -122,10 +122,10 @@ class SimonBuilder<T> extends SimonBaseListener {
     public SimonBuilder(
             Problem.Handler problemHandler,
             MetamodelSource metamodelSource,
-            Target<? extends ObjectType, ? extends Slotted, T> modelHandling) {
+            Backend<? extends ObjectType, ? extends Slotted, T> modelHandling) {
         this.problemHandler = problemHandler;
         this.metamodelSource = metamodelSource;
-        this.modelHandling = (Target<ObjectType, Slotted, T>) modelHandling;
+        this.modelHandling = (Backend<ObjectType, Slotted, T>) modelHandling;
     }
 
 

@@ -3,7 +3,7 @@ package com.abstratt.simon.compiler;
 import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrImpl;
 import com.abstratt.simon.compiler.source.SimpleSourceProvider;
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
-import com.abstratt.simon.compiler.target.ecore.EcoreModelBuilder;
+import com.abstratt.simon.compiler.backend.ecore.EcoreModelBuilder;
 import com.abstratt.simon.examples.ui.UI;
 import java.util.ArrayList;
 import java.util.Arrays;
