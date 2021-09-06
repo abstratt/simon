@@ -13,12 +13,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
-			<artifactId>simon-metamodel-core</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.abstratt.simon</groupId>
-			<artifactId>simon-compiler-core</artifactId>
+			<artifactId>simon-compiler</artifactId>
 			<version>0.0.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
@@ -29,7 +24,6 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.12.0</version>
 		</dependency>
 	</dependencies>
 </project>
