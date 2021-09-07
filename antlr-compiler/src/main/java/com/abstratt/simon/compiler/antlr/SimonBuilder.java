@@ -3,6 +3,7 @@ package com.abstratt.simon.compiler.antlr;
 import com.abstratt.simon.compiler.AbortCompilationException;
 import com.abstratt.simon.compiler.CompilerException;
 import com.abstratt.simon.compiler.Problem;
+import com.abstratt.simon.compiler.Problem.Severity;
 import com.abstratt.simon.compiler.source.MetamodelSource;
 import com.abstratt.simon.compiler.backend.Linking;
 import com.abstratt.simon.compiler.backend.Parenting;
@@ -29,12 +30,16 @@ import com.abstratt.simon.parser.antlr.SimonParser.ObjectHeaderContext;
 import com.abstratt.simon.parser.antlr.SimonParser.PropertiesContext;
 import com.abstratt.simon.parser.antlr.SimonParser.RecordLiteralContext;
 import com.abstratt.simon.parser.antlr.SimonParser.RootObjectContext;
+import com.abstratt.simon.parser.antlr.SimonParser.RootObjectsContext;
 import com.abstratt.simon.parser.antlr.SimonParser.SlotContext;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -86,6 +91,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     private final List<ElementInfo> built = new LinkedList<>(); 
     private final List<ResolutionRequest> resolutionRequests = new LinkedList<>();
 	private final List<String> imports = new ArrayList<>();
+    private Set<String> languages;
 	private String sourceName;
 
     interface Resolver<R> {
@@ -99,12 +105,14 @@ class SimonBuilder<T> extends SimonBaseListener {
         private final Resolver<T> resolver;
         private final String source;
         private Type expectedType;
+        private final Set<String> languages;
 
-        public ResolutionRequest(ParserRuleContext context, String source, T scope, String name, Resolver<T> resolver) {
+        public ResolutionRequest(ParserRuleContext context, String source, T scope, String name, Set<String> languages, Resolver<T> resolver) {
             this.source = source;
             this.context = context;
             this.scope = scope;
             this.name = name;
+            this.languages = languages;
             this.resolver = resolver;
         }
 
@@ -137,6 +145,13 @@ class SimonBuilder<T> extends SimonBaseListener {
         addImport(source);
     }
 
+
+    @Override
+    public void exitLanguageDeclaration(LanguageDeclarationContext ctx) {
+        var language = ctx.IDENT().getText();
+        addLanguage(language);
+    }
+
     @Override
     public void enterEveryRule(ParserRuleContext ctx) {
         assert sourceName != null;
@@ -145,14 +160,16 @@ class SimonBuilder<T> extends SimonBaseListener {
     public void startSource(String sourceName) {
         assert this.sourceName == null;
         this.sourceName = sourceName;
+        this.languages = new LinkedHashSet<>();
     }
 
     public void endSource(String sourceName) {
         assert sourceName.equals(this.sourceName);
         this.sourceName = null;
+        this.languages = null;
     }
 
-    public List<T> build() {
+    public List<T> buildUnit() {
     	assert currentScope.isEmpty();
     	var partialResult = built.stream().map(ElementInfo::getObject).collect(Collectors.toList());
     	built.clear();
@@ -176,23 +193,23 @@ class SimonBuilder<T> extends SimonBaseListener {
             reportError(Problem.Severity.Error, request.getSource(), request.getLine(), request.getColumn(), "Unknown name: '" + name + "'");
         }
     }
-
-    @Override
-    public void exitLanguageDeclaration(LanguageDeclarationContext ctx) {
-    	// TODO Auto-generated method stub
-    	super.exitLanguageDeclaration(ctx);
-    }
     
+    @Override
+    public void enterRootObject(RootObjectContext ctx) {
+        if (languages.isEmpty())
+        	reportError(Severity.Fatal, sourceName, ctx, "No languages defined");
+    }
+
     @Override
     public void exitObjectHeader(ObjectHeaderContext ctx) {
         var object = ctx.objectClass();
         var typeName = getTypeName(object);
-        var resolvedType = metamodelSource.resolveType(StringUtils.capitalize(typeName));
+        var resolvedType = metamodelSource.resolveType(StringUtils.capitalize(typeName), languages);
         var asObjectType = (ObjectType) resolvedType;
         if (asObjectType == null)
-            throw new CompilerException("Unknown type: " + typeName + " on line " + object.start.getLine());
+        	reportError(Severity.Fatal, sourceName, ctx, "Unknown language element: " + typeName);
         if (!asObjectType.isInstantiable())
-            throw new CompilerException("Type: " + typeName + " not instantiable on line " + object.start.getLine());
+        	reportError(Severity.Fatal, sourceName, ctx, "Language element not instantiable: " + typeName);
         var instantiation = modelHandling.instantiation();
         var created = (T) instantiation.createObject(asObjectType.isRoot(), asObjectType);
         var objectName = ctx.objectName();
@@ -242,7 +259,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private void requestResolution(String name, Resolver<T> resolver, ParserRuleContext context) {
-        resolutionRequests.add(new ResolutionRequest(context, sourceName, this.currentScope().get().getObject(), name, resolver));
+        resolutionRequests.add(new ResolutionRequest(context, sourceName, this.currentScope().get().getObject(), name, languages, resolver));
     }
 
     @Override
@@ -412,6 +429,10 @@ class SimonBuilder<T> extends SimonBaseListener {
 
     public void addImport(String importPath) {
     	imports.add(importPath);
+    }
+
+    public void addLanguage(String language) {
+        languages.add(language);
     }
     
     public List<String> collectImports() {

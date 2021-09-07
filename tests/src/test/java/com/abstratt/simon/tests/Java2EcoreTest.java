@@ -7,6 +7,7 @@ import com.abstratt.simon.examples.ui.UI.Application;
 import com.abstratt.simon.examples.ui.UI.PanelLayout;
 import com.abstratt.simon.metamodel.ecore.java2ecore.Java2EcoreMapper;
 import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -305,7 +306,7 @@ public class Java2EcoreTest {
 	void typeResolution() {
 		EPackage uiPackage = build(UI.class);
 		var typeSource = new EPackageMetamodelSource.Factory(uiPackage).build();
-		var resolved = typeSource.resolveType("Application");
+		var resolved = typeSource.resolveType("Application", null);
 		assertNotNull(resolved);
 	}
 

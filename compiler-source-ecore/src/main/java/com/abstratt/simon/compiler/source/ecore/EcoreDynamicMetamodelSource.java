@@ -12,6 +12,7 @@ import io.github.classgraph.ScanResult;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.eclipse.emf.common.util.EMap;
@@ -49,21 +50,23 @@ public class EcoreDynamicMetamodelSource implements MetamodelSource<EcoreType<EC
 	}
 
 	@Override
-	public EcoreType<EClassifier> resolveType(String typeName) {
-		var packages = this.packages.values();
-		return packages //
-				.stream() //
+	public EcoreType<EClassifier> resolveType(String typeName, Set<String> languages) {
+		return enabledPackages(languages) //
 				.map(ePackage -> EcoreHelper.findClassifierByName(ePackage, typeName)) //
 				.filter(Objects::nonNull) //
 				.map(eClass -> (EcoreType<EClassifier>) EcoreType.fromClassifier(eClass)) //
 				.findAny().orElse(null);
 	}
 
-	@Override
-	public Stream<EcoreType<EClassifier>> enumerate() {
-		var packages = this.packages.values();
-		return packages //
+	private Stream<EPackage> enabledPackages(Set<String> languages) {
+		return this.packages.values()
 				.stream() //
+				.filter(p -> languages == null || languages.contains(p.getName()));
+	}
+
+	@Override
+	public Stream<EcoreType<EClassifier>> enumerate(Set<String> languages) {
+		return enabledPackages(languages)
 				.flatMap(EcoreHelper::findAllClassifiers) //
 				.map(eClass -> (EcoreType<EClassifier>) EcoreType.fromClassifier(eClass));
 	}

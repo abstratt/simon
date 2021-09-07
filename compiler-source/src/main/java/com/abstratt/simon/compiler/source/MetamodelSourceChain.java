@@ -1,7 +1,9 @@
 package com.abstratt.simon.compiler.source;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,18 +20,18 @@ public class MetamodelSourceChain<T extends Type> implements MetamodelSource<T> 
 	}
 
 	@Override
-	public T resolveType(String typeName) {
+	public T resolveType(String typeName, Set<String> languages) {
 		return sources.stream()//
-				.map(s -> s.resolveType(typeName))//
+				.map(s -> s.resolveType(typeName, languages))//
 				.filter(Objects::nonNull)//
 				.findFirst()//
 				.orElse(null);
 	}
 
 	@Override
-	public Stream<T> enumerate() {
+	public Stream<T> enumerate(Set<String> languages) {
 		return sources.stream()//
-				.map(MetamodelSource::enumerate)//
+				.map(s -> s.enumerate(languages))//
 				.map(StreamEx::of)
 				.reduce(StreamEx.empty(), StreamEx::append);
 	}

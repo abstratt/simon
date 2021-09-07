@@ -1,18 +1,37 @@
 package com.abstratt.simon.tests;
 
+import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.EcoreDynamicMetamodelSource;
 import com.abstratt.simon.examples.ui.UI;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
+import static com.abstratt.simon.testing.TestHelper.UI_PACKAGE;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MetamodelSourceTests {
+
+    @Test
+    void metamodelResolveType() {
+        var metamodel = new EPackageMetamodelSource.Factory(UI_PACKAGE).build();
+        var resolved = metamodel.resolveType("Application", null);
+        assertNotNull(resolved);
+    }
 	@Test
-	void dynamic() {
+	void dynamicMetamodelSourceResolveType() {
 		var typeSourceFactory = new EcoreDynamicMetamodelSource.Factory(UI.class.getPackageName());
 		try (var typeSource = typeSourceFactory.build()) {
-			var resolved = typeSource.resolveType("application");
+			var resolved = typeSource.resolveType("application", null);
 			assertNotNull(resolved);
+		}
+	}
+	
+	@Test
+	void dynamicMetamodelResolveTypeConstrained() {
+		var typeSourceFactory = new EcoreDynamicMetamodelSource.Factory(UI.class.getPackageName());
+		try (var typeSource = typeSourceFactory.build()) {
+			var resolved = typeSource.resolveType("application", Collections.emptySet());
+			assertNull(resolved);
 		}
 	}
 }

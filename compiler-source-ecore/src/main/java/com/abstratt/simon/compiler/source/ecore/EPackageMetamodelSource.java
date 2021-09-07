@@ -5,6 +5,7 @@ import com.abstratt.simon.compiler.source.SimpleSourceProvider;
 import com.abstratt.simon.compiler.source.SourceProvider;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EPackage;
@@ -25,13 +26,17 @@ public class EPackageMetamodelSource implements MetamodelSource<EcoreType<? exte
 	}
 
 	@Override
-	public EcoreType<? extends EClassifier> resolveType(String typeName) {
+	public EcoreType<? extends EClassifier> resolveType(String typeName, Set<String> languages) {
+		if (languages != null && !languages.contains(ePackage.getName()))
+			return null;
 		var classifier = EcoreHelper.findClassifierByName(ePackage, typeName);
 		return classifier == null ? null : EcoreType.fromClassifier(classifier);
 	}
 
 	@Override
-	public Stream<EcoreType<? extends EClassifier>> enumerate() {
+	public Stream<EcoreType<? extends EClassifier>> enumerate(Set<String> languages) {
+		if (languages != null && !languages.contains(ePackage.getName()))
+			return Stream.empty();
 		return EcoreHelper.findAllClassifiers(ePackage).map(EcoreType::fromClassifier);
 	}
 

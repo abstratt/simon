@@ -37,22 +37,17 @@ public class CompilerTests {
     private static final EClass containerClass = uiClassFor(UI.Container.class);
     private static final EClass screenClass = uiClassFor(UI.Screen.class);
 
-    @Test
-    void metamodelResolveType() {
-        var metamodel = new EPackageMetamodelSource.Factory(UI_PACKAGE).build();
-        var resolved = metamodel.resolveType("Application");
-        assertNotNull(resolved);
-    }
 
     @Test
     void emptyApplication() {
-        var application = emptyApplication("Application myApplication {}");
+        var application = emptyApplication("@language UI Application myApplication {}");
         assertNotNull(application.eResource());
+        assertEquals("myApplication", getPrimitiveValue(application, "name"));
     }
 
     @Test
     void emptyApplications() {
-        List<Result<EObject>> results = compileValidProject(UI_PACKAGE, "Application myApplication1 {}", "Application myApplication2 {}");
+        List<Result<EObject>> results = compileValidProject(UI_PACKAGE, "@language UI Application myApplication1 {}", "@language UI Application myApplication2 {}");
         assertEquals(2, results.size());
         assertEquals(1, results.get(0).getRootObjects().size());
         assertEquals(1, results.get(1).getRootObjects().size());
@@ -67,8 +62,9 @@ public class CompilerTests {
     @Test
     void multipleApplications() {
         List<Result<EObject>> results = compileValidProject(UI_PACKAGE, """
-                  		Application myApplication1 {}
-                  		Application myApplication2 {}
+				@language UI
+          		Application myApplication1 {}
+          		Application myApplication2 {}
                 """);
         assertEquals(1, results.size());
         assertEquals(2, results.get(0).getRootObjects().size());
@@ -83,6 +79,7 @@ public class CompilerTests {
     @Test
     void typeReference() {
         var source = """
+        		@language Kirra
                 Namespace customers {
                   entities {
                     Entity Customer
@@ -112,6 +109,7 @@ public class CompilerTests {
 
     void doCrossFileReference(int... order) {
         String customersSource = """
+        		@language Kirra
                 namespace customers {
                         entities {
                             entity Customer
@@ -119,6 +117,7 @@ public class CompilerTests {
                 }
                 """;
         String ordersSource = """
+        		@language Kirra
                 namespace orders {
                         entities { 
                                 entity Order { 
@@ -149,6 +148,7 @@ public class CompilerTests {
                 Collections.singletonList("orders"),
                 Collections.singletonMap("orders",
                         """
+                        		@language Kirra
                                 Namespace orders {
                                         entities { 
                                                 Entity Order { 
@@ -169,10 +169,12 @@ public class CompilerTests {
     void imports() {
         var customers =
                 """
+                		@language Kirra
                         namespace customers
                         """;
         var orders =
                 """
+                		@language Kirra
                         @import 'customers'
                         namespace orders
                         """;
@@ -197,6 +199,7 @@ public class CompilerTests {
     void importBuiltIn() {
         var orders =
                 """
+                		@language Kirra
                         @import 'kirra'
                         namespace orders
                         """;
@@ -218,6 +221,7 @@ public class CompilerTests {
     void crossFileReferenceViaImport() {
         var customers =
                 """
+                		@language Kirra
                         namespace customers {
                                 entities {
                                     entity Customer
@@ -226,6 +230,7 @@ public class CompilerTests {
                         """;
         var orders =
                 """
+                		@language Kirra
                         @import 'customers'
                         namespace orders {
                                 entities { 
@@ -254,12 +259,12 @@ public class CompilerTests {
 
     @Test
     void emptyApplication_metaclassCapitalization() {
-        emptyApplication("application myApplication {}");
+        emptyApplication("@language UI application myApplication {}");
     }
 
     @Test
     void emptyApplicationWithNameAsProperty() {
-        emptyApplication("Application (name = 'myApplication')");
+        emptyApplication("@language UI Application (name = 'myApplication')");
     }
 
     @Test
@@ -273,6 +278,7 @@ public class CompilerTests {
     void namespaceWithTwoEntities() {
         var namespace1 = compile(KIRRA_PACKAGE,
                 """
+                		@language Kirra
                         Namespace myapp { 
                                 entities { 
                                         Entity Customer 
@@ -291,6 +297,7 @@ public class CompilerTests {
     void primitiveTypes()
     {
         var toParse = """
+        		@language Kirra
                 @import 'kirra'
                 namespace { 
                     entities { 
@@ -334,11 +341,11 @@ public class CompilerTests {
     }
 
     private static EObject compileUI(String toParse) {
-        return compile(UI_PACKAGE, toParse);
+        return compile(UI_PACKAGE, "@language UI " + toParse);
     }
 
     private static EObject compileKirra(String toParse) {
-        return compile(KIRRA_PACKAGE, toParse);
+        return compile(KIRRA_PACKAGE, "@language Kirra " + toParse);
     }
 
     private static EObject compile(EPackage package_, String toParse) {
@@ -460,7 +467,7 @@ public class CompilerTests {
     }
 
     @Test
-    void multiplePackages() {
+    void multiplePackagesEmptySource() {
         var roots = compileValidProject(Arrays.asList(KIRRA_PACKAGE, UI_PACKAGE), "");
         assertEquals(1, roots.size());
         assertNull(roots.get(0).getRootObject());

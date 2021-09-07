@@ -1,5 +1,6 @@
 package com.abstratt.simon.compiler.antlr;
 
+import com.abstratt.simon.compiler.AbortCompilationException;
 import com.abstratt.simon.compiler.Problem;
 import com.abstratt.simon.compiler.Problem.Severity;
 import com.abstratt.simon.compiler.Result;
@@ -91,10 +92,12 @@ public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 		}
 		try {
 			doParse(name, input.getContents(), builder);
+		} catch (AbortCompilationException e) {
+			// aborted due to fatal error
 		} catch (IOException e) {
 			return Result.failure(name, new Problem(name, e.toString(), Problem.Severity.Fatal));
 		}
-		var roots = builder.build();
+		var roots = builder.buildUnit();
 		return new Result(name, roots, Collections.emptyList());
 	}
 
