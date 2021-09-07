@@ -1,4 +1,4 @@
-package com.abstratt.simon.java2ecore;
+package com.abstratt.simon.tests;
 
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.examples.kirra.Kirra;

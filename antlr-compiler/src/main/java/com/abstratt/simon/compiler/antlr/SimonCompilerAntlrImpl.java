@@ -1,9 +1,11 @@
 package com.abstratt.simon.compiler.antlr;
 
 import com.abstratt.simon.compiler.Problem;
+import com.abstratt.simon.compiler.Problem.Severity;
 import com.abstratt.simon.compiler.Result;
 import com.abstratt.simon.compiler.SimonCompiler;
 import com.abstratt.simon.compiler.source.ContentProvider;
+import com.abstratt.simon.compiler.source.DebuggedSourceProvider;
 import com.abstratt.simon.compiler.source.MetamodelSource;
 import com.abstratt.simon.compiler.source.SourceProvider;
 import com.abstratt.simon.compiler.source.SourceProviderChain;
@@ -47,7 +49,7 @@ public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 	public List<Result<T>> compile(List<String> entryPoints, SourceProvider sources) {
 		try (var typeSource = typeSourceFactory.build()) {
 			var builtInSources = typeSource.builtInSources();
-			var augmentedSources = new SourceProviderChain(Arrays.asList(builtInSources, sources));
+			var augmentedSources = new SourceProviderChain(Arrays.asList(new DebuggedSourceProvider(builtInSources), new DebuggedSourceProvider(sources)));
 			return doCompile(entryPoints, augmentedSources, typeSource);
 		}
 
@@ -59,7 +61,7 @@ public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 		var results = modelHandling.runOperation(() -> parseUnits(sources, entryPoints, builder));
 		builder.resolve();
 		problemHandler.getAllProblems().forEach((source, problem) -> {
-			Result<T> sourceResult = results.computeIfAbsent(source, Result::failure);
+			Result<T> sourceResult = results.computeIfAbsent(source, s -> Result.failure(s, new Problem(source, "Missing source", Severity.Fatal)));
 			sourceResult.getProblems().addAll(problem);
 		});
 		return new ArrayList<>(results.values());
@@ -85,15 +87,15 @@ public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 
 	private Result<T> parseUnit(SimonBuilder<T> builder, String name, ContentProvider input) {
 		if (input == null) {
-			return new Result<>(name, null, Arrays.asList(new Problem(name, -1, -1, "No source found for '" + name + "'", Problem.Severity.Fatal)));
+			return Result.failure(name, new Problem(name, "No source found for '" + name + "'", Problem.Severity.Fatal));
 		}
 		try {
 			doParse(name, input.getContents(), builder);
 		} catch (IOException e) {
-			return new Result<>(name, null, Arrays.asList(new Problem(name, -1, -1, e.toString(), Problem.Severity.Fatal)));
+			return Result.failure(name, new Problem(name, e.toString(), Problem.Severity.Fatal));
 		}
-		T root = builder.build();
-		return new Result(name, root, Collections.emptyList());
+		var roots = builder.build();
+		return new Result(name, roots, Collections.emptyList());
 	}
 
 	private void doParse(String source, Reader contents, SimonBuilder<T> builder) throws IOException {

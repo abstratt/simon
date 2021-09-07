@@ -18,9 +18,7 @@ public interface MetamodelSource<T extends Type> extends AutoCloseable {
 
 	Stream<T> enumerate();
 
-	default SourceProvider builtInSources() {
-		return SourceProvider.NULL;
-	}
+	SourceProvider builtInSources();
 
 	default void close() {
 	}
@@ -28,4 +26,5 @@ public interface MetamodelSource<T extends Type> extends AutoCloseable {
 	interface Factory<T extends Type> {
 		MetamodelSource<T> build();
 	}
+
 }

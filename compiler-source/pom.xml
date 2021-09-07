@@ -16,5 +16,9 @@
 			<artifactId>simon-metamodel</artifactId>
 			<version>0.0.3-SNAPSHOT</version>
 		</dependency>
-    </dependencies>
+		<dependency>
+			<groupId>one.util</groupId>
+			<artifactId>streamex</artifactId>
+		</dependency>
+	</dependencies>
 </project>

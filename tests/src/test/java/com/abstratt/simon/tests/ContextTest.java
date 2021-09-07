@@ -1,4 +1,4 @@
-package com.abstratt.simon.java2ecore;
+package com.abstratt.simon.tests;
 
 import com.abstratt.simon.metamodel.ecore.java2ecore.Context;
 import java.util.ArrayList;

@@ -21,6 +21,15 @@ public class Problem {
 		this.message = message;
 		this.severity = severity;
 	}
+	
+	public Problem(String source, String message, Severity severity) {
+		this.source = source;
+		this.line = -1;
+		this.column = -1;
+		this.message = message;
+		this.severity = severity;
+	}
+
 
 	public Severity category() {
 		return severity;

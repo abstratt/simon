@@ -28,6 +28,7 @@ import com.abstratt.simon.parser.antlr.SimonParser.ObjectClassContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ObjectHeaderContext;
 import com.abstratt.simon.parser.antlr.SimonParser.PropertiesContext;
 import com.abstratt.simon.parser.antlr.SimonParser.RecordLiteralContext;
+import com.abstratt.simon.parser.antlr.SimonParser.RootObjectContext;
 import com.abstratt.simon.parser.antlr.SimonParser.SlotContext;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -82,6 +83,7 @@ class SimonBuilder<T> extends SimonBaseListener {
      * Scopes can be nested.
      */
     private final Deque<ElementInfo> currentScope = new LinkedList<>();
+    private final List<ElementInfo> built = new LinkedList<>(); 
     private final List<ResolutionRequest> resolutionRequests = new LinkedList<>();
 	private final List<String> imports = new ArrayList<>();
 	private String sourceName;
@@ -150,11 +152,11 @@ class SimonBuilder<T> extends SimonBaseListener {
         this.sourceName = null;
     }
 
-    public T build() {
-        assert currentScope.size() == 1;
-        T built = currentScope.getFirst().getObject();
-        currentScope.clear();
-        return built;
+    public List<T> build() {
+    	assert currentScope.isEmpty();
+    	var partialResult = built.stream().map(ElementInfo::getObject).collect(Collectors.toList());
+    	built.clear();
+		return partialResult;
     }
 
     void resolve() {
@@ -198,7 +200,16 @@ class SimonBuilder<T> extends SimonBaseListener {
             modelHandling.nameSetting().setName(created, getIdentifier(objectName));
         newScope(asObjectType, created);
     }
-
+    
+    @Override
+    public void exitRootObject(RootObjectContext ctx) {
+    	if (currentScope.isEmpty())
+    		return;
+    	assert currentScope.size() == 1;
+    	var lastScope = dropScope();
+    	built.add(lastScope);
+    }
+    
     private String getTypeName(ObjectClassContext object) {
         String text = object.getText();
         if (text.indexOf('.') < 0)
@@ -385,7 +396,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private <Z> Z debug(String tag, Z toDebug) {
-        //System.out.println("\n" + tag + ": " + toDebug);
+        System.out.println("\n" + tag + ": " + toDebug);
         return toDebug;
     }
 

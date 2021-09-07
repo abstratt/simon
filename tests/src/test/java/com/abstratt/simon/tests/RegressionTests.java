@@ -1,4 +1,4 @@
-package com.abstratt.simon.compiler;
+package com.abstratt.simon.tests;
 
 import com.abstratt.simon.examples.kirra.Kirra;
 import com.abstratt.simon.examples.ui.UI;

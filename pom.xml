@@ -19,11 +19,11 @@
 
 
 	<distributionManagement>
-	   <repository>
-	     <id>github</id>
-	     <name>Abstratt Maven Repository</name>
-	     <url>https://maven.pkg.github.com/abstratt/maven-releases</url>
-	   </repository>
+		<repository>
+			<id>github</id>
+			<name>Abstratt Maven Repository</name>
+			<url>https://maven.pkg.github.com/abstratt/maven-releases</url>
+		</repository>
 	</distributionManagement>
 
 	<properties>
@@ -31,8 +31,8 @@
 		<junit.jupiter.version>5.6.1</junit.jupiter.version>
 		<funcj.parser.version>0.6.15</funcj.parser.version>
 
-	    <maven.compiler.target>15</maven.compiler.target>
-	    <maven.compiler.source>15</maven.compiler.source>		
+		<maven.compiler.target>15</maven.compiler.target>
+		<maven.compiler.source>15</maven.compiler.source>
 	</properties>
 	<modules>
 		<module>gen-utils</module>
@@ -46,9 +46,9 @@
 		<module>metamodel-ecore</module>
 		<module>compiler-source-ecore</module>
 		<module>compiler-backend-ecore</module>
-		<module>tests</module>	
+		<module>tests</module>
 	</modules>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -115,6 +115,11 @@
 				<groupId>io.github.classgraph</groupId>
 				<artifactId>classgraph</artifactId>
 				<version>4.8.115</version>
+			</dependency>
+			<dependency>
+				<groupId>one.util</groupId>
+				<artifactId>streamex</artifactId>
+				<version>0.7.3</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
