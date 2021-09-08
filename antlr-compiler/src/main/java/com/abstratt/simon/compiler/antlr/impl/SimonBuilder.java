@@ -1,4 +1,4 @@
-package com.abstratt.simon.compiler.antlr;
+package com.abstratt.simon.compiler.antlr.impl;
 
 import com.abstratt.simon.compiler.AbortCompilationException;
 import com.abstratt.simon.compiler.CompilerException;

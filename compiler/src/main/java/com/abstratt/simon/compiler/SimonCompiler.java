@@ -1,8 +1,13 @@
 package com.abstratt.simon.compiler;
 
+import com.abstratt.simon.compiler.backend.Backend;
 import com.abstratt.simon.compiler.source.ContentProvider;
 import com.abstratt.simon.compiler.source.ContentProviderSourceProvider;
+import com.abstratt.simon.compiler.source.MetamodelSource;
 import com.abstratt.simon.compiler.source.SourceProvider;
+import com.abstratt.simon.metamodel.Metamodel.ObjectType;
+import com.abstratt.simon.metamodel.Metamodel.Slotted;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -73,5 +78,10 @@ public interface SimonCompiler<T> {
 
 	default Result<T> compile(String toParse) {
 		return compile(ContentProvider.provideContents(new StringReader(toParse)));
+	}
+	
+	interface Factory {
+		<T> SimonCompiler<T> create(MetamodelSource.Factory<?> typeSourceFactory,
+				Backend<? extends ObjectType, ? extends Slotted, T> configurationProvider);
 	}
 }

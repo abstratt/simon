@@ -1,33 +1,38 @@
 package com.abstratt.simon.tests;
 
-import com.abstratt.simon.compiler.Result;
-import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrImpl;
-import com.abstratt.simon.compiler.backend.ecore.EcoreModelBuilder;
-import com.abstratt.simon.compiler.source.MetamodelSource.Factory;
-import com.abstratt.simon.compiler.source.MetamodelSourceChain;
-import com.abstratt.simon.compiler.source.SimpleSourceProvider;
-import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
-import com.abstratt.simon.examples.kirra.Kirra;
-import com.abstratt.simon.examples.ui.UI;
-import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
-import com.abstratt.simon.testing.TestHelper;
-import java.util.ArrayList;
+import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.findByFeature;
+import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.findChildByAttributeValue;
+import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.findStructuralFeature;
+import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.getValue;
+import static com.abstratt.simon.testing.TestHelper.KIRRA_PACKAGE;
+import static com.abstratt.simon.testing.TestHelper.UI_PACKAGE;
+import static com.abstratt.simon.testing.TestHelper.compile;
+import static com.abstratt.simon.testing.TestHelper.compileProject;
+import static com.abstratt.simon.testing.TestHelper.compileUsingUI;
+import static com.abstratt.simon.testing.TestHelper.compileUsingKirra;
+import static com.abstratt.simon.testing.TestHelper.compileValidProject;
+import static com.abstratt.simon.testing.TestHelper.getPrimitiveValue;
+import static com.abstratt.simon.testing.TestHelper.uiClassFor;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+
 import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EPackage;
 import org.junit.jupiter.api.Test;
 
-import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.*;
-import static com.abstratt.simon.testing.TestHelper.*;
-import static org.junit.jupiter.api.Assertions.*;
+import com.abstratt.simon.compiler.Result;
+import com.abstratt.simon.examples.kirra.Kirra;
+import com.abstratt.simon.examples.ui.UI;
+import com.abstratt.simon.testing.TestHelper;
 
 public class CompilerTests {
     private static final EClass namespaceClass = TestHelper.kirraClassFor(Kirra.Namespace.class);
@@ -269,7 +274,7 @@ public class CompilerTests {
 
     @Test
     void numericalSlot() {
-        EObject button = compileUI("Button (index = 3)");
+        EObject button = compileUsingUI("Button (index = 3)");
         int buttonIndex = getPrimitiveValue(button, "index");
         assertEquals(3, buttonIndex);
     }
@@ -308,7 +313,7 @@ public class CompilerTests {
                         } 
                     } 
                 }""";
-        var namespace = compileKirra(toParse);
+        var namespace = compileUsingKirra(toParse);
         List<EObject> entities = getValue(namespace, "entities");
         assertEquals(1, entities.size());
         EObject productEntity = entities.get(0);
@@ -325,7 +330,7 @@ public class CompilerTests {
 
     @Test
     void recordSlot() {
-        var rootObject = compileUI("Button (backgroundColor = #(red = 100 blue = 50))");
+        var rootObject = compileUsingUI("Button (backgroundColor = #(red = 100 blue = 50))");
         var backgroundColor = (EObject) getValue(rootObject, "backgroundColor");
         assertNotNull(backgroundColor);
         assertEquals(100, (int) getPrimitiveValue(backgroundColor, "red"));
@@ -335,75 +340,14 @@ public class CompilerTests {
     }
 
     private EObject emptyApplication(String toParse) {
-        EObject application = compileUI(toParse);
+        EObject application = compileUsingUI(toParse);
         assertEquals("myApplication", getPrimitiveValue(application, "name"));
         return application;
     }
 
-    private static EObject compileUI(String toParse) {
-        return compile(UI_PACKAGE, "@language UI " + toParse);
-    }
-
-    private static EObject compileKirra(String toParse) {
-        return compile(KIRRA_PACKAGE, "@language Kirra " + toParse);
-    }
-
-    private static EObject compile(EPackage package_, String toParse) {
-        return compile(Arrays.asList(package_), toParse);
-    }
-
-    private static EObject compile(List<EPackage> asList, String toParse) {
-        var models = compileValidProject(asList, toParse);
-        assertNotNull(models.get(0));
-        return models.get(0).getRootObject();
-    }
-
-    private static List<Result<EObject>> compileValidProject(EPackage package_, String... toParse) {
-        return compileValidProject(Arrays.asList(package_), toParse);
-    }
-
-    private static List<Result<EObject>> compileValidProject(List<EPackage> packages, String... toParse) {
-        int[] index = {0};
-        var allSources = Arrays.stream(toParse).collect(Collectors.toMap(it -> "source" + index[0]++, it -> it));
-        return compileValidProject(packages, new ArrayList(allSources.keySet()), allSources);
-    }
-
-    private static List<Result<EObject>> compileValidProject(EPackage package_, List<String> entryPoints, Map<String, String> toParse) {
-        return compileValidProject(Arrays.asList(package_), entryPoints, toParse);
-    }
-
-    private static List<Result<EObject>> compileValidProject(List<EPackage> packages, List<String> entryPoints,
-            Map<String, String> toParse)
-    {
-        var results = compileProject(packages, entryPoints, toParse);
-        results.forEach(CompilerTests::ensureSuccess);
-        return results;
-    }
-
-    private static List<Result<EObject>> compileProject(EPackage package_, List<String> entryPoints, Map<String, String> toParse) {
-        return compileProject(Arrays.asList(package_), entryPoints, toParse);
-    }
-
-    private static List<Result<EObject>> compileProject(List<EPackage> packages, List<String> entryPoints,
-            Map<String, String> toParse)
-    {
-        List<Factory<EcoreType<? extends EClassifier>>> sourceFactories = packages.stream().map(p -> new EPackageMetamodelSource.Factory(p)).collect(Collectors.toList());
-        // TODO-RC this should be supported in the compiler itself, which should take
-        // multiple type sources (one per language) and then decide which ones to enable
-        // based on the languages declared in the file using the @language processing instruction
-        var typeSourceFactory = new MetamodelSourceChain.Factory<EcoreType<? extends EClassifier>>(sourceFactories);
-        var modelBuilder = new EcoreModelBuilder();
-        var compiler = new SimonCompilerAntlrImpl<>(typeSourceFactory, modelBuilder);
-        return compiler.compile(entryPoints, new SimpleSourceProvider(toParse));
-    }
-
-    private static void ensureSuccess(Result<?> result) {
-        assertEquals(0, result.getProblems().size(), result.getProblems()::toString);
-    }
-
     @Test
     void applicationWithScreens() {
-        var myApplication = compileUI(
+        var myApplication = compileUsingUI(
                 """
                             Application myApplication {
                                     screens {
@@ -424,7 +368,7 @@ public class CompilerTests {
 
     @Test
     void fullyQualifiedReferences() {
-        var application = compileUI("""
+        var application = compileUsingUI("""
                     @language UI
                     
                       application myApplication { 
