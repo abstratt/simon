@@ -27,11 +27,11 @@ import com.abstratt.simon.compiler.source.SimpleSourceProvider;
 import com.abstratt.simon.compiler.source.URISourceProvider;
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.EcoreDynamicMetamodelSource;
+import com.abstratt.simon.compiler.source.ecore.Java2EcoreMapper;
 import com.abstratt.simon.examples.kirra.Kirra;
 import com.abstratt.simon.examples.ui.UI;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
-import com.abstratt.simon.metamodel.ecore.impl.Java2EcoreMapper;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 
 public class TestHelper {

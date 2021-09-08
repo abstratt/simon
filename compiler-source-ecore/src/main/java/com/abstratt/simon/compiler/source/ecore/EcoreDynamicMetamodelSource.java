@@ -18,7 +18,6 @@ import com.abstratt.simon.compiler.source.SourceProvider;
 import com.abstratt.simon.metamodel.dsl.Meta;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
-import com.abstratt.simon.metamodel.ecore.impl.Java2EcoreMapper;
 
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;

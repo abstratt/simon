@@ -1,4 +1,4 @@
-package com.abstratt.simon.metamodel.ecore.impl;
+package com.abstratt.simon.compiler.source.ecore;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -39,6 +39,8 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 
 import com.abstratt.simon.metamodel.dsl.Meta;
 import com.abstratt.simon.metamodel.dsl.Meta.Required;
+import com.abstratt.simon.metamodel.ecore.impl.Context;
+import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 
 
 /**

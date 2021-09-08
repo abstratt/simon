@@ -25,11 +25,11 @@ import org.eclipse.emf.ecore.util.EcoreValidator;
 import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
+import com.abstratt.simon.compiler.source.ecore.Java2EcoreMapper;
 import com.abstratt.simon.examples.kirra.Kirra;
 import com.abstratt.simon.examples.ui.UI;
 import com.abstratt.simon.examples.ui.UI.Application;
 import com.abstratt.simon.examples.ui.UI.PanelLayout;
-import com.abstratt.simon.metamodel.ecore.impl.Java2EcoreMapper;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 
 /**
