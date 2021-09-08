@@ -1,15 +1,15 @@
 package com.abstratt.simon.tests;
 
-import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.findByFeature;
-import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.findChildByAttributeValue;
-import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.findStructuralFeature;
-import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.getValue;
+import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findByFeature;
+import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findChildByAttributeValue;
+import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findStructuralFeature;
+import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.getValue;
 import static com.abstratt.simon.testing.TestHelper.KIRRA_PACKAGE;
 import static com.abstratt.simon.testing.TestHelper.UI_PACKAGE;
 import static com.abstratt.simon.testing.TestHelper.compile;
 import static com.abstratt.simon.testing.TestHelper.compileProject;
-import static com.abstratt.simon.testing.TestHelper.compileUsingUI;
 import static com.abstratt.simon.testing.TestHelper.compileUsingKirra;
+import static com.abstratt.simon.testing.TestHelper.compileUsingUI;
 import static com.abstratt.simon.testing.TestHelper.compileValidProject;
 import static com.abstratt.simon.testing.TestHelper.getPrimitiveValue;
 import static com.abstratt.simon.testing.TestHelper.uiClassFor;

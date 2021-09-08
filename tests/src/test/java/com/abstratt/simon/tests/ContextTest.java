@@ -1,17 +1,22 @@
 package com.abstratt.simon.tests;
 
-import com.abstratt.simon.metamodel.ecore.java2ecore.Context;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+
 import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.junit.jupiter.api.Test;
 
-import static java.util.Arrays.*;
-import static java.util.Collections.*;
-import static org.junit.jupiter.api.Assertions.*;
+import com.abstratt.simon.metamodel.ecore.impl.Context;
 
 public class ContextTest {
 	@Test

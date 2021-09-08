@@ -1,11 +1,12 @@
 package com.abstratt.simon.metamodel.dsl;
 
-import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
 
 /**
  * An annotation-based internal DSL for creating Java-based Simon metamodels.

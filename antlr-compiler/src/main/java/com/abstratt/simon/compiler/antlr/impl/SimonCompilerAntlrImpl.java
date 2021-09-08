@@ -1,20 +1,5 @@
 package com.abstratt.simon.compiler.antlr.impl;
 
-import com.abstratt.simon.compiler.AbortCompilationException;
-import com.abstratt.simon.compiler.Problem;
-import com.abstratt.simon.compiler.Problem.Severity;
-import com.abstratt.simon.compiler.Result;
-import com.abstratt.simon.compiler.SimonCompiler;
-import com.abstratt.simon.compiler.source.ContentProvider;
-import com.abstratt.simon.compiler.source.DebuggedSourceProvider;
-import com.abstratt.simon.compiler.source.MetamodelSource;
-import com.abstratt.simon.compiler.source.SourceProvider;
-import com.abstratt.simon.compiler.source.SourceProviderChain;
-import com.abstratt.simon.compiler.backend.Backend;
-import com.abstratt.simon.metamodel.Metamodel.ObjectType;
-import com.abstratt.simon.metamodel.Metamodel.Slotted;
-import com.abstratt.simon.parser.antlr.SimonLexer;
-import com.abstratt.simon.parser.antlr.SimonParser;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -25,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -33,6 +19,22 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.UnbufferedTokenStream;
 import org.antlr.v4.runtime.tree.pattern.RuleTagToken;
 import org.apache.commons.lang3.tuple.Pair;
+
+import com.abstratt.simon.compiler.AbortCompilationException;
+import com.abstratt.simon.compiler.Problem;
+import com.abstratt.simon.compiler.Problem.Severity;
+import com.abstratt.simon.compiler.Result;
+import com.abstratt.simon.compiler.SimonCompiler;
+import com.abstratt.simon.compiler.backend.Backend;
+import com.abstratt.simon.compiler.source.ContentProvider;
+import com.abstratt.simon.compiler.source.DebuggedSourceProvider;
+import com.abstratt.simon.compiler.source.MetamodelSource;
+import com.abstratt.simon.compiler.source.SourceProvider;
+import com.abstratt.simon.compiler.source.SourceProviderChain;
+import com.abstratt.simon.metamodel.Metamodel.ObjectType;
+import com.abstratt.simon.metamodel.Metamodel.Slotted;
+import com.abstratt.simon.parser.antlr.SimonLexer;
+import com.abstratt.simon.parser.antlr.SimonParser;
 
 public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 	public final MetamodelSource.Factory<?> typeSourceFactory;

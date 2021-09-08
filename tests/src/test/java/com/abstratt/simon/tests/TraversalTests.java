@@ -1,24 +1,28 @@
 package com.abstratt.simon.tests;
 
-import com.abstratt.simon.compiler.Result;
-import com.abstratt.simon.compiler.backend.ecore.EObjectTraversalProvider;
-import com.abstratt.simon.examples.ui.UI;
-import com.abstratt.simon.genutils.Traversal;
-import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
-import com.abstratt.simon.testing.TestHelper;
+import static com.abstratt.simon.testing.TestHelper.compileResource;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static com.abstratt.simon.testing.TestHelper.*;
-import static org.junit.jupiter.api.Assertions.*;
+import com.abstratt.simon.compiler.Result;
+import com.abstratt.simon.compiler.backend.ecore.EObjectTraversalProvider;
+import com.abstratt.simon.examples.ui.UI;
+import com.abstratt.simon.genutils.Traversal;
+import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
+import com.abstratt.simon.testing.TestHelper;
 
 public class TraversalTests {
 	private static EObject application;

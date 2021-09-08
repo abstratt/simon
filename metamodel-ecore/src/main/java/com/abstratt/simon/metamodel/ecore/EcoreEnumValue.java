@@ -1,9 +1,10 @@
 package com.abstratt.simon.metamodel.ecore;
 
-import com.abstratt.simon.metamodel.Metamodel;
 import org.eclipse.emf.ecore.EEnum;
 import org.eclipse.emf.ecore.EFactory;
 import org.eclipse.emf.ecore.EObject;
+
+import com.abstratt.simon.metamodel.Metamodel;
 
 public class EcoreEnumValue extends EcoreValue<EEnum> implements Metamodel.Enumerated {
 

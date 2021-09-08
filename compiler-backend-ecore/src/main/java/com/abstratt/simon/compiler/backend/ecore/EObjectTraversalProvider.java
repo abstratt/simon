@@ -1,12 +1,14 @@
 package com.abstratt.simon.compiler.backend.ecore;
 
-import com.abstratt.simon.genutils.Traversal;
-import com.abstratt.simon.genutils.Traversal.Multiple;
-import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
 import java.util.stream.Stream;
+
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+
+import com.abstratt.simon.genutils.Traversal;
+import com.abstratt.simon.genutils.Traversal.Multiple;
+import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 
 public interface EObjectTraversalProvider extends Traversal.Provider<EObject, EAttribute> {
 	default Multiple<EObject> roots() {

@@ -1,8 +1,9 @@
 package com.abstratt.simon.compiler.source;
 
-import com.abstratt.simon.metamodel.Metamodel.Type;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import com.abstratt.simon.metamodel.Metamodel.Type;
 
 /**
  * A type source provides access to the metamodel of the language.

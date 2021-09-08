@@ -1,7 +1,8 @@
 package com.abstratt.simon.examples.ui;
 
-import com.abstratt.simon.metamodel.dsl.Meta;
 import java.util.List;
+
+import com.abstratt.simon.metamodel.dsl.Meta;
 
 @Meta.Package(builtIns = {})
 public interface UI {

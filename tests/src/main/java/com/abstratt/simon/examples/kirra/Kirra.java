@@ -1,9 +1,11 @@
 package com.abstratt.simon.examples.kirra;
 
-import com.abstratt.simon.metamodel.dsl.Meta;
 import java.util.Collection;
 import java.util.List;
+
 import org.apache.commons.text.WordUtils;
+
+import com.abstratt.simon.metamodel.dsl.Meta;
 
 @Meta.Package(builtIns = {"kirra"})
 public interface Kirra {

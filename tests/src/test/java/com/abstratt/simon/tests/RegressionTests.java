@@ -1,16 +1,21 @@
 package com.abstratt.simon.tests;
 
-import com.abstratt.simon.examples.kirra.Kirra;
-import com.abstratt.simon.examples.ui.UI;
-import com.abstratt.simon.testing.TestHelper;
+import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findByFeature;
+import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.getValue;
+import static com.abstratt.simon.testing.TestHelper.compileResourceToEObject;
+import static com.abstratt.simon.testing.TestHelper.getPrimitiveValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.util.List;
+
 import org.eclipse.emf.ecore.EEnumLiteral;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 
-import static com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper.*;
-import static com.abstratt.simon.testing.TestHelper.*;
-import static org.junit.jupiter.api.Assertions.*;
+import com.abstratt.simon.examples.kirra.Kirra;
+import com.abstratt.simon.examples.ui.UI;
+import com.abstratt.simon.testing.TestHelper;
 
 public class RegressionTests {
 

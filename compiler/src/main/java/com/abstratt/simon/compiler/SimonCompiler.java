@@ -1,13 +1,5 @@
 package com.abstratt.simon.compiler;
 
-import com.abstratt.simon.compiler.backend.Backend;
-import com.abstratt.simon.compiler.source.ContentProvider;
-import com.abstratt.simon.compiler.source.ContentProviderSourceProvider;
-import com.abstratt.simon.compiler.source.MetamodelSource;
-import com.abstratt.simon.compiler.source.SourceProvider;
-import com.abstratt.simon.metamodel.Metamodel.ObjectType;
-import com.abstratt.simon.metamodel.Metamodel.Slotted;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,6 +13,14 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import com.abstratt.simon.compiler.backend.Backend;
+import com.abstratt.simon.compiler.source.ContentProvider;
+import com.abstratt.simon.compiler.source.ContentProviderSourceProvider;
+import com.abstratt.simon.compiler.source.MetamodelSource;
+import com.abstratt.simon.compiler.source.SourceProvider;
+import com.abstratt.simon.metamodel.Metamodel.ObjectType;
+import com.abstratt.simon.metamodel.Metamodel.Slotted;
 
 /**
  * Base class for Simon compilers.

@@ -1,5 +1,14 @@
-package com.abstratt.simon.compiler.backend.ecore;
+package com.abstratt.simon.compiler.backend.ecore.impl;
 
+import java.util.List;
+
+import org.eclipse.emf.ecore.EAttribute;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
+
+import com.abstratt.simon.compiler.backend.Backend;
 import com.abstratt.simon.compiler.backend.Declaration;
 import com.abstratt.simon.compiler.backend.Instantiation;
 import com.abstratt.simon.compiler.backend.Linking;
@@ -8,22 +17,16 @@ import com.abstratt.simon.compiler.backend.NameResolution;
 import com.abstratt.simon.compiler.backend.NameSetting;
 import com.abstratt.simon.compiler.backend.Operation;
 import com.abstratt.simon.compiler.backend.Parenting;
-import com.abstratt.simon.compiler.backend.Backend;
 import com.abstratt.simon.compiler.backend.ValueSetting;
+import com.abstratt.simon.compiler.backend.ecore.EObjectTraversalProvider;
 import com.abstratt.simon.genutils.Traversal;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreObjectType;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreRelationship;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreSlot;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreSlotted;
 import com.abstratt.simon.metamodel.ecore.EcorePrimitiveValue;
-import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
-import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
-import java.util.List;
-import org.eclipse.emf.ecore.EAttribute;
-import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
+import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
+import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 
 public class EcoreModelBuilder implements Backend<EcoreObjectType, EcoreSlotted<?>, EObject> {
 

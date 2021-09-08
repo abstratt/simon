@@ -1,13 +1,16 @@
 package com.abstratt.simon.tests;
 
+import static com.abstratt.simon.testing.TestHelper.UI_PACKAGE;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.util.Collections;
+
+import org.junit.jupiter.api.Test;
+
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.EcoreDynamicMetamodelSource;
 import com.abstratt.simon.examples.ui.UI;
-import java.util.Collections;
-import org.junit.jupiter.api.Test;
-
-import static com.abstratt.simon.testing.TestHelper.UI_PACKAGE;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class MetamodelSourceTests {
 

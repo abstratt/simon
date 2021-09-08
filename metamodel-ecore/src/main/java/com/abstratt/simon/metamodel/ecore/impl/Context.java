@@ -1,4 +1,4 @@
-package com.abstratt.simon.metamodel.ecore.java2ecore;
+package com.abstratt.simon.metamodel.ecore.impl;
 
 import java.util.Deque;
 import java.util.LinkedHashMap;
@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
 import org.eclipse.emf.ecore.ENamedElement;
 
 /**

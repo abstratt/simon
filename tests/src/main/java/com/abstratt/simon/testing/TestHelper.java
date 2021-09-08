@@ -20,7 +20,7 @@ import org.eclipse.emf.ecore.EPackage;
 import com.abstratt.simon.compiler.Problem;
 import com.abstratt.simon.compiler.Result;
 import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrFactory;
-import com.abstratt.simon.compiler.backend.ecore.EcoreModelBuilder;
+import com.abstratt.simon.compiler.backend.ecore.EMFModelBackendFactory;
 import com.abstratt.simon.compiler.source.MetamodelSource.Factory;
 import com.abstratt.simon.compiler.source.MetamodelSourceChain;
 import com.abstratt.simon.compiler.source.SimpleSourceProvider;
@@ -30,22 +30,23 @@ import com.abstratt.simon.compiler.source.ecore.EcoreDynamicMetamodelSource;
 import com.abstratt.simon.examples.kirra.Kirra;
 import com.abstratt.simon.examples.ui.UI;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
-import com.abstratt.simon.metamodel.ecore.java2ecore.EcoreHelper;
-import com.abstratt.simon.metamodel.ecore.java2ecore.Java2EcoreMapper;
-import com.abstratt.simon.metamodel.ecore.java2ecore.MetaEcoreHelper;
+import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
+import com.abstratt.simon.metamodel.ecore.impl.Java2EcoreMapper;
+import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 
 public class TestHelper {
 
 	public static final EPackage KIRRA_PACKAGE = new Java2EcoreMapper().map(Kirra.class);
 	public static final EPackage UI_PACKAGE = new Java2EcoreMapper().map(UI.class);
 	private static SimonCompilerAntlrFactory compilerFactory = new SimonCompilerAntlrFactory();
+	private static EMFModelBackendFactory backendFactory = new EMFModelBackendFactory();
 
 	public static EObject compile(EPackage package_, String toParse) {
         return compile(Arrays.asList(package_), toParse);
     }
 
 	public static EObject compile(EPackageMetamodelSource.Factory typeSourceFactory, String toParse) {
-		var modelBuilder = new EcoreModelBuilder();
+		var modelBuilder = backendFactory.create();
 		var compiler = new SimonCompilerAntlrFactory().create(typeSourceFactory, modelBuilder);
 		var result = compiler.compile(toParse);
 		ensureSuccess(result);
@@ -72,7 +73,7 @@ public class TestHelper {
         // multiple type sources (one per language) and then decide which ones to enable
         // based on the languages declared in the file using the @language processing instruction
         var typeSourceFactory = new MetamodelSourceChain.Factory<EcoreType<? extends EClassifier>>(sourceFactories);
-        var modelBuilder = new EcoreModelBuilder();
+        var modelBuilder = backendFactory.create();
         var compiler = compilerFactory.create(typeSourceFactory, modelBuilder);
         return compiler.compile(entryPoints, new SimpleSourceProvider(toParse));
     }
@@ -83,7 +84,7 @@ public class TestHelper {
 		var resourceUri = resourceUrl.toURI();
 		var baseURL = resourceUri.resolve(".");
 		var sourceName = FilenameUtils.removeExtension(baseURL.relativize(resourceUri).getPath());
-		var modelBuilder = new EcoreModelBuilder();
+		var modelBuilder = backendFactory.create();
 		var typeSource = new EcoreDynamicMetamodelSource.Factory(packageClass.getPackageName());
 		var compiler = compilerFactory.create(typeSource, modelBuilder);
 		var results = compiler.compile(Arrays.asList(sourceName), new URISourceProvider(baseURL, "simon"));
