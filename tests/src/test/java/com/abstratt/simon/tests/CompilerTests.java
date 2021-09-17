@@ -146,29 +146,35 @@ public class CompilerTests {
         var orderEntity = findChildByAttributeValue(ordersNamespace, "name", "Order");
         var customerRelationship = findChildByAttributeValue(orderEntity, "name", "customer");
         assertNotNull(customerRelationship);
+        var customerEntity = findChildByAttributeValue(customersNamespace, "name", "Customer");
+        assertSame(customerEntity, getValue(customerRelationship, "type"));
     }
 
     @Test
     void unresolvedReference() {
         var results = compileProject(KIRRA_PACKAGE,
-                Collections.singletonMap("orders",
-    """
-            @language Kirra
-            Namespace orders {
-                    entities { 
-                            Entity Order { 
-                                    relationships { 
-                                            relationship { type: customers.Customer } 
-                                    } 
-                            }
-                    }
+"""
+    @language Kirra
+    Namespace orders {
+        entities { 
+            Entity Order { 
+                relationships { 
+                    relationship customer { type: FOOBAR } 
+                } 
             }
+        }
+    }
     """
-                )
         );
 
         var problems = results.get(0).getProblems();
-        assertNotEquals(0, problems.size());
+        assertEquals(1, problems.size());
+        assertEquals(Problem.Category.UnresolvedName, problems.get(0).category(), problems.get(0)::toString);
+        
+        var ordersNamespace = results.get(0).getRootObject();
+        var orderEntity = findChildByAttributeValue(ordersNamespace, "name", "Order");
+        var customerRelationship = findChildByAttributeValue(orderEntity, "name", "customer");
+        assertNull(getValue(customerRelationship, "type"));
     }
 
     @Test
