@@ -4,11 +4,11 @@ import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findByFeature;
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findChildByAttributeValue;
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findStructuralFeature;
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.getValue;
-import static com.abstratt.simon.testing.TestHelper.KIRRA_PACKAGE;
+import static com.abstratt.simon.testing.TestHelper.IM_PACKAGE;
 import static com.abstratt.simon.testing.TestHelper.UI_PACKAGE;
 import static com.abstratt.simon.testing.TestHelper.compile;
 import static com.abstratt.simon.testing.TestHelper.compileProject;
-import static com.abstratt.simon.testing.TestHelper.compileUsingKirra;
+import static com.abstratt.simon.testing.TestHelper.compileUsingIM;
 import static com.abstratt.simon.testing.TestHelper.compileUsingUI;
 import static com.abstratt.simon.testing.TestHelper.compileValidProject;
 import static com.abstratt.simon.testing.TestHelper.getPrimitiveValue;
@@ -31,12 +31,12 @@ import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.Result;
-import com.abstratt.simon.examples.kirra.Kirra;
+import com.abstratt.simon.examples.im.IM;
 import com.abstratt.simon.examples.ui.UI;
 import com.abstratt.simon.testing.TestHelper;
 
 public class CompilerTests {
-    private static final EClass namespaceClass = TestHelper.kirraClassFor(Kirra.Namespace.class);
+    private static final EClass namespaceClass = TestHelper.imClassFor(IM.Namespace.class);
     private static final EClass applicationClass = uiClassFor(UI.Application.class);
     private static final EClass buttonClass = uiClassFor(UI.Button.class);
     private static final EClass namedClass = uiClassFor(UI.Named.class);
@@ -85,7 +85,7 @@ public class CompilerTests {
     @Test
     void typeReference() {
         var source = """
-        		@language Kirra
+        		@language IM
                 Namespace customers {
                   entities {
                     Entity Customer
@@ -97,7 +97,7 @@ public class CompilerTests {
                   }
                 }
                 """;
-        EObject namespace = compile(KIRRA_PACKAGE, source);
+        EObject namespace = compile(IM_PACKAGE, source);
         List<EObject> entities = getValue(namespace, "entities");
         assertEquals("Customer", getPrimitiveValue(entities.get(0), "name"));
         assertEquals("Order", getPrimitiveValue(entities.get(1), "name"));
@@ -115,7 +115,7 @@ public class CompilerTests {
 
     void doCrossFileReference(int... order) {
         String customersSource = """
-        		@language Kirra
+        		@language IM
                 namespace customers {
                         entities {
                             entity Customer
@@ -123,7 +123,7 @@ public class CompilerTests {
                 }
                 """;
         String ordersSource = """
-        		@language Kirra
+        		@language IM
                 namespace orders {
                         entities { 
                                 entity Order { 
@@ -135,7 +135,7 @@ public class CompilerTests {
                 }
                 """;
         String[] sources = {customersSource, ordersSource};
-        var results = compileValidProject(KIRRA_PACKAGE,
+        var results = compileValidProject(IM_PACKAGE,
                 sources[order[0]],
                 sources[order[1]]
         );
@@ -152,9 +152,9 @@ public class CompilerTests {
 
     @Test
     void unresolvedReference() {
-        var results = compileProject(KIRRA_PACKAGE,
+        var results = compileProject(IM_PACKAGE,
 """
-    @language Kirra
+    @language IM
     Namespace orders {
         entities { 
             Entity Order { 
@@ -170,7 +170,7 @@ public class CompilerTests {
         var problems = results.get(0).getProblems();
         assertEquals(1, problems.size());
         assertEquals(Problem.Category.UnresolvedName, problems.get(0).category(), problems.get(0)::toString);
-        
+
         var ordersNamespace = results.get(0).getRootObject();
         var orderEntity = findChildByAttributeValue(ordersNamespace, "name", "Order");
         var customerRelationship = findChildByAttributeValue(orderEntity, "name", "customer");
@@ -181,12 +181,12 @@ public class CompilerTests {
     void imports() {
         var customers =
                 """
-                		@language Kirra
+                		@language IM
                         namespace customers
                         """;
         var orders =
                 """
-                		@language Kirra
+                		@language IM
                         @import 'customers'
                         namespace orders
                         """;
@@ -195,7 +195,7 @@ public class CompilerTests {
         allSources.put("customers", customers);
         allSources.put("orders", orders);
         var results = compileValidProject(
-                KIRRA_PACKAGE,
+                IM_PACKAGE,
                 Collections.singletonList("orders"),
                 allSources
         );
@@ -211,13 +211,13 @@ public class CompilerTests {
     void importBuiltIn() {
         var orders =
                 """
-                		@language Kirra
-                        @import 'kirra'
+                		@language IM
+                        @import 'im'
                         namespace orders
                         """;
 
         var results = compileValidProject(
-                KIRRA_PACKAGE,
+                IM_PACKAGE,
                 Collections.singletonList("orders"),
                 Collections.singletonMap("orders", orders)
         );
@@ -233,7 +233,7 @@ public class CompilerTests {
     void crossFileReferenceViaImport() {
         var customers =
                 """
-                		@language Kirra
+                		@language IM
                         namespace customers {
                                 entities {
                                     entity Customer
@@ -242,7 +242,7 @@ public class CompilerTests {
                         """;
         var orders =
                 """
-                		@language Kirra
+                		@language IM
                         @import 'customers'
                         namespace orders {
                                 entities { 
@@ -259,7 +259,7 @@ public class CompilerTests {
         allSources.put("customers", customers);
         allSources.put("orders", orders);
         var results = compileValidProject(
-                KIRRA_PACKAGE,
+                IM_PACKAGE,
                 Collections.singletonList("orders"),
                 allSources
         );
@@ -315,9 +315,9 @@ public class CompilerTests {
 
     @Test
     void namespaceWithTwoEntities() {
-        var namespace1 = compile(KIRRA_PACKAGE,
+        var namespace1 = compile(IM_PACKAGE,
                 """
-                		@language Kirra
+                		@language IM
                         Namespace myapp { 
                                 entities { 
                                         Entity Customer 
@@ -336,18 +336,18 @@ public class CompilerTests {
     void primitiveTypes()
     {
         var toParse = """
-        		@language Kirra
-                @import 'kirra'
+        		@language IM
+                @import 'im'
                 namespace { 
                     entities { 
                         Entity Product { 
                             properties { 
-                                Property description { type = kirra.StringValue } 
+                                Property description { type = im.StringValue } 
                             } 
                         } 
                     } 
                 }""";
-        var namespace = compileUsingKirra(toParse);
+        var namespace = compileUsingIM(toParse);
         List<EObject> entities = getValue(namespace, "entities");
         assertEquals(1, entities.size());
         EObject productEntity = entities.get(0);
@@ -429,9 +429,9 @@ public class CompilerTests {
 
     @Test
     void multipleLanguages() {
-        var results = compileValidProject(Arrays.asList(KIRRA_PACKAGE, UI_PACKAGE), """
+        var results = compileValidProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), """
                   @language UI
-                  @language Kirra
+                  @language IM
                   application myApplication
                   namespace myNamespace
                 """);
@@ -446,7 +446,7 @@ public class CompilerTests {
 
     @Test
     void multiplePackagesEmptySource() {
-        var roots = compileValidProject(Arrays.asList(KIRRA_PACKAGE, UI_PACKAGE), "");
+        var roots = compileValidProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), "");
         assertEquals(1, roots.size());
         assertNull(roots.get(0).getRootObject());
         assertEquals(0, roots.get(0).getProblems().size());

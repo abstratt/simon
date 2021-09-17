@@ -29,7 +29,7 @@ import com.abstratt.simon.compiler.source.URISourceProvider;
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.EcoreDynamicMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.Java2EcoreMapper;
-import com.abstratt.simon.examples.kirra.Kirra;
+import com.abstratt.simon.examples.im.IM;
 import com.abstratt.simon.examples.ui.UI;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
@@ -37,7 +37,7 @@ import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 
 public class TestHelper {
 
-	public static final EPackage KIRRA_PACKAGE = new Java2EcoreMapper().map(Kirra.class);
+	public static final EPackage IM_PACKAGE = new Java2EcoreMapper().map(IM.class);
 	public static final EPackage UI_PACKAGE = new Java2EcoreMapper().map(UI.class);
 	private static SimonCompilerAntlrFactory compilerFactory = new SimonCompilerAntlrFactory();
 	private static EMFModelBackendFactory backendFactory = new EMFModelBackendFactory();
@@ -108,8 +108,8 @@ public class TestHelper {
 		return rootObject;
 	}
 	
-    public static EObject compileUsingKirra(String toParse) {
-        return compile(KIRRA_PACKAGE, "@language Kirra " + toParse);
+    public static EObject compileUsingIM(String toParse) {
+        return compile(IM_PACKAGE, "@language IM " + toParse);
     }	
     
     public static EObject compileUsingUI(String toParse) {
@@ -164,8 +164,8 @@ public class TestHelper {
 		}
 		return EcoreHelper.unwrappedPrimitiveValue(value);
 	}
-	public static EClass kirraClassFor(Class<?> clazz) {
-		EPackage package_ = KIRRA_PACKAGE;
+	public static EClass imClassFor(Class<?> clazz) {
+		EPackage package_ = IM_PACKAGE;
 		return eClassFor(clazz, package_);
 	}
 

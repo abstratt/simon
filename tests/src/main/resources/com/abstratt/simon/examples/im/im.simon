@@ -1,6 +1,6 @@
-@language Kirra
+@language IM
 
-namespace kirra {
+namespace im {
     primitives {
 	    primitive StringValue
 		primitive BooleanValue

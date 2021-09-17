@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.Java2EcoreMapper;
-import com.abstratt.simon.examples.kirra.Kirra;
+import com.abstratt.simon.examples.im.IM;
 import com.abstratt.simon.examples.ui.UI;
 import com.abstratt.simon.examples.ui.UI.Application;
 import com.abstratt.simon.examples.ui.UI.PanelLayout;
@@ -39,14 +39,14 @@ public class Java2EcoreTest {
 
 	@Test
 	void objectType() {
-		var result = build(Kirra.Namespace.class);
-		assertEquals(Kirra.Namespace.class.getSimpleName(), result.getName());
+		var result = build(IM.Namespace.class);
+		assertEquals(IM.Namespace.class.getSimpleName(), result.getName());
 	}
 
 	@Test
 	void rootType() {
 		assertTrue(MetaEcoreHelper.isRootComposite(UI.Application.class));
-		EClass result = build(Kirra.Namespace.class);
+		EClass result = build(IM.Namespace.class);
 		assertTrue(MetaEcoreHelper.isRootComposite(result));
 	}
 
@@ -160,11 +160,11 @@ public class Java2EcoreTest {
 
 	@Test
 	void superClass2() {
-		EPackage uiPackage = build(Kirra.class);
-		var namedEClass = (EClass) uiPackage.getEClassifier(name(Kirra.Named.class));
-		var typeEClass = (EClass) uiPackage.getEClassifier(name(Kirra.Type.class));
-		var basicTypeEClass = (EClass) uiPackage.getEClassifier(name(Kirra.BasicType.class));
-		var primitiveEClass = (EClass) uiPackage.getEClassifier(name(Kirra.Primitive.class));
+		EPackage uiPackage = build(IM.class);
+		var namedEClass = (EClass) uiPackage.getEClassifier(name(IM.Named.class));
+		var typeEClass = (EClass) uiPackage.getEClassifier(name(IM.Type.class));
+		var basicTypeEClass = (EClass) uiPackage.getEClassifier(name(IM.BasicType.class));
+		var primitiveEClass = (EClass) uiPackage.getEClassifier(name(IM.Primitive.class));
 
 		assertTrue(namedEClass.getESuperTypes().isEmpty());
 		assertTrue(namedEClass.isSuperTypeOf(typeEClass));
@@ -174,9 +174,9 @@ public class Java2EcoreTest {
 
 	@Test
 	void packages() {
-		EPackage kirraPackage = build(Kirra.class);
-		assertNotNull(kirraPackage);
-		var allClassifiers = kirraPackage.getEClassifiers();
+		EPackage imPackage = build(IM.class);
+		assertNotNull(imPackage);
+		var allClassifiers = imPackage.getEClassifiers();
 		var entityClass = find(allClassifiers, pred((EClassifier eo) -> eo instanceof EClass)//
 				.and(pred(eo -> "Entity".equals(eo.getName()))));
 		assertNotNull(entityClass);
@@ -184,11 +184,11 @@ public class Java2EcoreTest {
 
 	@Test
 	void containingPackage() {
-		EPackage kirraPackage = build(Kirra.class);
-		assertNotNull(kirraPackage);
-		var entityEClass = kirraPackage.getEClassifier(name(Kirra.Entity.class));
+		EPackage imPackage = build(IM.class);
+		assertNotNull(imPackage);
+		var entityEClass = imPackage.getEClassifier(name(IM.Entity.class));
 		assertNotNull(entityEClass);
-		assertSame(kirraPackage, entityEClass.getEPackage());
+		assertSame(imPackage, entityEClass.getEPackage());
 	}
 
 	@Test
@@ -223,7 +223,7 @@ public class Java2EcoreTest {
 
 	@Test
 	void children() {
-		EClass namespaceEClass = build(Kirra.Namespace.class);
+		EClass namespaceEClass = build(IM.Namespace.class);
 		var entities = find(namespaceEClass.getEAllReferences(),
 				pred(EReference::isContainment).and(e -> e.getName().equals("entities")));
 		assertNotNull(entities);
@@ -286,7 +286,7 @@ public class Java2EcoreTest {
 	
 	@Test
 	void inheritedReferences() {
-		EClass relationshipEclass = build(Kirra.Relationship.class);
+		EClass relationshipEclass = build(IM.Relationship.class);
 		assertNotNull(relationshipEclass.getEPackage());
 		var typeReference = find(relationshipEclass.getEAllReferences(), e -> e.getName().equals("type"));
 		assertNotNull(typeReference);
@@ -297,7 +297,7 @@ public class Java2EcoreTest {
 
 	@Test
 	void opposite() {
-		EClass entityEClass = build(Kirra.Entity.class);
+		EClass entityEClass = build(IM.Entity.class);
 		var superTypes = find(entityEClass.getEAllReferences(),
 				pred(EReference::isContainment).negate().and(e -> e.getName().equals("superTypes")));
 		var subTypes = find(entityEClass.getEAllReferences(),

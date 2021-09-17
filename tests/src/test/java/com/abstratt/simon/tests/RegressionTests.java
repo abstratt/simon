@@ -13,7 +13,7 @@ import org.eclipse.emf.ecore.EEnumLiteral;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 
-import com.abstratt.simon.examples.kirra.Kirra;
+import com.abstratt.simon.examples.im.IM;
 import com.abstratt.simon.examples.ui.UI;
 import com.abstratt.simon.testing.TestHelper;
 
@@ -43,8 +43,8 @@ public class RegressionTests {
     }
 
     @Test
-    void kirraProgram() throws Exception {
-        EObject namespace = compileResourceToEObject(Kirra.class,"/kirra-sample.simon");
+    void imProgram() throws Exception {
+        EObject namespace = compileResourceToEObject(IM.class,"/im-sample.simon");
         List<EObject> entities = getValue(namespace, "entities");
         assertEquals(5, entities.size());
         EObject memberEntity = findByFeature(entities, "name", "Member");

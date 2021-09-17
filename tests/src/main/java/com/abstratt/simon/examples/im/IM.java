@@ -1,4 +1,4 @@
-package com.abstratt.simon.examples.kirra;
+package com.abstratt.simon.examples.im;
 
 import java.util.Collection;
 import java.util.List;
@@ -7,8 +7,8 @@ import org.apache.commons.text.WordUtils;
 
 import com.abstratt.simon.metamodel.dsl.Meta;
 
-@Meta.Package(builtIns = {"kirra"})
-public interface Kirra {
+@Meta.Package(builtIns = {"im"})
+public interface IM {
 
 	class Primitive implements BasicType {
 		@Override
