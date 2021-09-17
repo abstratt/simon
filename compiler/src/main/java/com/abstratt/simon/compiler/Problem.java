@@ -8,38 +8,53 @@ public class Problem {
 		Fatal
     }
 
+	public enum Category {
+		Unspecified,
+		Internal,
+		MissingElement,
+		SyntaxError,
+		UnresolvedName,
+		UnknownElement, AbstractElement, MissingFeature, ElementAdmitsNoFeatures, TypeError
+	}
+
+	private final Category category;
 	private final Severity severity;
 	private final String source;
 	private final int line;
 	private final int column;
 	private final String message;
 
-	public Problem(String source, int line, int column, String message, Severity severity) {
+	public Problem(String source, int line, int column, String message, Severity severity, Category category) {
 		this.source = source;
 		this.line = line;
 		this.column = column;
 		this.message = message;
 		this.severity = severity;
+		this.category = category;
 	}
-	
+
+	public Problem(String source, int line, int column, String message, Severity severity) {
+		this(source,line,column,message, severity, Category.Unspecified);
+	}
+
 	public Problem(String source, String message, Severity severity) {
-		this.source = source;
-		this.line = -1;
-		this.column = -1;
-		this.message = message;
-		this.severity = severity;
+		this(source, -1, -1, message, severity);
 	}
 
 
-	public Severity category() {
+	public Severity severity() {
 		return severity;
+	}
+
+	public Category category() {
+		return category;
 	}
 
 	public int column() {
 		return column;
 	}
 
-	int line() {
+	public int line() {
 		return line;
 	}
 
@@ -53,7 +68,7 @@ public class Problem {
 
 	@Override
 	public String toString() {
-		return message + " in " + source + " at " + (line + "," + column);
+		return message + " in " + source + " at " + ("[" + line + "," + column + "] (" + category + ")");
 	}
 
 	public interface Handler {

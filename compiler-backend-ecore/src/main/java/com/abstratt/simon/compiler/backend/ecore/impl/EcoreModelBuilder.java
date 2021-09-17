@@ -1,5 +1,6 @@
 package com.abstratt.simon.compiler.backend.ecore.impl;
 
+import com.abstratt.simon.compiler.backend.MetamodelException;
 import java.util.List;
 
 import org.eclipse.emf.ecore.EAttribute;
@@ -128,11 +129,19 @@ public class EcoreModelBuilder implements Backend<EcoreObjectType, EcoreSlotted<
 	}
 
 	private void link(EcoreRelationship reference, EObject referrer, EObject referred) {
-		setOrAddReference(referrer, referred, reference);
+		try {
+			setOrAddReference(referrer, referred, reference);
+		} catch (ClassCastException e) {
+			throw new MetamodelException(nameQuerying().getName(referred) +  " cannot be referred to via " + nameQuerying().getName(referrer) + "'s " + reference.name(), e);
+		}
 	}
 
 	private void addChild(EcoreRelationship composition, EObject parent, EObject child) {
-		setOrAddReference(parent, child, composition);
+		try {
+			setOrAddReference(parent, child, composition);
+		} catch (ClassCastException e) {
+			throw new MetamodelException(nameQuerying().getName(parent) +  " cannot be added as a child to " + nameQuerying().getName(parent) + "'s " + composition.name(), e);
+		}
 	}
 
 	private void setParent(EcoreRelationship composition, EObject child, EObject parent) {

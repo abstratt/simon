@@ -1,5 +1,6 @@
 package com.abstratt.simon.compiler.antlr.impl;
 
+import com.abstratt.simon.compiler.Problem.Category;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -90,14 +91,14 @@ public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 
 	private Result<T> parseUnit(SimonBuilder<T> builder, String name, ContentProvider input) {
 		if (input == null) {
-			return Result.failure(name, new Problem(name, "No source found for '" + name + "'", Problem.Severity.Fatal));
+			return Result.failure(name, new Problem(name, "No source found for '" + name + "'", Severity.Fatal));
 		}
 		try {
 			doParse(name, input.getContents(), builder);
 		} catch (AbortCompilationException e) {
 			// aborted due to fatal error
 		} catch (IOException e) {
-			return Result.failure(name, new Problem(name, e.toString(), Problem.Severity.Fatal));
+			return Result.failure(name, new Problem(name, e.toString(), Severity.Fatal));
 		}
 		var roots = builder.buildUnit();
 		return new Result(name, roots, Collections.emptyList());
@@ -108,14 +109,14 @@ public class SimonCompilerAntlrImpl<T> implements SimonCompiler<T>{
 	}
 
 	private void doParse(String source, CharStream input, SimonBuilder<T> builder) {
-		SimonLexer lexer = new SimonLexer(input);
-		SimonParser parser = new SimonParser(new UnbufferedTokenStream<RuleTagToken>(lexer));
+		var lexer = new SimonLexer(input);
+		var parser = new SimonParser(new UnbufferedTokenStream<RuleTagToken>(lexer));
 		parser.addParseListener(builder);
 		parser.addErrorListener(new BaseErrorListener() {
 			@Override
 			public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line,
 					int charPositionInLine, String msg, RecognitionException e) {
-				builder.reportError(Problem.Severity.Error, source, line, charPositionInLine, msg);
+				builder.reportError(Severity.Error, Category.SyntaxError, source, line, charPositionInLine, msg);
 			}
 		});
 		builder.startSource(source);
@@ -145,6 +146,6 @@ class ProblemHandler implements Problem.Handler {
 		String source = toHandle.source();
 		List<Problem> sourceProblems = this.problems.computeIfAbsent(source, it -> new ArrayList<>());
 		sourceProblems.add(toHandle);
-		hasFatalProblem = hasFatalProblem || toHandle.category() == Problem.Severity.Fatal;
+		hasFatalProblem = hasFatalProblem || toHandle.severity() == Severity.Fatal;
 	}
 }

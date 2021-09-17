@@ -10,5 +10,5 @@ public interface Linking<M, R extends Metamodel.Reference> {
      * @param referrer
      * @param referred
      */
-    void link(R reference, M referrer, M referred);
+    void link(R reference, M referrer, M referred) throws MetamodelException;
 }

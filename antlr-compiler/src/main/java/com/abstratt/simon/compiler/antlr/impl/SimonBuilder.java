@@ -1,5 +1,7 @@
 package com.abstratt.simon.compiler.antlr.impl;
 
+import com.abstratt.simon.compiler.Problem.Category;
+import com.abstratt.simon.compiler.backend.MetamodelException;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashSet;
@@ -188,16 +190,20 @@ class SimonBuilder<T> extends SimonBaseListener {
         String[] nameComponents = name.contains(".") ? name.split("\\.") : new String[]{name};
         T resolved = modelHandling.nameResolution().resolve(scope, nameComponents);
         if (resolved != null) {
-            resolver.resolve(resolved);
+            try {
+                resolver.resolve(resolved);
+            } catch (MetamodelException e) {
+                reportError(Severity.Error, Category.TypeError, request.getSource(), request.getLine(), request.getColumn(), e.getMessage());
+            }
         } else {
-            reportError(Problem.Severity.Error, request.getSource(), request.getLine(), request.getColumn(), "Unknown name: '" + name + "'");
+            reportError(Severity.Error, Category.UnresolvedName, request.getSource(), request.getLine(), request.getColumn(), "Unknown name: '" + name + "'");
         }
     }
     
     @Override
     public void enterRootObject(RootObjectContext ctx) {
         if (languages.isEmpty())
-        	reportError(Severity.Fatal, sourceName, ctx, "No languages defined");
+        	reportError(Severity.Fatal, Category.MissingElement, sourceName, ctx, "No languages defined");
     }
 
     @Override
@@ -207,9 +213,9 @@ class SimonBuilder<T> extends SimonBaseListener {
         var resolvedType = metamodelSource.resolveType(StringUtils.capitalize(typeName), languages);
         var asObjectType = (ObjectType) resolvedType;
         if (asObjectType == null)
-        	reportError(Severity.Fatal, sourceName, ctx, "Unknown language element: " + typeName);
+        	reportError(Severity.Fatal, Category.UnknownElement, sourceName, ctx, "Unknown language element: " + typeName);
         if (!asObjectType.isInstantiable())
-        	reportError(Severity.Fatal, sourceName, ctx, "Language element not instantiable: " + typeName);
+        	reportError(Severity.Fatal, Category.AbstractElement, sourceName, ctx, "Language element not instantiable: " + typeName);
         var instantiation = modelHandling.instantiation();
         var created = (T) instantiation.createObject(asObjectType.isRoot(), asObjectType);
         var objectName = ctx.objectName();
@@ -276,7 +282,7 @@ class SimonBuilder<T> extends SimonBaseListener {
         Parenting<T, Composition> parenting = modelHandling.parenting();
         Composition composition = getObjectFeature(parentInfo, ctx.featureName(), ObjectType::compositionByName);
         if (composition == null) {
-            reportError(Problem.Severity.Fatal, sourceName, ctx.featureName(), "No feature '" + getIdentifier(ctx.featureName()) +"' found on " + parentInfo.getType().name());
+            reportError(Severity.Fatal, Category.MissingFeature, sourceName, ctx.featureName(), "No feature '" + getIdentifier(ctx.featureName()) + "' found on " + parentInfo.getType().name());
             return;
         }
         for (T child : components) {
@@ -288,25 +294,25 @@ class SimonBuilder<T> extends SimonBaseListener {
                                                                ParserRuleContext featureNameCtx, BiFunction<ObjectType, String, F> getter) {
         Slotted parentType = featureOwnerInfo.getType();
         if (!(parentType instanceof ObjectType))
-            reportError(Problem.Severity.Fatal, featureOwnerInfo.getSourceName(), featureNameCtx, "This type cannot have components: " + parentType.name());
+            reportError(Severity.Fatal, Category.ElementAdmitsNoFeatures, featureOwnerInfo.getSourceName(), featureNameCtx, "This type cannot have components: " + parentType.name());
         ObjectType parentTypeAsObjectType = (ObjectType) parentType;
         String featureName = getIdentifier(featureNameCtx);
         F feature = getter.apply(parentTypeAsObjectType, featureName);
         if (feature == null)
-            reportError(Problem.Severity.Fatal, featureOwnerInfo.getSourceName(), featureNameCtx, "No feature '" + featureName + "' in " + parentType.name());
+            reportError(Severity.Fatal, Category.MissingFeature, featureOwnerInfo.getSourceName(), featureNameCtx, "No feature '" + featureName + "' in " + parentType.name());
         return feature;
     }
 
-    private Problem reportError(Problem.Severity severity, String sourceName, ParserRuleContext ctx, String message) {
+    private Problem reportError(Severity severity, Category category, String sourceName, ParserRuleContext ctx, String message) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return reportError(severity, sourceName, line, column, message);
+        return reportError(severity, category, sourceName, line, column, message);
     }
 
-    Problem reportError(Problem.Severity severity, String source, int line, int column, String message) {
-        var problem = new Problem(source, line, column, message, severity);
+    Problem reportError(Severity severity, Category category, String source, int line, int column, String message) {
+        var problem = new Problem(source, line, column, message, severity, category);
         problemHandler.handleProblem(problem);
-        if (severity == Problem.Severity.Fatal)
+        if (severity == Severity.Fatal)
             throw new AbortCompilationException();
         return problem;
     }

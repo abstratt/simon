@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -45,9 +46,9 @@ public class TestHelper {
         return compile(Arrays.asList(package_), toParse);
     }
 
-	public static EObject compile(EPackageMetamodelSource.Factory typeSourceFactory, String toParse) {
+	public static EObject compile_(EPackageMetamodelSource.Factory typeSourceFactory, String toParse) {
 		var modelBuilder = backendFactory.create();
-		var compiler = new SimonCompilerAntlrFactory().create(typeSourceFactory, modelBuilder);
+		var compiler = compilerFactory.create(typeSourceFactory, modelBuilder);
 		var result = compiler.compile(toParse);
 		ensureSuccess(result);
 		EObject rootObject = result.getRootObject();
@@ -60,6 +61,14 @@ public class TestHelper {
         assertNotNull(models.get(0));
         return models.get(0).getRootObject();
     }
+
+	public static List<Result<EObject>> compileProject(EPackage package_, String toParse) {
+		return compileProject(package_, Collections.singletonMap("source", toParse));
+	}
+
+	public static List<Result<EObject>> compileProject(EPackage package_, Map<String, String> toParse) {
+		return compileProject(Arrays.asList(package_), new ArrayList<>(toParse.keySet()), toParse);
+	}
 
 	public static List<Result<EObject>> compileProject(EPackage package_, List<String> entryPoints, Map<String, String> toParse) {
         return compileProject(Arrays.asList(package_), entryPoints, toParse);

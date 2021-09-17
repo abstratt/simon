@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+import com.abstratt.simon.compiler.Problem;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -150,20 +151,20 @@ public class CompilerTests {
     @Test
     void unresolvedReference() {
         var results = compileProject(KIRRA_PACKAGE,
-                Collections.singletonList("orders"),
                 Collections.singletonMap("orders",
-                        """
-                        		@language Kirra
-                                Namespace orders {
-                                        entities { 
-                                                Entity Order { 
-                                                        relationships { 
-                                                                relationship { type: customers.Customer } 
-                                                        } 
-                                                }
-                                        }
-                                }
-                                """)
+    """
+            @language Kirra
+            Namespace orders {
+                    entities { 
+                            Entity Order { 
+                                    relationships { 
+                                            relationship { type: customers.Customer } 
+                                    } 
+                            }
+                    }
+            }
+    """
+                )
         );
 
         var problems = results.get(0).getProblems();
@@ -259,6 +260,33 @@ public class CompilerTests {
         assertEquals(2, results.size());
         var ordersNamespace = results.get(0).getRootObject();
         assertEquals("orders", getPrimitiveValue(ordersNamespace, "name"));
+    }
+
+    @Test
+    void incompatibleReference() {
+        var source = """
+            @language UI
+            application {
+              screens {
+                screen (layout : Vertical) {
+                    children {
+                        button btn1 (label : 'Ok')
+                        link(label: 'To screen 2') {
+                          targetScreen: btn1
+                        }
+                    }
+                }
+              }
+            }
+        """;
+        var results = compileProject(UI_PACKAGE, source);
+        assertEquals(1, results.size());
+        assertEquals(1, results.get(0).getProblems().size());
+        var problem = results.get(0).getProblems().get(0);
+        assertEquals(Problem.Category.TypeError, problem.category(), problem::toString);
+        assertEquals(Problem.Severity.Error, problem.severity(), problem::toString);
+        assertEquals(8, problem.line());
+        assertEquals(32, problem.column());
     }
 
 
