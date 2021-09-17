@@ -3,6 +3,7 @@ package com.abstratt.simon.compiler.antlr.impl;
 import com.abstratt.simon.compiler.Problem.Category;
 import com.abstratt.simon.compiler.backend.MetamodelException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -161,6 +162,7 @@ class SimonBuilder<T> extends SimonBaseListener {
 
     public void startSource(String sourceName) {
         assert this.sourceName == null;
+        this.currentScope.clear();
         this.sourceName = sourceName;
         this.languages = new LinkedHashSet<>();
     }
@@ -172,11 +174,18 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     public List<T> buildUnit() {
+    	if (hasFatalError())
+    		return Collections.emptyList();
     	assert currentScope.isEmpty();
     	var partialResult = built.stream().map(ElementInfo::getObject).collect(Collectors.toList());
     	built.clear();
 		return partialResult;
     }
+
+
+	public boolean hasFatalError() {
+		return problemHandler.hasFatalError();
+	}
 
     void resolve() {
         for (ResolutionRequest request : resolutionRequests)
@@ -226,6 +235,8 @@ class SimonBuilder<T> extends SimonBaseListener {
     
     @Override
     public void exitRootObject(RootObjectContext ctx) {
+    	if (hasFatalError())
+    		return;
     	if (currentScope.isEmpty())
     		return;
     	assert currentScope.size() == 1;
@@ -270,6 +281,8 @@ class SimonBuilder<T> extends SimonBaseListener {
 
     @Override
     public void exitComponent(ComponentContext ctx) {
+    	if (hasFatalError())
+    		return;
         int childCount = ctx.childObjects().getChildCount();
         List<T> components = new ArrayList<>(childCount);
         for (int i = 0; i < childCount; i++) {
@@ -312,8 +325,9 @@ class SimonBuilder<T> extends SimonBaseListener {
     Problem reportError(Severity severity, Category category, String source, int line, int column, String message) {
         var problem = new Problem(source, line, column, message, severity, category);
         problemHandler.handleProblem(problem);
-        if (severity == Severity.Fatal)
+        if (severity == Severity.Fatal) {
             throw new AbortCompilationException();
+        }
         return problem;
     }
 
@@ -445,5 +459,9 @@ class SimonBuilder<T> extends SimonBaseListener {
         var result = new ArrayList<>(imports);
         imports.clear();
         return result;
+	}
+    
+    public Problem.Handler getProblemHandler() {
+		return problemHandler;
 	}
 }

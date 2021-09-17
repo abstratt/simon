@@ -61,6 +61,7 @@ public @interface Meta {
     @Inherited
     @interface Typed {
         Class<?> value();
+        boolean multivalued() default false;
     }
 
     @Retention(RetentionPolicy.RUNTIME)

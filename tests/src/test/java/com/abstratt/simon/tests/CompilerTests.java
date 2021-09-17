@@ -5,21 +5,22 @@ import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findChildByAtt
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findStructuralFeature;
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.getValue;
 import static com.abstratt.simon.testing.TestHelper.IM_PACKAGE;
+import static com.abstratt.simon.testing.TestHelper.UI2_PACKAGE;
 import static com.abstratt.simon.testing.TestHelper.UI_PACKAGE;
-import static com.abstratt.simon.testing.TestHelper.compile;
+import static com.abstratt.simon.testing.TestHelper.buildMetamodelSourceFactory;
+import static com.abstratt.simon.testing.TestHelper.buildSourceProvider;
 import static com.abstratt.simon.testing.TestHelper.compileProject;
 import static com.abstratt.simon.testing.TestHelper.compileUsingIM;
 import static com.abstratt.simon.testing.TestHelper.compileUsingUI;
-import static com.abstratt.simon.testing.TestHelper.compileValidProject;
+import static com.abstratt.simon.testing.TestHelper.ensureSuccess;
 import static com.abstratt.simon.testing.TestHelper.getPrimitiveValue;
+import static com.abstratt.simon.testing.TestHelper.root;
 import static com.abstratt.simon.testing.TestHelper.uiClassFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-import com.abstratt.simon.compiler.Problem;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,9 +31,10 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
 
+import com.abstratt.simon.compiler.Problem;
 import com.abstratt.simon.compiler.Result;
-import com.abstratt.simon.examples.im.IM;
-import com.abstratt.simon.examples.ui.UI;
+import com.abstratt.simon.examples.IM;
+import com.abstratt.simon.examples.UI;
 import com.abstratt.simon.testing.TestHelper;
 
 public class CompilerTests {
@@ -53,7 +55,8 @@ public class CompilerTests {
 
     @Test
     void emptyApplications() {
-        List<Result<EObject>> results = compileValidProject(UI_PACKAGE, "@language UI Application myApplication1 {}", "@language UI Application myApplication2 {}");
+        String[] toParse = { "@language UI Application myApplication1 {}", "@language UI Application myApplication2 {}" };
+		List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(UI_PACKAGE), toParse));
         assertEquals(2, results.size());
         assertEquals(1, results.get(0).getRootObjects().size());
         assertEquals(1, results.get(1).getRootObjects().size());
@@ -67,11 +70,12 @@ public class CompilerTests {
 
     @Test
     void multipleApplications() {
-        List<Result<EObject>> results = compileValidProject(UI_PACKAGE, """
+        String[] toParse = { """
 				@language UI
           		Application myApplication1 {}
           		Application myApplication2 {}
-                """);
+                """ };
+		List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(UI_PACKAGE), toParse));
         assertEquals(1, results.size());
         assertEquals(2, results.get(0).getRootObjects().size());
         EObject application1 = results.get(0).getRootObjects().get(0);
@@ -97,7 +101,8 @@ public class CompilerTests {
                   }
                 }
                 """;
-        EObject namespace = compile(IM_PACKAGE, source);
+		String[] toParse = { source };
+        EObject namespace = root(ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse)));
         List<EObject> entities = getValue(namespace, "entities");
         assertEquals("Customer", getPrimitiveValue(entities.get(0), "name"));
         assertEquals("Order", getPrimitiveValue(entities.get(1), "name"));
@@ -135,10 +140,8 @@ public class CompilerTests {
                 }
                 """;
         String[] sources = {customersSource, ordersSource};
-        var results = compileValidProject(IM_PACKAGE,
-                sources[order[0]],
-                sources[order[1]]
-        );
+		String[] toParse = { sources[order[0]], sources[order[1]] };
+        var results = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse));
         var customersNamespace = results.get(order[0]).getRootObject();
         var ordersNamespace = results.get(order[1]).getRootObject();
         assertEquals("customers", getPrimitiveValue(customersNamespace, "name"));
@@ -194,11 +197,7 @@ public class CompilerTests {
         var allSources = new HashMap<String, String>();
         allSources.put("customers", customers);
         allSources.put("orders", orders);
-        var results = compileValidProject(
-                IM_PACKAGE,
-                Collections.singletonList("orders"),
-                allSources
-        );
+        var results = ensureSuccess(compileProject(Collections.singletonList("orders"), buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)), buildSourceProvider(allSources)));
         assertEquals(2, results.size());
         var ordersNamespace = results.get(0).getRootObject();
         var customersNamespace = results.get(1).getRootObject();
@@ -216,11 +215,7 @@ public class CompilerTests {
                         namespace orders
                         """;
 
-        var results = compileValidProject(
-                IM_PACKAGE,
-                Collections.singletonList("orders"),
-                Collections.singletonMap("orders", orders)
-        );
+        var results = ensureSuccess(compileProject(Collections.singletonList("orders"), buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)), buildSourceProvider(Collections.singletonMap("orders", orders))));
         assertEquals(2, results.size());
         var namespace = results.get(0).getRootObject();
         assertEquals("orders", getPrimitiveValue(namespace, "name"));
@@ -258,11 +253,7 @@ public class CompilerTests {
         var allSources = new HashMap<String, String>();
         allSources.put("customers", customers);
         allSources.put("orders", orders);
-        var results = compileValidProject(
-                IM_PACKAGE,
-                Collections.singletonList("orders"),
-                allSources
-        );
+        var results = ensureSuccess(compileProject(Arrays.asList("orders"), buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)), buildSourceProvider(allSources)));
         assertEquals(2, results.size());
         var ordersNamespace = results.get(0).getRootObject();
         assertEquals("orders", getPrimitiveValue(ordersNamespace, "name"));
@@ -315,17 +306,16 @@ public class CompilerTests {
 
     @Test
     void namespaceWithTwoEntities() {
-        var namespace1 = compile(IM_PACKAGE,
-                """
-                		@language IM
-                        Namespace myapp { 
-                                entities { 
-                                        Entity Customer 
-                                        Entity Order 
-                                } 
-                        }
-                        """
-        );
+        String[] toParse = { """
+		@language IM
+		Namespace myapp { 
+		        entities { 
+		                Entity Customer 
+		                Entity Order 
+		        } 
+		}
+		""" };
+		var namespace1 = root(ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse)));
         List<EObject> entities = getValue(namespace1, "entities");
         assertEquals("Customer", getPrimitiveValue(entities.get(0), "name"));
         assertEquals("Order", getPrimitiveValue(entities.get(1), "name"));
@@ -333,8 +323,7 @@ public class CompilerTests {
 
     @Test
         // issue https://github.com/abstratt/simon/issues/3
-    void primitiveTypes()
-    {
+    void primitiveTypes() {
         var toParse = """
         		@language IM
                 @import 'im'
@@ -429,12 +418,13 @@ public class CompilerTests {
 
     @Test
     void multipleLanguages() {
-        var results = compileValidProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), """
+        String[] toParse = { """
                   @language UI
                   @language IM
                   application myApplication
                   namespace myNamespace
-                """);
+                """ };
+		var results = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), toParse));
         assertEquals(1, results.size());
         var roots = results.get(0).getRootObjects();
         assertEquals(2, roots.size());
@@ -446,9 +436,44 @@ public class CompilerTests {
 
     @Test
     void multiplePackagesEmptySource() {
-        var roots = compileValidProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), "");
+        String[] toParse = { "" };
+		var roots = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), toParse));
         assertEquals(1, roots.size());
         assertNull(roots.get(0).getRootObject());
         assertEquals(0, roots.get(0).getProblems().size());
+    }
+    
+    @Test
+    void derivedLanguages() {
+        String toParse = """
+                  @language UI2
+                  @language UI
+                  application myApplication {
+                      screens {
+                          screen main {
+                              children {
+	                              form MyForm {
+                              		  children {
+		                                  link(label: 'To screen 2') {
+			                                  targetScreen: helpScreen
+			                              }
+		                              }
+	                              }
+                              }
+                          }
+                          screen helpScreen
+                      }
+                  }
+                """;
+		var application = ensureSuccess(compileProject(UI2_PACKAGE.eResource(), toParse)).get(0).getRootObject();
+        List<EObject> screens = getValue(application, "screens");
+        assertEquals(2, screens.size());
+        EObject mainScreen = screens.get(0);
+        EObject helpScreen = screens.get(1);
+        EObject form = ((List<EObject>) getValue(mainScreen, "children")).get(0);
+        EObject link = ((List<EObject>) getValue(form, "children")).get(0);
+        EObject linkTarget = getValue(link, "targetScreen");
+        assertNotNull(linkTarget);
+        assertSame(helpScreen, linkTarget);
     }
 }

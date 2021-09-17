@@ -13,15 +13,19 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.eclipse.emf.ecore.ENamedElement;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.junit.jupiter.api.Test;
 
-import com.abstratt.simon.metamodel.ecore.impl.Context;
+import com.abstratt.simon.metamodel.ecore.impl.MappingSession;
+import com.abstratt.simon.metamodel.ecore.impl.MappingSession.ElementBuilder;
+import com.abstratt.simon.metamodel.ecore.impl.MappingSession.RootElementBuilder;
 
 public class ContextTest {
 	@Test
 	void pendingRequests() {
-		Context context = new Context();
+		MappingSession context = new MappingSession();
 		List<String> log = new ArrayList<>();
 		context.addPendingRequest("request 1"::toString, "", true, ctx -> log.add("1"));
 		context.addPendingRequest("request 2"::toString, "", true, ctx -> {
@@ -34,29 +38,29 @@ public class ContextTest {
 			context.addPendingRequest("request 3"::toString, "", true, ctx2 -> log.add("3c"));
 		});
 		assertEquals(emptyList(), log);
-		context.resolvePendingRequests();
+		context.processPendingRequests();
 		assertEquals(asList("1", "2", "3", "2b", "3b", "3c"), log);
 		log.clear();
-		context.resolvePendingRequests();
+		context.processPendingRequests();
 		assertEquals(emptyList(), log);
 	}
 
 	@Test
 	void runWithScope() {
 		EcorePackage someElement = EcorePackage.eINSTANCE;
-		Context context = new Context();
+		MappingSession context = new MappingSession();
 		List<ENamedElement> collected = new ArrayList<>();
-		context.runWithScope(someElement, "", ctx -> collected.add(ctx.currentScope()));
+		context.runWithPackage(someElement, "", ctx -> collected.add(ctx.currentPackage()));
 		assertEquals(asList(someElement), collected);
 	}
 
 	@Test
 	void runWithScopeRequiresScope() {
-		Context context = new Context();
-		assertNull(context.currentScope());
+		MappingSession context = new MappingSession();
+		assertNull(context.currentPackage());
 		List<ENamedElement> collected = new ArrayList<>();
 		try {
-			context.runWithScope(null, "", ctx -> collected.add(ctx.currentScope()));
+			context.runWithPackage(null, "", ctx -> collected.add(ctx.currentPackage()));
 			fail();
 		} catch (NullPointerException e) {
 			// expected
@@ -66,22 +70,23 @@ public class ContextTest {
 
 	@Test
 	void resolve() {
-		EcorePackage someElement = EcorePackage.eINSTANCE;
+		EPackage someElement = EcoreFactory.eINSTANCE.createEPackage();
 		Class<ContextTest> someClass = ContextTest.class;
-		Context context = new Context();
-		List<EcorePackage> collected = new ArrayList<>();
-		Consumer<EcorePackage> consumer = collected::add;
-		BiFunction<Context, Class<?>, EcorePackage> builder = (ctx, clazz) -> EcorePackage.eINSTANCE;
-		context.resolve(new Context.ResolutionAction<>("id1", someClass, consumer, builder, true));
+		MappingSession context = new MappingSession();
+		List<EPackage> collected = new ArrayList<>();
+		Consumer<EPackage> consumer = collected::add;
+		RootElementBuilder builder = (ctx, clazz) -> someElement;
+		context.mapRoot("id1", someClass, builder, consumer);
 		assertEquals(emptyList(), collected);
 		assertTrue(context.hasPendingRequests());
 
-		context.resolvePendingRequests();
+		context.processPendingRequests();
 		assertEquals(asList(someElement), collected);
 
 		// second attempt should get the same model element without rebuilding
-		context.resolve(new Context.ResolutionAction<>("id2", someClass, consumer,
-				(ctx, clazz) -> fail("Should not attempt to rebuild for a same class"), true));
+		context.mapRoot("id2", someClass,
+				(ctx, clazz) -> fail("Should not attempt to rebuild for a same class"), 
+				consumer);
 		assertTrue(!context.hasPendingRequests());
 		assertEquals(asList(someElement, someElement), collected);
 	}

@@ -20,9 +20,14 @@ public class Result<T> {
     }
 
     public static <T> Result<T> failure(String source, Problem problem) {
-        return new Result<>(source, Collections.emptyList(), Arrays.asList(problem));
+        return failure(source, Arrays.asList(problem));
     }
 
+    public static <T> Result<T> failure(String source, List<Problem> problems) {
+        return new Result<>(source, Collections.emptyList(), problems);
+    }
+
+    
     public T getRootObject() {
         return rootObjects.isEmpty() ? null : rootObjects.get(0);
     }

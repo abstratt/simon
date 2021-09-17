@@ -1,4 +1,4 @@
-package com.abstratt.simon.examples.ui;
+package com.abstratt.simon.examples;
 
 import java.util.List;
 
@@ -27,18 +27,26 @@ public interface UI {
 			return name;
 		}
 	}
+	
+	interface IComponent extends Named {
+		@Meta.Reference(opposite = "children")
+		@Meta.Required(false)
+		public Container parent();
 
-	abstract class Component extends BaseNamed {
+		@Meta.Attribute
+		public int index();
+	}
+
+	abstract class Component extends BaseNamed implements IComponent {
 		private Container parent;
 		private int index;
 
-		@Meta.Reference(opposite = "children")
-		@Meta.Required(false)
+		@Override
 		public Container parent() {
 			return parent;
 		}
 
-		@Meta.Attribute
+		@Override
 		public int index() {
 			return index;
 		}
@@ -46,12 +54,12 @@ public interface UI {
 
 	@Meta.Composite
 	abstract class Container extends Component {
-		private List<Component> children;
+		private List<IComponent> children;
 		private PanelLayout layout;
 
 		@Meta.Contained
-		@Meta.Typed(Component.class)
-		public List<Component> children() {
+		@Meta.Typed(IComponent.class)
+		public List<IComponent> children() {
 			return children;
 		}
 

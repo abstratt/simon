@@ -73,5 +73,6 @@ public class Problem {
 
 	public interface Handler {
 		void handleProblem(Problem toHandle);
+		boolean hasFatalError();
 	}
 }
