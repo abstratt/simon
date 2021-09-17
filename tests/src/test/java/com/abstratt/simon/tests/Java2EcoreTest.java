@@ -3,15 +3,20 @@ package com.abstratt.simon.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.util.BasicDiagnostic;
 import org.eclipse.emf.common.util.Diagnostic;
+import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EEnum;
@@ -26,11 +31,15 @@ import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.Java2EcoreMapper;
-import com.abstratt.simon.examples.im.IM;
-import com.abstratt.simon.examples.ui.UI;
-import com.abstratt.simon.examples.ui.UI.Application;
-import com.abstratt.simon.examples.ui.UI.PanelLayout;
+import com.abstratt.simon.examples.IM;
+import com.abstratt.simon.examples.UI;
+import com.abstratt.simon.examples.UI.Application;
+import com.abstratt.simon.examples.UI.PanelLayout;
+import com.abstratt.simon.examples.UI.Screen;
+import com.abstratt.simon.examples.UI2;
+import com.abstratt.simon.examples.UI3;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
+import com.abstratt.simon.testing.TestHelper;
 
 /**
  * Explores building Ecore-based metamodels (remember, Ecore is the meta-metamodel) from annotated Java models.
@@ -42,13 +51,30 @@ public class Java2EcoreTest {
 		var result = build(IM.Namespace.class);
 		assertEquals(IM.Namespace.class.getSimpleName(), result.getName());
 	}
-
+	
+	@Test
+	void objectTypeFromAccessor() throws Exception {
+		var type = MetaEcoreHelper.getType(Screen.class.getMethod("application")); 
+		assertEquals(UI.Application.class, type);
+	}
+	
+	@Test
+	void isObjectType() throws Exception {
+		var type = UI.Application.class; 
+		var annotations = MetaEcoreHelper.getTypeAnnotations(type).collect(Collectors.toList());
+		assertEquals(Collections.emptyList(), annotations);
+		assertFalse(MetaEcoreHelper.isExplicitlyObjectType(type));
+		assertTrue(MetaEcoreHelper.isImplicitlyObjectType(type));
+		assertTrue(MetaEcoreHelper.isObjectType(type));
+	}
+	
 	@Test
 	void rootType() {
 		assertTrue(MetaEcoreHelper.isRootComposite(UI.Application.class));
 		EClass result = build(IM.Namespace.class);
 		assertTrue(MetaEcoreHelper.isRootComposite(result));
 	}
+	
 
 	@Test
 	void abstractClass() {
@@ -156,6 +182,9 @@ public class Java2EcoreTest {
 		assertTrue(componentEClass.isSuperTypeOf(containerEClass));
 		assertTrue(namedEClass.isSuperTypeOf(componentEClass));
 		assertTrue(namedEClass.getESuperTypes().isEmpty());
+		
+		var nameAttributes = filter(containerEClass.getEAllStructuralFeatures(), e -> e.getName().equals("name"));
+		assertEquals(1, nameAttributes.size());
 	}
 
 	@Test
@@ -190,12 +219,12 @@ public class Java2EcoreTest {
 		assertNotNull(entityEClass);
 		assertSame(imPackage, entityEClass.getEPackage());
 	}
-
+	
 	@Test
 	void optional() {
 		EPackage uiPackage = build(UI.class);
 		var componentEClass = (EClass) uiPackage.getEClassifier(name(UI.Component.class));
-		var componentParent = find(componentEClass.getEReferences(), e -> e.getName().equals("parent"));
+		var componentParent = find(componentEClass.getEAllReferences(), e -> e.getName().equals("parent"));
 		assertFalse(componentParent.isRequired());
 	}
 
@@ -294,7 +323,62 @@ public class Java2EcoreTest {
 		assertEquals("Type", typeReferenceEClass.getName());
 		assertSame(relationshipEclass.getEPackage(), typeReferenceEClass.getEPackage());
 	}
+	
+	@Test
+	void dependentPackageViaInheritance() {
+		EPackage ui2Package = build(UI2.class);
+		
+		assertNotNull(ui2Package);
+		assertEquals("UI2", ui2Package.getName());
+		var formClass = (EClass) ui2Package.getEClassifier(UI2.Form.class.getSimpleName());
+		assertNotNull(formClass);
+		
+		var superTypes = formClass.getESuperTypes();
+		assertEquals(1, superTypes.size());
+		var componentClass = superTypes.get(0);
+		assertEquals(UI.Container.class.getSimpleName(), componentClass.getName());
+		assertNotNull(componentClass.getEPackage());
+		assertEquals("UI", componentClass.getEPackage().getName());
+		var uiPackage = componentClass.getEPackage();
+		
+		var namedClass = find(componentClass.getEAllSuperTypes(), cls -> cls.getName().equals("Named"));
+		assertNotNull(namedClass);
+		var formName = formClass.getEStructuralFeature("name");
+		var componentName = componentClass.getEStructuralFeature("name");
+		var namedName = namedClass.getEStructuralFeature("name");
+		
+		assertNotNull(formName);
+		assertNotNull(componentName);
+		assertSame(componentName, formName);
+		
+		assertNotNull(namedName);
+		assertSame(componentName, namedName);
+		
+		var nameAttributes = filter(formClass.getEAllStructuralFeatures(), e -> e.getName().equals("name"));
+		assertEquals(1, nameAttributes.size());
 
+		assertNotNull(uiPackage.eResource());
+		assertNotNull(ui2Package.eResource());
+		assertSame(uiPackage.eResource(), ui2Package.eResource());
+		assertEquals(2, ui2Package.eResource().getContents().size());
+		
+		assertEquals(1, filter(uiPackage.eResource().getAllContents(), e -> e instanceof EClass && ((EClass) e).getName().equals("Named")).size());
+	}
+
+	@Test
+	void dependentPackageViaReference() {
+		EPackage ui3Package = build(UI3.class);
+		assertNotNull(ui3Package);
+		assertEquals("UI3", ui3Package.getName());
+		var prototypeClass = (EClass) ui3Package.getEClassifier(UI3.IPrototype.class.getSimpleName());
+		assertNotNull(prototypeClass);
+		var applicationsRef = find(prototypeClass.getEAllReferences(), ref -> ref.getName().equals("applications"));
+		var applicationEClass = applicationsRef.getEReferenceType();
+		assertNotNull(applicationEClass);
+		assertNotNull(applicationEClass.getEPackage());
+		assertEquals("UI", applicationEClass.getEPackage().getName());
+	}
+	
 	@Test
 	void opposite() {
 		EClass entityEClass = build(IM.Entity.class);
@@ -305,6 +389,15 @@ public class Java2EcoreTest {
 		assertNotNull(superTypes);
 		assertNotNull(subTypes);
 		assertSame(subTypes, superTypes.getEOpposite());
+	}
+	
+	@Test
+	void typeDeclaration() {
+		EClass applicationClass = build(UI.Application.class);
+		var screens = applicationClass.getEStructuralFeature("screens");
+		assertNotNull(screens.getEType().getEPackage());
+		assertTrue(screens.isMany());
+		assertEquals(Screen.class.getSimpleName(), screens.getEType().getName());
 	}
 
 	@Test
@@ -317,6 +410,15 @@ public class Java2EcoreTest {
 
 	<E extends EObject> List<E> filter(List<E> toFilter, Predicate<E> predicate) {
 		return toFilter.stream().filter(predicate).collect(Collectors.toList());
+	}
+	
+	<E extends EObject> List<E> filter(TreeIterator<E> toFilter, Predicate<E> predicate) {
+		var result = new ArrayList<E>();
+		toFilter.forEachRemaining(it -> {
+			if (predicate.test(it))
+				result.add(it);
+		});
+		return result;
 	}
 
 	<E extends EObject> E find(List<E> toFilter, Predicate<E> predicate) {

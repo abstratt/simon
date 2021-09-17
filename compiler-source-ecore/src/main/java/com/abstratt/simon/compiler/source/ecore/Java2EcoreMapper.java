@@ -39,7 +39,7 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 
 import com.abstratt.simon.metamodel.dsl.Meta;
 import com.abstratt.simon.metamodel.dsl.Meta.Required;
-import com.abstratt.simon.metamodel.ecore.impl.Context;
+import com.abstratt.simon.metamodel.ecore.impl.MappingSession;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 
 
@@ -55,11 +55,11 @@ public class Java2EcoreMapper {
 		//System.out.println("*** " + Arrays.stream(new Throwable().fillInStackTrace().getStackTrace()).skip(1)
 		//		.findFirst().get().toString());
 
-		Context context = new Context();
+		MappingSession mappingSession = new MappingSession();
 		Object[] result = { null };
-		buildIfNeeded(clazz, context, r -> result[0] = r);
+		buildIfNeeded(clazz, mappingSession, debug("building if needed", r -> result[0] = r));
 		//System.out.println("**** Resolving pending requests");
-		context.resolvePendingRequests();
+		mappingSession.processPendingRequests();
 		//System.out.println("**** Done");
 
 		return (E) result[0];
@@ -70,44 +70,48 @@ public class Java2EcoreMapper {
 	 * 
 	 * @param <E>      the concrete model element
 	 * @param clazz    the Java type
-	 * @param context  the resolution context
+	 * @param mappingSession  the resolution mappingSession
 	 * @param consumer a consumer for the built or resolved element
 	 */
-	private <E extends ENamedElement> void buildIfNeeded(Class<?> clazz, Context context, Consumer<E> consumer) {
-		if (MetaEcoreHelper.isPackage(clazz)) {
-			context.resolveRoot(null, clazz, this::buildPackage, (Consumer<EPackage>) consumer);
+	private <E extends ENamedElement> void buildIfNeeded(Class<?> clazz, MappingSession mappingSession, Consumer<E> consumer) {
+		System.out.println("Building if needed: " + clazz.getName());
+		
+		
+		if (MetaEcoreHelper.isPrimitive(clazz) || MetaEcoreHelper.isPrimitiveJavaClass(clazz)) {
+			buildIfNeeded(mappingSession.currentPackage(), clazz, mappingSession, consumer);
 			return;
 		}
-		// may need to build the package first
+		if (MetaEcoreHelper.isPackage(clazz)) {
+			mappingSession.mapRoot(null, clazz, this::buildPackage, (Consumer<EPackage>) consumer);
+			return;
+		}
+		
 		Class<?> packageClass = getPackageClass(clazz);
+		if (!MetaEcoreHelper.isPackage(packageClass))
+			// TODO-RC not a metamodel class, what to do?
+			throw new IllegalArgumentException("Not a metamodel class:" + clazz.getName());
 
-		context.resolve(new Context.ResolutionAction<>(null, packageClass,
-				packageElement -> buildIfNeeded(packageElement, clazz, context, consumer), //
-				this::buildPackage, //
-				true));
+		// may need to build the package first
+		buildIfNeeded(packageClass, mappingSession, (EPackage resolvedEPackage) -> {
+			System.out.println("Discovered parent package: " + resolvedEPackage.getName());			
+			buildIfNeeded(resolvedEPackage, clazz, mappingSession, consumer);
+		});
+		
 	}
 
-	private <E extends ENamedElement> void buildIfNeeded(EPackage parentPackage, Class<?> clazz, Context context,
+	private <E extends ENamedElement> void buildIfNeeded(EPackage parentPackage, Class<?> clazz, MappingSession mappingSession,
 														 Consumer<E> consumer) {
+		System.out.println("Building if needed: " + clazz.getName() + " under " + parentPackage.getName());
 		assert parentPackage != null : clazz.getName();
-		context.runWithScope(parentPackage, "findOrBuild(" + clazz.getName() + ")", ctx -> {
-			if (MetaEcoreHelper.isPrimitive(clazz)) {
-				if (clazz.isEnum()) {
-//					Enum<?>[] enumConstants = (Enum<?>[]) clazz.getEnumConstants();
-//					for (Enum<?> enum1 : enumConstants) {
-//						System.out.println("Primitive: " + enum1.name());
-//						context.resolve(clazz, clazz, this::buildPrimitiveType, (Consumer<EClass>) consumer);			
-//					}	
-				} else {
-					context.resolve(clazz, clazz, this::buildPrimitiveType, (Consumer<EClass>) consumer);
-				}
-
+		mappingSession.runWithPackage(parentPackage, "findOrBuild(" + clazz.getName() + ")", ctx -> {
+			if (MetaEcoreHelper.isPrimitive(clazz) || MetaEcoreHelper.isPrimitiveJavaClass(clazz)) {
+				mappingSession.mapUnder(parentPackage, clazz, clazz, this::buildPrimitiveType, (Consumer<EClass>) consumer);
 			} else if (MetaEcoreHelper.isEnum(clazz)) {
-				context.resolve(clazz, clazz, this::buildEnumType, (Consumer<EEnum>) consumer);
+				mappingSession.mapChild(clazz, clazz, this::buildEnumType, (Consumer<EEnum>) consumer);
 			} else if (MetaEcoreHelper.isRecord(clazz)) {
-				context.resolve(clazz, clazz, this::buildRecordType, (Consumer<EClass>) consumer);
+				mappingSession.mapChild(clazz, clazz, this::buildRecordType, (Consumer<EClass>) consumer);
 			} else {
-				context.resolve(clazz, clazz, this::buildObjectType, (Consumer<EClass>) consumer);
+				mappingSession.mapChild(clazz, clazz, this::buildObjectType, (Consumer<EClass>) consumer);
 			}
 
 		});
@@ -121,7 +125,7 @@ public class Java2EcoreMapper {
 		return result.getName() + " (" + result.eClass().getName() + ")";
 	}
 
-	private EPackage buildPackage(Context context, Class<?> packageClass) {
+	private EPackage buildPackage(MappingSession mappingSession, Class<?> packageClass) {
 		EPackage ePackage = EcoreFactory.eINSTANCE.createEPackage();
 		ePackage.setNsURI(packageClass.getSimpleName());
 		ePackage.setNsPrefix(packageClass.getSimpleName());
@@ -131,9 +135,9 @@ public class Java2EcoreMapper {
 		var builtIns = packageAnnotation.builtIns();
 		storeBuiltIns(packageClass, ePackage, builtIns);
 
-		context.runWithScope(ePackage, "Building classes in package " + packageClass.getName(), ctx -> {
+		mappingSession.runWithPackage(ePackage, "Building classes in package " + packageClass.getName(), ctx -> {
 			for (Class<?> nested : packageClass.getClasses()) {
-				this.<EClassifier>buildIfNeeded(nested, context, ePackage.getEClassifiers()::add);
+				this.<EClassifier>buildIfNeeded(nested, mappingSession, debug("Adding to " + ePackage.getName(), ePackage.getEClassifiers()::add));
 			}
 		});
 		return ePackage;
@@ -158,7 +162,7 @@ public class Java2EcoreMapper {
 		ePackage.getEAnnotations().add(builtInsEAnnotation);
 	}
 
-//	private EDataType buildPrimitiveType(Context context, Class<?> clazz) {
+//	private EDataType buildPrimitiveType(Context mappingSession, Class<?> clazz) {
 //		String className = clazz.getSimpleName();
 //		System.out.println("Building primitive type " + className);
 //		EDataType eDataType = EcoreFactory.eINSTANCE.createEDataType();
@@ -168,7 +172,7 @@ public class Java2EcoreMapper {
 //		return eDataType;
 //	}
 
-	private EClass buildPrimitiveType(Context context, Class<?> clazz) {
+	private EClass buildPrimitiveType(MappingSession mappingSession, Class<?> clazz) {
 		// a primitive type is a class without any features
 		String className = clazz.getSimpleName();
 		//System.out.println("Building primitive type " + className);
@@ -180,11 +184,11 @@ public class Java2EcoreMapper {
 		eAttribute.setEType(primitiveType);
 		eClass.getEStructuralFeatures().add(eAttribute);
 		MetaEcoreHelper.makePrimitiveType(eClass, MetaEcoreHelper.getPrimitiveKind(primitiveType));
-		addSupertypes(context, clazz, eClass);
+		addSupertypes(mappingSession, clazz, eClass);
 		return eClass;
 	}
 
-	private EEnum buildEnumType(Context context, Class<?> clazz) {
+	private EEnum buildEnumType(MappingSession mappingSession, Class<?> clazz) {
 		var className = clazz.getSimpleName();
 		//System.out.println("Building enum type " + className);
 		var eEnum = EcoreFactory.eINSTANCE.createEEnum();
@@ -202,21 +206,21 @@ public class Java2EcoreMapper {
 		return eEnum;
 	}
 
-	private EClass buildRecordType(Context context, Class<?> clazz) {
+	private EClass buildRecordType(MappingSession mappingSession, Class<?> clazz) {
 		String className = clazz.getSimpleName();
 		//System.out.println("Building record type " + className);
 		EClass eClass = EcoreFactory.eINSTANCE.createEClass();
 		eClass.setName(className);
 		MetaEcoreHelper.makeRecordType(eClass);
-		addClassifierToCurrentPackage(context, eClass);
-		addSupertypes(context, clazz, eClass);
-		addAttributes(context, clazz, eClass);
+		resolvePackageAndAddClassifier(mappingSession, clazz, eClass);
+		addSupertypes(mappingSession, clazz, eClass);
+		addAttributes(mappingSession, clazz, eClass);
 		return eClass;
 	}
 
-	private EClass buildObjectType(Context context, Class<?> clazz) {
+	private EClass buildObjectType(MappingSession mappingSession, Class<?> clazz) {
 		String className = clazz.getSimpleName();
-		//System.out.println("Building object type " + className);
+		System.out.println("Building object type " + className);
 		boolean isInterface = Modifier.isInterface(clazz.getModifiers());
 		boolean isAbstractClass = Modifier.isAbstract(clazz.getModifiers());
 		boolean isRootComposite = MetaEcoreHelper.isRootComposite(clazz);
@@ -225,43 +229,46 @@ public class Java2EcoreMapper {
 			EcoreUtil.setAnnotation(eClass, MetaEcoreHelper.SIMON_ANNOTATION, MetaEcoreHelper.ROOT_COMPOSITE_VALUE,
 					Boolean.toString(true));
 		}
-		addSupertypes(context, clazz, eClass);
+		addSupertypes(mappingSession, clazz, eClass);
 
 		eClass.setName(className);
 		eClass.setAbstract(isAbstractClass);
 		eClass.setInterface(isInterface);
-		addClassifierToCurrentPackage(context, eClass);
-		addContainments(context, clazz, eClass);
-		addReferences(context, clazz, eClass);
-		addAttributes(context, clazz, eClass);
+		addContainments(mappingSession, clazz, eClass);
+		addReferences(mappingSession, clazz, eClass);
+		addAttributes(mappingSession, clazz, eClass);
+		resolvePackageAndAddClassifier(mappingSession, clazz, eClass);
 		return eClass;
 	}
 
-	private void addSupertypes(Context context, Class<?> clazz, EClass eClass) {
+	private void addSupertypes(MappingSession mappingSession, Class<?> clazz, EClass eClass) {
 		Class<?> superJavaClass = clazz.getSuperclass();
 		if (superJavaClass != null) {
-			collectSuperType(context, clazz, superJavaClass,
+			collectSuperType(mappingSession, clazz, superJavaClass,
 					debug("Setting super type on " + eClass.getName(), eClass.getESuperTypes()::add));
 		}
 		for (Class<?> i : clazz.getInterfaces()) {
-			collectSuperType(context, clazz, i,
+			collectSuperType(mappingSession, clazz, i,
 					debug("Setting interface as super type on " + eClass.getName(), eClass.getESuperTypes()::add));
 		}
 	}
 
-	private void addClassifierToCurrentPackage(Context context, EClass eClass) {
-		assert context.inScope();
-		var parent = context.currentScope();
-		assert parent != null;
-		assert parent instanceof EPackage;
-		((EPackage) parent).getEClassifiers().add(eClass);
+	private void resolvePackageAndAddClassifier(MappingSession mappingSession, Class<?> clazz, EClass eClass) {
+		buildIfNeeded(getPackageClass(clazz), mappingSession, (EPackage resolvedPackage) -> addClassifierToPackage(eClass, resolvedPackage));
+	}
+
+	public boolean addClassifierToPackage(EClass eClass, EPackage resolvedPackage) {
+		return resolvedPackage.getEClassifiers().add(eClass);
 	}
 
 	private Class<?> getPackageClass(Class<?> containedClazz) {
-		assert containedClazz.isMemberClass();
-		return containedClazz.getEnclosingClass();
+		assert containedClazz.isMemberClass() : containedClazz;
+		Class<?> packageClass = containedClazz.getEnclosingClass();
+		while (packageClass.getEnclosingClass() != null)
+			packageClass = packageClass.getEnclosingClass();
+		return packageClass;
 	}
-
+	
 	private abstract static class Request {
 		protected final Class<?> classToResolve;
 
@@ -306,45 +313,49 @@ public class Java2EcoreMapper {
 			} else return classToResolve.equals(other.classToResolve);
 		}
 
+		@Override
+		public String toString() {
+			return getClass().getSimpleName() + " [classToResolve=" + classToResolve + "]";
+		}
 	}
 
-	private void collectSuperType(Context context, Class<?> baseJavaClass, Class<?> superJavaClass,
+	private void collectSuperType(MappingSession mappingSession, Class<?> baseJavaClass, Class<?> superJavaClass,
 			Consumer<EClass> consumer) {
-		if (superJavaClass != Object.class) {
-			context.resolve(new SuperClassRequest(baseJavaClass, superJavaClass), superJavaClass, this::buildObjectType,
+		if (superJavaClass.getEnclosingClass() != null) {
+			mappingSession.mapChild(new SuperClassRequest(baseJavaClass, superJavaClass), superJavaClass, this::buildObjectType,
 					consumer);
 		}
 	}
 
-	private <E extends ENamedElement, J extends AnnotatedElement> Function<J, E> wrapBuilder(Context context,
-			BiFunction<Context, J, E> builder) {
+	private <E extends ENamedElement, J extends AnnotatedElement> Function<J, E> wrapBuilder(MappingSession mappingSession,
+			BiFunction<MappingSession, J, E> builder) {
 		return (javaElement) -> {
-			E built = builder.apply(context, javaElement);
+			E built = builder.apply(mappingSession, javaElement);
 			//System.out.println(toString(javaElement, built));
 			return built;
 		};
 	}
 
-	private void addAttributes(Context context, Class<?> clazz, EClass eClass) {
+	private void addAttributes(MappingSession mappingSession, Class<?> clazz, EClass eClass) {
 		final Stream<Method> attributeAccessors = getMethodsWithAnnotation(clazz, Meta.Attribute.class);
-		Stream<EAttribute> eAttributes = attributeAccessors.map(wrapBuilder(context, this::buildAttribute));
-		eAttributes.forEach(debug("adding attribute to " + eClass.getName(), eClass.getEStructuralFeatures()::add));
+		Stream<EAttribute> eAttributes = attributeAccessors.map(wrapBuilder(mappingSession, this::buildAttribute));
+		eAttributes.forEach(debug("adding attribute to " + eClass.getName() + " (" + eClass + ")", eClass.getEStructuralFeatures()::add));
 	}
 
-	private void addContainments(Context context, Class<?> clazz, EClass eClass) {
-		doAddReferences(context, clazz, eClass, Meta.Contained.class,
-				wrapBuilder(context, this::buildContainmentReference));
+	private void addContainments(MappingSession mappingSession, Class<?> clazz, EClass eClass) {
+		doAddReferences(mappingSession, clazz, eClass, Meta.Contained.class,
+				wrapBuilder(mappingSession, this::buildContainmentReference));
 	}
 
-	private void addReferences(Context context, Class<?> clazz, EClass eClass) {
-		doAddReferences(context, clazz, eClass, Meta.Reference.class, wrapBuilder(context, this::buildReference));
+	private void addReferences(MappingSession mappingSession, Class<?> clazz, EClass eClass) {
+		doAddReferences(mappingSession, clazz, eClass, Meta.Reference.class, wrapBuilder(mappingSession, this::buildReference));
 	}
 
-	private void doAddReferences(Context context, Class<?> clazz, EClass eClass,
+	private void doAddReferences(MappingSession mappingSession, Class<?> clazz, EClass eClass,
 			Class<? extends Annotation> annotationClass, Function<Method, EReference> builder) {
 		Stream<Method> accessors = getMethodsWithAnnotation(clazz, annotationClass);
 		List<EReference> references = accessors.map(builder).collect(Collectors.toList());
-		references.forEach(eClass.getEStructuralFeatures()::add);
+		references.forEach(debug("Adding reference to " + eClass.getName(), eClass.getEStructuralFeatures()::add));
 	}
 
 	private Stream<Method> getMethodsWithAnnotation(Class<?> clazz, Class<? extends Annotation> annotationClass) {
@@ -367,13 +378,13 @@ public class Java2EcoreMapper {
 		//System.out.println("Marked as opposite: " + opposite + "\n\tof " + thisSide);
 	}
 
-	private EReference buildReference(Context context, Method accessor) {
-		String oppositeName = getAnnotationValue(accessor, Meta.Reference.class, Meta.Reference::opposite).get();
-		return doBuildReference(context, accessor, referenceConnector(oppositeName));
+	private EReference buildReference(MappingSession mappingSession, Method accessor) {
+		String oppositeName = MetaEcoreHelper.getAnnotationValue(accessor, Meta.Reference.class, Meta.Reference::opposite).get();
+		return doBuildReference(mappingSession, accessor, referenceConnector(oppositeName));
 	}
 
-	private EReference buildContainmentReference(Context context, Method accessor) {
-		return doBuildReference(context, accessor, this::markReferenceAsContainment);
+	private EReference buildContainmentReference(MappingSession mappingSession, Method accessor) {
+		return doBuildReference(mappingSession, accessor, this::markReferenceAsContainment);
 	}
 
 	private void markReferenceAsContainment(EReference reference) {
@@ -381,32 +392,32 @@ public class Java2EcoreMapper {
 		//System.out.println("Marked as containment: " + reference);
 	}
 
-	private EReference doBuildReference(Context context, Method accessor, Consumer<EReference> customizer) {
+	private EReference doBuildReference(MappingSession mappingSession, Method accessor, Consumer<EReference> customizer) {
 		EReference eReference = EcoreFactory.eINSTANCE.createEReference();
 		eReference.setName(accessor.getName());
 		markOptional(accessor, eReference);
 		Consumer<EClass> typeSetter = eReference::setEType;
-		context.resolve(accessor, getType(accessor), this::buildObjectType,
+		mappingSession.mapChild(accessor, MetaEcoreHelper.getType(accessor), this::buildObjectType,
 				debug("Setting reference type on " + eReference.getName(),
 						typeSetter.andThen(resolvedEClass -> customizer.accept(eReference))));
 		return eReference;
 	}
 
-	private EAttribute buildAttribute(Context context, Method accessor) {
+	private EAttribute buildAttribute(MappingSession mappingSession, Method accessor) {
 		EAttribute eAttribute = EcoreFactory.eINSTANCE.createEAttribute();
 		String attributeName = WordUtils.uncapitalize(accessor.getName().replaceFirst("^get", ""));
 		eAttribute.setName(attributeName);
 		markOptional(accessor, eAttribute);
-		context.resolve(accessor, getType(accessor), this::buildBasicType,
-				debug("Setting type of attribute " + eAttribute.getName(), setAttributeType(context, eAttribute)));
+		buildIfNeeded(MetaEcoreHelper.getType(accessor), mappingSession, 
+				debug("Setting type of attribute " + eAttribute.getName(), setAttributeType(mappingSession, eAttribute)));
 		return eAttribute;
 	}
 
-	private <EC extends EClassifier> Consumer<EC> setAttributeType(Context context, EAttribute attribute) {
+	private <EC extends EClassifier> Consumer<EC> setAttributeType(MappingSession mappingSession, EAttribute attribute) {
 		return classifier -> {
 			attribute.setEType(classifier);
 			String requestId = attribute.getName() + " : " + classifier.getName();
-			context.addPendingRequest(requestId::toString, "setAttributeType(" + attribute.getName() + ")", false,
+			mappingSession.addPendingRequest(requestId::toString, "setAttributeType(" + attribute.getName() + ")", false,
 					ctx -> {
 						EClass eContainingClass = attribute.getEContainingClass();
 						EPackage containingClassEPackage = eContainingClass.getEPackage();
@@ -418,12 +429,14 @@ public class Java2EcoreMapper {
 	}
 
 	private <EC extends ENamedElement> Consumer<EC> debug(String tag, Consumer<EC> toDebug) {
-		//System.out.println(tag + " - " + value);
-		return toDebug::accept;
+		return (value) -> {
+			System.out.println(tag + " - " + value);
+			toDebug.accept(value);
+		};
 	}
 
 	private void markOptional(Method accessor, EStructuralFeature feature) {
-		Optional<Boolean> required = getAnnotationValue(accessor, Meta.Required.class, Required::value);
+		Optional<Boolean> required = MetaEcoreHelper.getAnnotationValue(accessor, Meta.Required.class, Required::value);
 		boolean multivalued = Iterable.class.isAssignableFrom(accessor.getReturnType())
 				|| Array.class.isAssignableFrom(accessor.getReturnType());
 		if (multivalued) {
@@ -435,69 +448,54 @@ public class Java2EcoreMapper {
 		}
 	}
 
-	private EClassifier buildBasicType(Context context, Class<?> type) {
-		if (type.isEnum())
-			return buildEnumType(context, type);
-		if (MetaEcoreHelper.isRecord(type))
-			return buildRecordType(context, type);
-		return buildPrimitiveType(context, type);
+//	private EClassifier buildBasicType(MappingSession mappingSession, Class<?> type) {
+//		if (type.isEnum())
+//			return buildEnumType(mappingSession, type);
+//		if (MetaEcoreHelper.isRecord(type))
+//			return buildRecordType(mappingSession, type);
+//		return buildPrimitiveType(mappingSession, type);
+//
+////		if (type == String.class) {
+////			return EcorePackage.eINSTANCE.getEString();
+////		}
+////		if (type == int.class) {
+////			return EcorePackage.eINSTANCE.getEInt();
+////		}
+////		if (type == Integer.class) {
+////			return EcorePackage.eINSTANCE.getEIntegerObject();
+////		}
+////		if (type == boolean.class) {
+////			return EcorePackage.eINSTANCE.getEBoolean();
+////		}
+////		if (type == Boolean.class) {
+////			return EcorePackage.eINSTANCE.getEBooleanObject();
+////		}
+////		EDataType dataType = EcoreFactory.eINSTANCE.createEDataType();
+////		dataType.setInstanceTypeName(type.getName());
+////		dataType.setName(type.getSimpleName());
+////		return dataType;
+//	}
 
-//		if (type == String.class) {
+//	private EDataType getPrimitiveType(Class<?> javaPrimitiveType) {
+//		if (javaPrimitiveType == String.class) {
 //			return EcorePackage.eINSTANCE.getEString();
 //		}
-//		if (type == int.class) {
+//		if (javaPrimitiveType == int.class) {
 //			return EcorePackage.eINSTANCE.getEInt();
 //		}
-//		if (type == Integer.class) {
+//		if (javaPrimitiveType == Integer.class) {
 //			return EcorePackage.eINSTANCE.getEIntegerObject();
 //		}
-//		if (type == boolean.class) {
+//		if (javaPrimitiveType == boolean.class) {
 //			return EcorePackage.eINSTANCE.getEBoolean();
 //		}
-//		if (type == Boolean.class) {
+//		if (javaPrimitiveType == Boolean.class) {
 //			return EcorePackage.eINSTANCE.getEBooleanObject();
 //		}
-//		EDataType dataType = EcoreFactory.eINSTANCE.createEDataType();
-//		dataType.setInstanceTypeName(type.getName());
-//		dataType.setName(type.getSimpleName());
-//		return dataType;
-	}
+//		if (MetaEcoreHelper.isPrimitive(javaPrimitiveType)) {
+//
+//		}
+//		throw new IllegalStateException(javaPrimitiveType.getSimpleName());
+//	}
 
-	private EDataType getPrimitiveType(Class<?> javaPrimitiveType) {
-		if (javaPrimitiveType == String.class) {
-			return EcorePackage.eINSTANCE.getEString();
-		}
-		if (javaPrimitiveType == int.class) {
-			return EcorePackage.eINSTANCE.getEInt();
-		}
-		if (javaPrimitiveType == Integer.class) {
-			return EcorePackage.eINSTANCE.getEIntegerObject();
-		}
-		if (javaPrimitiveType == boolean.class) {
-			return EcorePackage.eINSTANCE.getEBoolean();
-		}
-		if (javaPrimitiveType == Boolean.class) {
-			return EcorePackage.eINSTANCE.getEBooleanObject();
-		}
-		if (MetaEcoreHelper.isPrimitive(javaPrimitiveType)) {
-
-		}
-		throw new IllegalStateException(javaPrimitiveType.getSimpleName());
-	}
-
-	private Class<?> getType(Method method) {
-		Optional<Class<?>> explicitType = getType((AnnotatedElement) method);
-		return explicitType.orElseGet(method::getReturnType);
-	}
-
-	private Optional<Class<?>> getType(AnnotatedElement it) {
-		return getAnnotationValue(it, Meta.Typed.class, Meta.Typed::value);
-
-	}
-
-	private <A extends Annotation, V> Optional<V> getAnnotationValue(AnnotatedElement it, Class<A> annotationClass,
-			Function<A, V> mapper) {
-		A annotation = it.getAnnotation(annotationClass);
-		return Optional.ofNullable(annotation).map(mapper);
-	}
 }

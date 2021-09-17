@@ -1,4 +1,4 @@
-package com.abstratt.simon.examples.im;
+package com.abstratt.simon.examples;
 
 import java.util.Collection;
 import java.util.List;
@@ -83,6 +83,7 @@ public interface IM {
 		}
 
 		@Meta.Contained
+		@Meta.Typed(Parameter.class)
 		Collection<Parameter> parameters() {
 			return this.parameters;
 		}

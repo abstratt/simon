@@ -15,7 +15,7 @@ import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 public class EPackageMetamodelSource implements MetamodelSource<EcoreType<? extends EClassifier>> {
 	private final EPackage ePackage;
 
-	private EPackageMetamodelSource(EPackage ePackage) {
+	protected EPackageMetamodelSource(EPackage ePackage) {
 		this.ePackage = ePackage;
 	}
 

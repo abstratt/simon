@@ -89,6 +89,8 @@ public class EcoreHelper {
 	}
 
 	public static Object getUnwrappedValue(EObject toCheck, EStructuralFeature feature) {
+		if (!toCheck.eIsSet(feature))
+			return null;
 		var actual = toCheck.eGet(feature);
 		if (actual instanceof EObject)
 			actual = unwrappedPrimitiveValue((EObject) actual);

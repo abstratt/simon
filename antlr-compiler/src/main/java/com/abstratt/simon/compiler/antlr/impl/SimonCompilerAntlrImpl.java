@@ -140,6 +140,11 @@ class ProblemHandler implements Problem.Handler {
 	public List<Problem> getProblems(String source) {
 		return problems.getOrDefault(source, Collections.emptyList());
 	}
+	
+	@Override
+	public boolean hasFatalError() {
+		return hasFatalProblem;
+	}
 
 	@Override
 	public void handleProblem(Problem toHandle) {

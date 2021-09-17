@@ -1,6 +1,12 @@
 package com.abstratt.simon.metamodel.ecore.impl;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
@@ -55,7 +61,7 @@ public interface MetaEcoreHelper {
 	}
 
 	static boolean isPrimitive(EClassifier eClass) {
-		String tag = MetaEcoreHelper.PRIMITIVE_TYPE;
+		var tag = MetaEcoreHelper.PRIMITIVE_TYPE;
 		return Boolean.TRUE.toString().equals(getAnnotation(eClass, tag));
 	}
 
@@ -82,8 +88,32 @@ public interface MetaEcoreHelper {
 	}
 
 	static boolean isObjectType(Class<?> clazz) {
-		return clazz.isAnnotationPresent(Meta.ObjectType.class) || Arrays.stream(clazz.getAnnotations())
-				.noneMatch(ann -> ann.annotationType().getAnnotationsByType(Type.class).length == 0);
+		return isExplicitlyObjectType(clazz) || isImplicitlyObjectType(clazz);
+	}
+
+	static boolean isImplicitlyObjectType(Class<?> clazz) {
+		var typeAnnotations = getTypeAnnotations(clazz);
+		return typeAnnotations.findAny().isEmpty();
+	}
+
+	static Stream<Annotation> getTypeAnnotations(Class<?> clazz) {
+		var annotations = clazz.getAnnotations();
+		var typeAnnotations = Arrays.stream(annotations).filter(MetaEcoreHelper::isTypeAnnotation);
+		return typeAnnotations;
+	}
+
+	static boolean isTypeAnnotation(Annotation ann) {
+		var typeAnnotations = getAnnotationTypes(ann);
+		return typeAnnotations.length > 0;
+	}
+
+	static Type[] getAnnotationTypes(Annotation ann) {
+		var typeAnnotations = ann.annotationType().getAnnotationsByType(Type.class);
+		return typeAnnotations;
+	}
+
+	static boolean isExplicitlyObjectType(Class<?> clazz) {
+		return clazz.isAnnotationPresent(Meta.ObjectType.class);
 	}
 
 	static boolean isEnum(Class<?> clazz) {
@@ -97,25 +127,43 @@ public interface MetaEcoreHelper {
 	static boolean isPrimitive(Class<?> clazz) {
 		return clazz.isAnnotationPresent(Meta.PrimitiveType.class);
 	}
-
+	
+	static boolean isPrimitiveJavaClass(Class<?> clazz) {
+		return getPrimitiveETypeOrNull(clazz) != null; 
+	}
+ 
 	static PrimitiveKind getPrimitiveKind(Class<?> clazz) {
 		assert isPrimitive(clazz) : clazz;
 		return clazz.getAnnotation(Meta.PrimitiveType.class).value();
 	}
 
 	static EDataType getPrimitiveEType(PrimitiveKind primitiveKind) {
+		var eDataType = getPrimitiveETypeOrNull(primitiveKind);
+		if (eDataType == null)
+			throw new IllegalArgumentException(primitiveKind.name());
+		return eDataType;
+	}
+
+	static EDataType getPrimitiveETypeOrNull(PrimitiveKind primitiveKind) {
 		return switch (primitiveKind) {
 			case Boolean -> EcorePackage.Literals.EBOOLEAN;
 			case Integer -> EcorePackage.Literals.EINT;
 			case Decimal -> EcorePackage.Literals.EBIG_DECIMAL;
 			case String, Other -> EcorePackage.Literals.ESTRING;
-			default -> throw new IllegalArgumentException(primitiveKind.name());
+			default -> null;
 		};
 	}
 
 	static EDataType getPrimitiveEType(Class<?> clazz) {
+		var primitiveETypeOrNull = getPrimitiveETypeOrNull(clazz);
+		if (primitiveETypeOrNull == null) 
+			throw new IllegalArgumentException(clazz.getName());
+		return primitiveETypeOrNull;
+	}
+
+	static EDataType getPrimitiveETypeOrNull(Class<?> clazz) {
 		if (isPrimitive(clazz))
-			return getPrimitiveEType(getPrimitiveKind(clazz));
+			return getPrimitiveETypeOrNull(getPrimitiveKind(clazz));
 		if (clazz == Boolean.class)
 			return EcorePackage.Literals.EBOOLEAN_OBJECT;
 		if (clazz == boolean.class)
@@ -127,7 +175,7 @@ public interface MetaEcoreHelper {
 		if (clazz == String.class)
 			return EcorePackage.Literals.ESTRING;
 
-		throw new IllegalArgumentException(clazz.getName());
+		return null;
 	}
 
 	static boolean isRootComposite(Class<?> clazz) {
@@ -162,6 +210,22 @@ public interface MetaEcoreHelper {
 
 	static boolean isNamed(EObject eObject) {
 		return getNameAttribute(eObject) != null;
+	}
+
+	public static Class<?> getType(Method method) {
+		Optional<Class<?>> explicitType = getType((AnnotatedElement) method);
+		var actualType = explicitType.orElseGet(method::getReturnType);
+		return actualType;
+	}
+
+	public static Optional<Class<?>> getType(AnnotatedElement it) {
+		return getAnnotationValue(it, Meta.Typed.class, Meta.Typed::value);
+	}
+
+	public static <A extends Annotation, V> Optional<V> getAnnotationValue(AnnotatedElement it, Class<A> annotationClass,
+			Function<A, V> mapper) {
+		A annotation = it.getAnnotation(annotationClass);
+		return Optional.ofNullable(annotation).map(mapper);
 	}
 
 }

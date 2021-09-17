@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.Result;
 import com.abstratt.simon.compiler.backend.ecore.EObjectTraversalProvider;
-import com.abstratt.simon.examples.ui.UI;
+import com.abstratt.simon.examples.UI;
 import com.abstratt.simon.genutils.Traversal;
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 import com.abstratt.simon.testing.TestHelper;
