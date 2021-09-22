@@ -56,7 +56,7 @@ public class CompilerTests {
     @Test
     void emptyApplications() {
         String[] toParse = { "@language UI Application myApplication1 {}", "@language UI Application myApplication2 {}" };
-		List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(UI_PACKAGE), toParse));
+        List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(UI_PACKAGE), toParse));
         assertEquals(2, results.size());
         assertEquals(1, results.get(0).getRootObjects().size());
         assertEquals(1, results.get(1).getRootObjects().size());
@@ -71,11 +71,11 @@ public class CompilerTests {
     @Test
     void multipleApplications() {
         String[] toParse = { """
-				@language UI
-          		Application myApplication1 {}
-          		Application myApplication2 {}
-                """ };
-		List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(UI_PACKAGE), toParse));
+              @language UI
+              Application myApplication1 {}
+              Application myApplication2 {}
+            """ };
+        List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(UI_PACKAGE), toParse));
         assertEquals(1, results.size());
         assertEquals(2, results.get(0).getRootObjects().size());
         EObject application1 = results.get(0).getRootObjects().get(0);
@@ -89,19 +89,19 @@ public class CompilerTests {
     @Test
     void typeReference() {
         var source = """
-        		@language IM
-                Namespace customers {
-                  entities {
-                    Entity Customer
-                    Entity Order {
-                      relationships {
-                        relationship { type: Customer }
-                      }
-                    }
+            @language IM
+            Namespace customers {
+              entities {
+                Entity Customer
+                Entity Order {
+                  relationships {
+                    relationship { type: Customer }
                   }
                 }
-                """;
-		String[] toParse = { source };
+              }
+            }
+            """;
+        String[] toParse = { source };
         EObject namespace = root(ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse)));
         List<EObject> entities = getValue(namespace, "entities");
         assertEquals("Customer", getPrimitiveValue(entities.get(0), "name"));
@@ -120,27 +120,27 @@ public class CompilerTests {
 
     void doCrossFileReference(int... order) {
         String customersSource = """
-        		@language IM
-                namespace customers {
-                        entities {
-                            entity Customer
-                        }
-                }
-                """;
+            @language IM
+            namespace customers {
+                    entities {
+                        entity Customer
+                    }
+            }
+            """;
         String ordersSource = """
-        		@language IM
-                namespace orders {
-                        entities { 
-                                entity Order { 
-                                        relationships { 
-                                                relationship customer { type: customers.Customer } 
-                                        } 
-                                }
-                        }
-                }
-                """;
+            @language IM
+            namespace orders {
+                    entities { 
+                            entity Order { 
+                                    relationships { 
+                                            relationship customer { type: customers.Customer } 
+                                    } 
+                            }
+                    }
+            }
+            """;
         String[] sources = {customersSource, ordersSource};
-		String[] toParse = { sources[order[0]], sources[order[1]] };
+        String[] toParse = { sources[order[0]], sources[order[1]] };
         var results = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse));
         var customersNamespace = results.get(order[0]).getRootObject();
         var ordersNamespace = results.get(order[1]).getRootObject();
@@ -156,17 +156,17 @@ public class CompilerTests {
     @Test
     void unresolvedReference() {
         var results = compileProject(IM_PACKAGE,
-"""
-    @language IM
-    Namespace orders {
-        entities { 
-            Entity Order { 
-                relationships { 
-                    relationship customer { type: FOOBAR } 
-                } 
+    """
+        @language IM
+        Namespace orders {
+            entities { 
+                Entity Order { 
+                    relationships { 
+                        relationship customer { type: FOOBAR } 
+                    } 
+                }
             }
         }
-    }
     """
         );
 
@@ -183,16 +183,16 @@ public class CompilerTests {
     @Test
     void imports() {
         var customers =
-                """
-                		@language IM
-                        namespace customers
-                        """;
+            """
+            @language IM
+            namespace customers
+            """;
         var orders =
-                """
-                		@language IM
-                        @import 'customers'
-                        namespace orders
-                        """;
+            """
+            @language IM
+            @import 'customers'
+            namespace orders
+            """;
 
         var allSources = new HashMap<String, String>();
         allSources.put("customers", customers);
@@ -209,11 +209,11 @@ public class CompilerTests {
     @Test
     void importBuiltIn() {
         var orders =
-                """
-                		@language IM
-                        @import 'im'
-                        namespace orders
-                        """;
+            """
+            @language IM
+            @import 'im'
+            namespace orders
+            """;
 
         var results = ensureSuccess(compileProject(Collections.singletonList("orders"), buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)), buildSourceProvider(Collections.singletonMap("orders", orders))));
         assertEquals(2, results.size());
@@ -228,27 +228,27 @@ public class CompilerTests {
     void crossFileReferenceViaImport() {
         var customers =
                 """
-                		@language IM
-                        namespace customers {
-                                entities {
-                                    entity Customer
-                                }
+                @language IM
+                namespace customers {
+                        entities {
+                            entity Customer
                         }
-                        """;
+                }
+                """;
         var orders =
                 """
-                		@language IM
-                        @import 'customers'
-                        namespace orders {
-                                entities { 
-                                        entity Order { 
-                                                relationships { 
-                                                        relationship { type: customers.Customer } 
-                                                } 
-                                        }
+                @language IM
+                @import 'customers'
+                namespace orders {
+                        entities { 
+                                entity Order { 
+                                        relationships { 
+                                                relationship { type: customers.Customer } 
+                                        } 
                                 }
                         }
-                        """;
+                }
+                """;
 
         var allSources = new HashMap<String, String>();
         allSources.put("customers", customers);
@@ -307,15 +307,15 @@ public class CompilerTests {
     @Test
     void namespaceWithTwoEntities() {
         String[] toParse = { """
-		@language IM
-		Namespace myapp { 
-		        entities { 
-		                Entity Customer 
-		                Entity Order 
-		        } 
-		}
-		""" };
-		var namespace1 = root(ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse)));
+        @language IM
+        Namespace myapp { 
+                entities { 
+                        Entity Customer 
+                        Entity Order 
+                } 
+        }
+        """ };
+        var namespace1 = root(ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse)));
         List<EObject> entities = getValue(namespace1, "entities");
         assertEquals("Customer", getPrimitiveValue(entities.get(0), "name"));
         assertEquals("Order", getPrimitiveValue(entities.get(1), "name"));
@@ -325,7 +325,7 @@ public class CompilerTests {
         // issue https://github.com/abstratt/simon/issues/3
     void primitiveTypes() {
         var toParse = """
-        		@language IM
+                @language IM
                 @import 'im'
                 namespace { 
                     entities { 
@@ -372,13 +372,13 @@ public class CompilerTests {
     void applicationWithScreens() {
         var myApplication = compileUsingUI(
                 """
-                            Application myApplication {
-                                    screens {
-                                        Screen screen1 {} 
-                                        Screen screen2 {} 
-                                        Screen screen3 {} 
-                                    } 
-                            }
+            application myApplication {
+                    screens {
+                        Screen screen1 {} 
+                        Screen screen2 {} 
+                        Screen screen3 {} 
+                    } 
+            }
                         """);
         assertNotNull(myApplication);
         assertSame(applicationClass, myApplication.eClass());
@@ -392,20 +392,19 @@ public class CompilerTests {
     @Test
     void fullyQualifiedReferences() {
         var application = compileUsingUI("""
-                    @language UI
-                    
-                      application myApplication { 
-                          screens { 
-                            screen screen1 {
-                              children {
-                                link {
-                                    targetScreen: myApplication.screen2
-                                }
-                              }
-                            } 
-                            screen screen2 {} 
-                          } 
+              @language UI
+              application myApplication { 
+                  screens { 
+                    screen screen1 {
+                      children {
+                        link {
+                            targetScreen: myApplication.screen2
+                        }
                       }
+                    } 
+                    screen screen2 {} 
+                  } 
+              }
                 """);
         List<EObject> screens = getValue(application, "screens");
         assertEquals(2, screens.size());
@@ -424,7 +423,7 @@ public class CompilerTests {
                   application myApplication
                   namespace myNamespace
                 """ };
-		var results = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), toParse));
+        var results = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), toParse));
         assertEquals(1, results.size());
         var roots = results.get(0).getRootObjects();
         assertEquals(2, roots.size());
@@ -437,7 +436,7 @@ public class CompilerTests {
     @Test
     void multiplePackagesEmptySource() {
         String[] toParse = { "" };
-		var roots = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), toParse));
+        var roots = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), toParse));
         assertEquals(1, roots.size());
         assertNull(roots.get(0).getRootObject());
         assertEquals(0, roots.get(0).getProblems().size());
@@ -452,20 +451,20 @@ public class CompilerTests {
                       screens {
                           screen main {
                               children {
-	                              form MyForm {
-                              		  children {
-		                                  link(label: 'To screen 2') {
-			                                  targetScreen: helpScreen
-			                              }
-		                              }
-	                              }
+                                  form MyForm {
+                                        children {
+                                          link(label: 'To screen 2') {
+                                              targetScreen: helpScreen
+                                          }
+                                      }
+                                  }
                               }
                           }
                           screen helpScreen
                       }
                   }
                 """;
-		var application = ensureSuccess(compileProject(UI2_PACKAGE.eResource(), toParse)).get(0).getRootObject();
+        var application = ensureSuccess(compileProject(UI2_PACKAGE.eResource(), toParse)).get(0).getRootObject();
         List<EObject> screens = getValue(application, "screens");
         assertEquals(2, screens.size());
         EObject mainScreen = screens.get(0);

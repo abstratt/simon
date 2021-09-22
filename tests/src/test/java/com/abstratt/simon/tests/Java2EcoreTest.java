@@ -3,11 +3,9 @@ package com.abstratt.simon.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,7 +37,6 @@ import com.abstratt.simon.examples.UI.Screen;
 import com.abstratt.simon.examples.UI2;
 import com.abstratt.simon.examples.UI3;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
-import com.abstratt.simon.testing.TestHelper;
 
 /**
  * Explores building Ecore-based metamodels (remember, Ecore is the meta-metamodel) from annotated Java models.
