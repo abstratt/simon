@@ -21,11 +21,10 @@ import com.abstratt.simon.testing.TestHelper;
 
 public class RegressionTests {
 
-
     @Test
     void uiProgram() throws Exception {
         List<Result<EObject>> results = ensureSuccess(compileResource(UI.class, "/ui-sample.simon"));
-		EObject application = results.get(0).getRootObject();
+        EObject application = results.get(0).getRootObject();
         List<EObject> screens = getValue(application, "screens");
         assertEquals(3, screens.size());
         EObject firstScreen = screens.get(0);
@@ -48,7 +47,7 @@ public class RegressionTests {
     @Test
     void imProgram() throws Exception {
         List<Result<EObject>> results = ensureSuccess(compileResource(IM.class, "/im-sample.simon"));
-		EObject namespace = results.get(0).getRootObject();
+        EObject namespace = results.get(0).getRootObject();
         List<EObject> entities = getValue(namespace, "entities");
         assertEquals(5, entities.size());
         EObject memberEntity = findByFeature(entities, "name", "Member");

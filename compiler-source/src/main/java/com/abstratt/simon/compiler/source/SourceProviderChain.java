@@ -12,6 +12,7 @@ public class SourceProviderChain implements SourceProvider {
 
     @Override
     public ContentProvider access(String sourceName) {
-        return chain.stream().map(provider -> provider.access(sourceName)).filter(Objects::nonNull).findFirst().orElse(null);
+        return chain.stream().map(provider -> provider.access(sourceName)).filter(Objects::nonNull).findFirst()
+                .orElse(null);
     }
 }

@@ -39,11 +39,13 @@ public @interface Meta {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    @interface Contained {}
+    @interface Contained {
+    }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    @interface Parent {}
+    @interface Parent {
+    }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
@@ -54,13 +56,15 @@ public @interface Meta {
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     @Inherited
-    @interface Attribute {}
+    @interface Attribute {
+    }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     @Inherited
     @interface Typed {
         Class<?> value();
+
         boolean multivalued() default false;
     }
 
@@ -73,7 +77,8 @@ public @interface Meta {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    @interface Name {}
+    @interface Name {
+    }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
@@ -88,7 +93,8 @@ public @interface Meta {
     @Retention(RetentionPolicy.RUNTIME)
     @Inherited
     @Type(Type.Nature.Object)
-    @interface ObjectType {}
+    @interface ObjectType {
+    }
 
     /**
      * A record is an structured data type that can only hold primitives,
@@ -97,7 +103,8 @@ public @interface Meta {
     @Retention(RetentionPolicy.RUNTIME)
     @Inherited
     @Type(Type.Nature.Record)
-    @interface RecordType {}
+    @interface RecordType {
+    }
 
     /**
      * For enums only? No, for classes as well. (i.e. either enum values or regular

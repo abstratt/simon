@@ -45,7 +45,6 @@ public class CompilerTests {
     private static final EClass containerClass = uiClassFor(UI.Container.class);
     private static final EClass screenClass = uiClassFor(UI.Screen.class);
 
-
     @Test
     void emptyApplication() {
         var application = emptyApplication("@language UI Application myApplication {}");
@@ -55,7 +54,8 @@ public class CompilerTests {
 
     @Test
     void emptyApplications() {
-        String[] toParse = { "@language UI Application myApplication1 {}", "@language UI Application myApplication2 {}" };
+        String[] toParse = { "@language UI Application myApplication1 {}",
+                "@language UI Application myApplication2 {}" };
         List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(UI_PACKAGE), toParse));
         assertEquals(2, results.size());
         assertEquals(1, results.get(0).getRootObjects().size());
@@ -71,10 +71,10 @@ public class CompilerTests {
     @Test
     void multipleApplications() {
         String[] toParse = { """
-              @language UI
-              Application myApplication1 {}
-              Application myApplication2 {}
-            """ };
+                  @language UI
+                  Application myApplication1 {}
+                  Application myApplication2 {}
+                """ };
         List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(UI_PACKAGE), toParse));
         assertEquals(1, results.size());
         assertEquals(2, results.get(0).getRootObjects().size());
@@ -89,18 +89,18 @@ public class CompilerTests {
     @Test
     void typeReference() {
         var source = """
-            @language IM
-            Namespace customers {
-              entities {
-                Entity Customer
-                Entity Order {
-                  relationships {
-                    relationship { type: Customer }
+                @language IM
+                Namespace customers {
+                  entities {
+                    Entity Customer
+                    Entity Order {
+                      relationships {
+                        relationship { type: Customer }
+                      }
+                    }
                   }
                 }
-              }
-            }
-            """;
+                """;
         String[] toParse = { source };
         EObject namespace = root(ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse)));
         List<EObject> entities = getValue(namespace, "entities");
@@ -120,26 +120,26 @@ public class CompilerTests {
 
     void doCrossFileReference(int... order) {
         String customersSource = """
-            @language IM
-            namespace customers {
-                    entities {
-                        entity Customer
-                    }
-            }
-            """;
+                @language IM
+                namespace customers {
+                        entities {
+                            entity Customer
+                        }
+                }
+                """;
         String ordersSource = """
-            @language IM
-            namespace orders {
-                    entities { 
-                            entity Order { 
-                                    relationships { 
-                                            relationship customer { type: customers.Customer } 
-                                    } 
-                            }
-                    }
-            }
-            """;
-        String[] sources = {customersSource, ordersSource};
+                @language IM
+                namespace orders {
+                        entities {
+                                entity Order {
+                                        relationships {
+                                                relationship customer { type: customers.Customer }
+                                        }
+                                }
+                        }
+                }
+                """;
+        String[] sources = { customersSource, ordersSource };
         String[] toParse = { sources[order[0]], sources[order[1]] };
         var results = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse));
         var customersNamespace = results.get(order[0]).getRootObject();
@@ -155,20 +155,18 @@ public class CompilerTests {
 
     @Test
     void unresolvedReference() {
-        var results = compileProject(IM_PACKAGE,
-    """
-        @language IM
-        Namespace orders {
-            entities { 
-                Entity Order { 
-                    relationships { 
-                        relationship customer { type: FOOBAR } 
-                    } 
-                }
-            }
-        }
-    """
-        );
+        var results = compileProject(IM_PACKAGE, """
+                    @language IM
+                    Namespace orders {
+                        entities {
+                            Entity Order {
+                                relationships {
+                                    relationship customer { type: FOOBAR }
+                                }
+                            }
+                        }
+                    }
+                """);
 
         var problems = results.get(0).getProblems();
         assertEquals(1, problems.size());
@@ -182,22 +180,21 @@ public class CompilerTests {
 
     @Test
     void imports() {
-        var customers =
-            """
-            @language IM
-            namespace customers
-            """;
-        var orders =
-            """
-            @language IM
-            @import 'customers'
-            namespace orders
-            """;
+        var customers = """
+                @language IM
+                namespace customers
+                """;
+        var orders = """
+                @language IM
+                @import 'customers'
+                namespace orders
+                """;
 
         var allSources = new HashMap<String, String>();
         allSources.put("customers", customers);
         allSources.put("orders", orders);
-        var results = ensureSuccess(compileProject(Collections.singletonList("orders"), buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)), buildSourceProvider(allSources)));
+        var results = ensureSuccess(compileProject(Collections.singletonList("orders"),
+                buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)), buildSourceProvider(allSources)));
         assertEquals(2, results.size());
         var ordersNamespace = results.get(0).getRootObject();
         var customersNamespace = results.get(1).getRootObject();
@@ -208,14 +205,15 @@ public class CompilerTests {
 
     @Test
     void importBuiltIn() {
-        var orders =
-            """
-            @language IM
-            @import 'im'
-            namespace orders
-            """;
+        var orders = """
+                @language IM
+                @import 'im'
+                namespace orders
+                """;
 
-        var results = ensureSuccess(compileProject(Collections.singletonList("orders"), buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)), buildSourceProvider(Collections.singletonMap("orders", orders))));
+        var results = ensureSuccess(compileProject(Collections.singletonList("orders"),
+                buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)),
+                buildSourceProvider(Collections.singletonMap("orders", orders))));
         assertEquals(2, results.size());
         var namespace = results.get(0).getRootObject();
         assertEquals("orders", getPrimitiveValue(namespace, "name"));
@@ -223,11 +221,9 @@ public class CompilerTests {
         assertSame(results.get(0).getRootObject().eResource(), results.get(1).getRootObject().eResource());
     }
 
-
     @Test
     void crossFileReferenceViaImport() {
-        var customers =
-                """
+        var customers = """
                 @language IM
                 namespace customers {
                         entities {
@@ -235,16 +231,15 @@ public class CompilerTests {
                         }
                 }
                 """;
-        var orders =
-                """
+        var orders = """
                 @language IM
                 @import 'customers'
                 namespace orders {
-                        entities { 
-                                entity Order { 
-                                        relationships { 
-                                                relationship { type: customers.Customer } 
-                                        } 
+                        entities {
+                                entity Order {
+                                        relationships {
+                                                relationship { type: customers.Customer }
+                                        }
                                 }
                         }
                 }
@@ -253,7 +248,8 @@ public class CompilerTests {
         var allSources = new HashMap<String, String>();
         allSources.put("customers", customers);
         allSources.put("orders", orders);
-        var results = ensureSuccess(compileProject(Arrays.asList("orders"), buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)), buildSourceProvider(allSources)));
+        var results = ensureSuccess(compileProject(Arrays.asList("orders"),
+                buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)), buildSourceProvider(allSources)));
         assertEquals(2, results.size());
         var ordersNamespace = results.get(0).getRootObject();
         assertEquals("orders", getPrimitiveValue(ordersNamespace, "name"));
@@ -262,20 +258,20 @@ public class CompilerTests {
     @Test
     void incompatibleReference() {
         var source = """
-            @language UI
-            application {
-              screens {
-                screen (layout : Vertical) {
-                    children {
-                        button btn1 (label : 'Ok')
-                        link(label: 'To screen 2') {
-                          targetScreen: btn1
+                    @language UI
+                    application {
+                      screens {
+                        screen (layout : Vertical) {
+                            children {
+                                button btn1 (label : 'Ok')
+                                link(label: 'To screen 2') {
+                                  targetScreen: btn1
+                                }
+                            }
                         }
+                      }
                     }
-                }
-              }
-            }
-        """;
+                """;
         var results = compileProject(UI_PACKAGE, source);
         assertEquals(1, results.size());
         assertEquals(1, results.get(0).getProblems().size());
@@ -285,7 +281,6 @@ public class CompilerTests {
         assertEquals(8, problem.line());
         assertEquals(32, problem.column());
     }
-
 
     @Test
     void emptyApplication_metaclassCapitalization() {
@@ -307,14 +302,14 @@ public class CompilerTests {
     @Test
     void namespaceWithTwoEntities() {
         String[] toParse = { """
-        @language IM
-        Namespace myapp { 
-                entities { 
-                        Entity Customer 
-                        Entity Order 
-                } 
-        }
-        """ };
+                @language IM
+                Namespace myapp {
+                        entities {
+                                Entity Customer
+                                Entity Order
+                        }
+                }
+                """ };
         var namespace1 = root(ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse)));
         List<EObject> entities = getValue(namespace1, "entities");
         assertEquals("Customer", getPrimitiveValue(entities.get(0), "name"));
@@ -322,19 +317,19 @@ public class CompilerTests {
     }
 
     @Test
-        // issue https://github.com/abstratt/simon/issues/3
+    // issue https://github.com/abstratt/simon/issues/3
     void primitiveTypes() {
         var toParse = """
                 @language IM
                 @import 'im'
-                namespace { 
-                    entities { 
-                        Entity Product { 
-                            properties { 
-                                Property description { type = im.StringValue } 
-                            } 
-                        } 
-                    } 
+                namespace {
+                    entities {
+                        Entity Product {
+                            properties {
+                                Property description { type = im.StringValue }
+                            }
+                        }
+                    }
                 }""";
         var namespace = compileUsingIM(toParse);
         List<EObject> entities = getValue(namespace, "entities");
@@ -370,16 +365,15 @@ public class CompilerTests {
 
     @Test
     void applicationWithScreens() {
-        var myApplication = compileUsingUI(
-                """
-            application myApplication {
-                    screens {
-                        Screen screen1 {} 
-                        Screen screen2 {} 
-                        Screen screen3 {} 
-                    } 
-            }
-                        """);
+        var myApplication = compileUsingUI("""
+                application myApplication {
+                        screens {
+                            Screen screen1 {}
+                            Screen screen2 {}
+                            Screen screen3 {}
+                        }
+                }
+                            """);
         assertNotNull(myApplication);
         assertSame(applicationClass, myApplication.eClass());
         List<EObject> screens = getValue(myApplication, "screens");
@@ -392,20 +386,20 @@ public class CompilerTests {
     @Test
     void fullyQualifiedReferences() {
         var application = compileUsingUI("""
-              @language UI
-              application myApplication { 
-                  screens { 
-                    screen screen1 {
-                      children {
-                        link {
-                            targetScreen: myApplication.screen2
+                @language UI
+                application myApplication {
+                    screens {
+                      screen screen1 {
+                        children {
+                          link {
+                              targetScreen: myApplication.screen2
+                          }
                         }
                       }
-                    } 
-                    screen screen2 {} 
-                  } 
-              }
-                """);
+                      screen screen2 {}
+                    }
+                }
+                  """);
         List<EObject> screens = getValue(application, "screens");
         assertEquals(2, screens.size());
         EObject firstScreen = screens.get(0);
@@ -441,7 +435,7 @@ public class CompilerTests {
         assertNull(roots.get(0).getRootObject());
         assertEquals(0, roots.get(0).getProblems().size());
     }
-    
+
     @Test
     void derivedLanguages() {
         String toParse = """

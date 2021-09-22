@@ -27,11 +27,10 @@ public class Result<T> {
         return new Result<>(source, Collections.emptyList(), problems);
     }
 
-    
     public T getRootObject() {
         return rootObjects.isEmpty() ? null : rootObjects.get(0);
     }
-    
+
     public List<T> getRootObjects() {
         return rootObjects;
     }

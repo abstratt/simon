@@ -10,15 +10,15 @@ import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 
 public abstract class EcoreValue<DT extends EClassifier> extends EcoreType<DT> implements Metamodel.BasicType {
 
-	public EcoreValue(DT classifier) {
-		super(classifier);
-	}
+    public EcoreValue(DT classifier) {
+        super(classifier);
+    }
 
-	@Override
-	public EObject newModelElement() {
-		EDataType dataType = (EDataType) wrapped();
-		EFactory factory = dataType.getEPackage().getEFactoryInstance();
-		return (EObject) factory.createFromString(dataType, null);
-	}
+    @Override
+    public EObject newModelElement() {
+        EDataType dataType = (EDataType) wrapped();
+        EFactory factory = dataType.getEPackage().getEFactoryInstance();
+        return (EObject) factory.createFromString(dataType, null);
+    }
 
 }

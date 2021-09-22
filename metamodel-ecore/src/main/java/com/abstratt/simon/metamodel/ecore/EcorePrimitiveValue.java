@@ -12,43 +12,43 @@ import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 
 public class EcorePrimitiveValue extends EcoreValue<EClass> implements Metamodel.Primitive {
 
-	public EcorePrimitiveValue(EClass classifier) {
-		super(classifier);
-	}
+    public EcorePrimitiveValue(EClass classifier) {
+        super(classifier);
+    }
 
-	@Override
-	public boolean isInstantiable() {
-		return false;
-	}
+    @Override
+    public boolean isInstantiable() {
+        return false;
+    }
 
-	@Override
-	public EObject newModelElement() {
-		EClass dataType = wrapped();
-		EFactory factory = dataType.getEPackage().getEFactoryInstance();
-		EObject value = factory.create(dataType);
-		return value;
-	}
+    @Override
+    public EObject newModelElement() {
+        EClass dataType = wrapped();
+        EFactory factory = dataType.getEPackage().getEFactoryInstance();
+        EObject value = factory.create(dataType);
+        return value;
+    }
 
-	public PrimitiveKind kind() {
-		EDataType eClass = (EDataType) wrapped().getEStructuralFeature(MetaEcoreHelper.PRIMITIVE_VALUE_FEATURE)
-				.getEType();
-		if (EcorePackage.Literals.EBOOLEAN == eClass || EcorePackage.Literals.EBOOLEAN_OBJECT == eClass)
-			return PrimitiveKind.Boolean;
-		if (EcorePackage.Literals.EINT == eClass || EcorePackage.Literals.EINTEGER_OBJECT == eClass)
-			return PrimitiveKind.Integer;
-		if (EcorePackage.Literals.ELONG == eClass || EcorePackage.Literals.ELONG_OBJECT == eClass)
-			return PrimitiveKind.Integer;
-		if (EcorePackage.Literals.ESHORT == eClass || EcorePackage.Literals.ESHORT_OBJECT == eClass)
-			return PrimitiveKind.Integer;
-		if (EcorePackage.Literals.ECHAR == eClass || EcorePackage.Literals.ECHARACTER_OBJECT == eClass)
-			return PrimitiveKind.Integer;
-		if (EcorePackage.Literals.EDOUBLE == eClass || EcorePackage.Literals.EDOUBLE_OBJECT == eClass)
-			return PrimitiveKind.Decimal;
-		if (EcorePackage.Literals.EFLOAT == eClass || EcorePackage.Literals.EFLOAT_OBJECT == eClass)
-			return PrimitiveKind.Decimal;
-		if (EcorePackage.Literals.ESTRING == eClass)
-			return PrimitiveKind.String;
-		throw new IllegalStateException(eClass.getName());
-	}
+    public PrimitiveKind kind() {
+        EDataType eClass = (EDataType) wrapped().getEStructuralFeature(MetaEcoreHelper.PRIMITIVE_VALUE_FEATURE)
+                .getEType();
+        if (EcorePackage.Literals.EBOOLEAN == eClass || EcorePackage.Literals.EBOOLEAN_OBJECT == eClass)
+            return PrimitiveKind.Boolean;
+        if (EcorePackage.Literals.EINT == eClass || EcorePackage.Literals.EINTEGER_OBJECT == eClass)
+            return PrimitiveKind.Integer;
+        if (EcorePackage.Literals.ELONG == eClass || EcorePackage.Literals.ELONG_OBJECT == eClass)
+            return PrimitiveKind.Integer;
+        if (EcorePackage.Literals.ESHORT == eClass || EcorePackage.Literals.ESHORT_OBJECT == eClass)
+            return PrimitiveKind.Integer;
+        if (EcorePackage.Literals.ECHAR == eClass || EcorePackage.Literals.ECHARACTER_OBJECT == eClass)
+            return PrimitiveKind.Integer;
+        if (EcorePackage.Literals.EDOUBLE == eClass || EcorePackage.Literals.EDOUBLE_OBJECT == eClass)
+            return PrimitiveKind.Decimal;
+        if (EcorePackage.Literals.EFLOAT == eClass || EcorePackage.Literals.EFLOAT_OBJECT == eClass)
+            return PrimitiveKind.Decimal;
+        if (EcorePackage.Literals.ESTRING == eClass)
+            return PrimitiveKind.String;
+        throw new IllegalStateException(eClass.getName());
+    }
 
 }

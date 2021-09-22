@@ -1,7 +1,5 @@
 package com.abstratt.simon.compiler.antlr.impl;
 
-import com.abstratt.simon.compiler.Problem.Category;
-import com.abstratt.simon.compiler.backend.MetamodelException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
@@ -21,9 +19,11 @@ import org.apache.commons.lang3.StringUtils;
 import com.abstratt.simon.compiler.AbortCompilationException;
 import com.abstratt.simon.compiler.CompilerException;
 import com.abstratt.simon.compiler.Problem;
+import com.abstratt.simon.compiler.Problem.Category;
 import com.abstratt.simon.compiler.Problem.Severity;
 import com.abstratt.simon.compiler.backend.Backend;
 import com.abstratt.simon.compiler.backend.Linking;
+import com.abstratt.simon.compiler.backend.MetamodelException;
 import com.abstratt.simon.compiler.backend.Parenting;
 import com.abstratt.simon.compiler.source.MetamodelSource;
 import com.abstratt.simon.metamodel.Metamodel.BasicType;
@@ -91,11 +91,11 @@ class SimonBuilder<T> extends SimonBaseListener {
      * Scopes can be nested.
      */
     private final Deque<ElementInfo> currentScope = new LinkedList<>();
-    private final List<ElementInfo> built = new LinkedList<>(); 
+    private final List<ElementInfo> built = new LinkedList<>();
     private final List<ResolutionRequest> resolutionRequests = new LinkedList<>();
-	private final List<String> imports = new ArrayList<>();
+    private final List<String> imports = new ArrayList<>();
     private Set<String> languages;
-	private String sourceName;
+    private String sourceName;
 
     interface Resolver<R> {
         void resolve(R resolved);
@@ -110,7 +110,8 @@ class SimonBuilder<T> extends SimonBaseListener {
         private Type expectedType;
         private final Set<String> languages;
 
-        public ResolutionRequest(ParserRuleContext context, String source, T scope, String name, Set<String> languages, Resolver<T> resolver) {
+        public ResolutionRequest(ParserRuleContext context, String source, T scope, String name, Set<String> languages,
+                Resolver<T> resolver) {
             this.source = source;
             this.context = context;
             this.scope = scope;
@@ -132,22 +133,18 @@ class SimonBuilder<T> extends SimonBaseListener {
         }
     }
 
-    public SimonBuilder(
-            Problem.Handler problemHandler,
-            MetamodelSource metamodelSource,
+    public SimonBuilder(Problem.Handler problemHandler, MetamodelSource metamodelSource,
             Backend<? extends ObjectType, ? extends Slotted, T> modelHandling) {
         this.problemHandler = problemHandler;
         this.metamodelSource = metamodelSource;
         this.modelHandling = (Backend<ObjectType, Slotted, T>) modelHandling;
     }
 
-
     @Override
     public void exitImportDeclaration(com.abstratt.simon.parser.antlr.SimonParser.ImportDeclarationContext ctx) {
         var source = getCharLiteral(ctx);
         addImport(source);
     }
-
 
     @Override
     public void exitLanguageDeclaration(LanguageDeclarationContext ctx) {
@@ -174,18 +171,17 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     public List<T> buildUnit() {
-    	if (hasFatalError())
-    		return Collections.emptyList();
-    	assert currentScope.isEmpty();
-    	var partialResult = built.stream().map(ElementInfo::getObject).collect(Collectors.toList());
-    	built.clear();
-		return partialResult;
+        if (hasFatalError())
+            return Collections.emptyList();
+        assert currentScope.isEmpty();
+        var partialResult = built.stream().map(ElementInfo::getObject).collect(Collectors.toList());
+        built.clear();
+        return partialResult;
     }
 
-
-	public boolean hasFatalError() {
-		return problemHandler.hasFatalError();
-	}
+    public boolean hasFatalError() {
+        return problemHandler.hasFatalError();
+    }
 
     void resolve() {
         for (ResolutionRequest request : resolutionRequests)
@@ -196,23 +192,25 @@ class SimonBuilder<T> extends SimonBaseListener {
         String name = request.name;
         Resolver<T> resolver = request.resolver;
         T scope = request.scope;
-        String[] nameComponents = name.contains(".") ? name.split("\\.") : new String[]{name};
+        String[] nameComponents = name.contains(".") ? name.split("\\.") : new String[] { name };
         T resolved = modelHandling.nameResolution().resolve(scope, nameComponents);
         if (resolved != null) {
             try {
                 resolver.resolve(resolved);
             } catch (MetamodelException e) {
-                reportError(Severity.Error, Category.TypeError, request.getSource(), request.getLine(), request.getColumn(), e.getMessage());
+                reportError(Severity.Error, Category.TypeError, request.getSource(), request.getLine(),
+                        request.getColumn(), e.getMessage());
             }
         } else {
-            reportError(Severity.Error, Category.UnresolvedName, request.getSource(), request.getLine(), request.getColumn(), "Unknown name: '" + name + "'");
+            reportError(Severity.Error, Category.UnresolvedName, request.getSource(), request.getLine(),
+                    request.getColumn(), "Unknown name: '" + name + "'");
         }
     }
-    
+
     @Override
     public void enterRootObject(RootObjectContext ctx) {
         if (languages.isEmpty())
-        	reportError(Severity.Fatal, Category.MissingElement, sourceName, ctx, "No languages defined");
+            reportError(Severity.Fatal, Category.MissingElement, sourceName, ctx, "No languages defined");
     }
 
     @Override
@@ -222,9 +220,11 @@ class SimonBuilder<T> extends SimonBaseListener {
         var resolvedType = metamodelSource.resolveType(StringUtils.capitalize(typeName), languages);
         var asObjectType = (ObjectType) resolvedType;
         if (asObjectType == null)
-        	reportError(Severity.Fatal, Category.UnknownElement, sourceName, ctx, "Unknown language element: " + typeName);
+            reportError(Severity.Fatal, Category.UnknownElement, sourceName, ctx,
+                    "Unknown language element: " + typeName);
         if (!asObjectType.isInstantiable())
-        	reportError(Severity.Fatal, Category.AbstractElement, sourceName, ctx, "Language element not instantiable: " + typeName);
+            reportError(Severity.Fatal, Category.AbstractElement, sourceName, ctx,
+                    "Language element not instantiable: " + typeName);
         var instantiation = modelHandling.instantiation();
         var created = (T) instantiation.createObject(asObjectType.isRoot(), asObjectType);
         var objectName = ctx.objectName();
@@ -232,18 +232,18 @@ class SimonBuilder<T> extends SimonBaseListener {
             modelHandling.nameSetting().setName(created, getIdentifier(objectName));
         newScope(asObjectType, created);
     }
-    
+
     @Override
     public void exitRootObject(RootObjectContext ctx) {
-    	if (hasFatalError())
-    		return;
-    	if (currentScope.isEmpty())
-    		return;
-    	assert currentScope.size() == 1;
-    	var lastScope = dropScope();
-    	built.add(lastScope);
+        if (hasFatalError())
+            return;
+        if (currentScope.isEmpty())
+            return;
+        assert currentScope.size() == 1;
+        var lastScope = dropScope();
+        built.add(lastScope);
     }
-    
+
     private String getTypeName(ObjectClassContext object) {
         String text = object.getText();
         if (text.indexOf('.') < 0)
@@ -276,13 +276,14 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private void requestResolution(String name, Resolver<T> resolver, ParserRuleContext context) {
-        resolutionRequests.add(new ResolutionRequest(context, sourceName, this.currentScope().get().getObject(), name, languages, resolver));
+        resolutionRequests.add(new ResolutionRequest(context, sourceName, this.currentScope().get().getObject(), name,
+                languages, resolver));
     }
 
     @Override
     public void exitComponent(ComponentContext ctx) {
-    	if (hasFatalError())
-    		return;
+        if (hasFatalError())
+            return;
         int childCount = ctx.childObjects().getChildCount();
         List<T> components = new ArrayList<>(childCount);
         for (int i = 0; i < childCount; i++) {
@@ -295,7 +296,8 @@ class SimonBuilder<T> extends SimonBaseListener {
         Parenting<T, Composition> parenting = modelHandling.parenting();
         Composition composition = getObjectFeature(parentInfo, ctx.featureName(), ObjectType::compositionByName);
         if (composition == null) {
-            reportError(Severity.Fatal, Category.MissingFeature, sourceName, ctx.featureName(), "No feature '" + getIdentifier(ctx.featureName()) + "' found on " + parentInfo.getType().name());
+            reportError(Severity.Fatal, Category.MissingFeature, sourceName, ctx.featureName(),
+                    "No feature '" + getIdentifier(ctx.featureName()) + "' found on " + parentInfo.getType().name());
             return;
         }
         for (T child : components) {
@@ -304,19 +306,22 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private <F extends Feature<ObjectType>> F getObjectFeature(ElementInfo featureOwnerInfo,
-                                                               ParserRuleContext featureNameCtx, BiFunction<ObjectType, String, F> getter) {
+            ParserRuleContext featureNameCtx, BiFunction<ObjectType, String, F> getter) {
         Slotted parentType = featureOwnerInfo.getType();
         if (!(parentType instanceof ObjectType))
-            reportError(Severity.Fatal, Category.ElementAdmitsNoFeatures, featureOwnerInfo.getSourceName(), featureNameCtx, "This type cannot have components: " + parentType.name());
+            reportError(Severity.Fatal, Category.ElementAdmitsNoFeatures, featureOwnerInfo.getSourceName(),
+                    featureNameCtx, "This type cannot have components: " + parentType.name());
         ObjectType parentTypeAsObjectType = (ObjectType) parentType;
         String featureName = getIdentifier(featureNameCtx);
         F feature = getter.apply(parentTypeAsObjectType, featureName);
         if (feature == null)
-            reportError(Severity.Fatal, Category.MissingFeature, featureOwnerInfo.getSourceName(), featureNameCtx, "No feature '" + featureName + "' in " + parentType.name());
+            reportError(Severity.Fatal, Category.MissingFeature, featureOwnerInfo.getSourceName(), featureNameCtx,
+                    "No feature '" + featureName + "' in " + parentType.name());
         return feature;
     }
 
-    private Problem reportError(Severity severity, Category category, String sourceName, ParserRuleContext ctx, String message) {
+    private Problem reportError(Severity severity, Category category, String sourceName, ParserRuleContext ctx,
+            String message) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return reportError(severity, category, sourceName, line, column, message);
@@ -348,7 +353,8 @@ class SimonBuilder<T> extends SimonBaseListener {
         Slot slot = asSlotted.slotByName(propertyName);
         if (slot == null) {
             List<String> slotNames = asSlotted.slots().stream().map(Slot::name).collect(Collectors.toList());
-            throw new CompilerException("Unknown property: " + propertyName + " in type " + asSlotted.name() + " - slots are: " + slotNames);
+            throw new CompilerException("Unknown property: " + propertyName + " in type " + asSlotted.name()
+                    + " - slots are: " + slotNames);
         }
         if (!(slot.type() instanceof RecordType)) {
             // no instance required
@@ -372,7 +378,8 @@ class SimonBuilder<T> extends SimonBaseListener {
         ElementInfo info = currentScope().get();
 
         T target = info.getObject();
-        parseSlotValue(ctx, info.getType(), (slot, value) -> modelHandling.valueSetting().setValue(slot, target, value));
+        parseSlotValue(ctx, info.getType(),
+                (slot, value) -> modelHandling.valueSetting().setValue(slot, target, value));
     }
 
     private void parseSlotValue(SlotContext ctx, Slotted slotOwner, BiConsumer<Slot, Object> consumer) {
@@ -380,7 +387,8 @@ class SimonBuilder<T> extends SimonBaseListener {
         Slot slot = slotOwner.slotByName(propertyName);
         if (slot == null) {
             List<String> slotNames = slotOwner.slots().stream().map(Slot::name).collect(Collectors.toList());
-            throw new CompilerException("Unknown property: " + propertyName + " in element " + slotOwner.name() + " - slots are: " + slotNames);
+            throw new CompilerException("Unknown property: " + propertyName + " in element " + slotOwner.name()
+                    + " - slots are: " + slotNames);
         }
 
         Object slotValue = buildValue(ctx, slot);
@@ -420,11 +428,11 @@ class SimonBuilder<T> extends SimonBaseListener {
 
     private Object parsePrimitiveLiteral(Primitive slotType, String literalText) {
         return switch (slotType.kind()) {
-            case Integer -> Integer.parseInt(literalText);
-            case Decimal -> Double.parseDouble(literalText);
-            case Boolean -> Boolean.parseBoolean(literalText);
-            case String, Other -> literalText.substring(1, literalText.length() - 1);
-            default -> throw new IllegalStateException();
+        case Integer -> Integer.parseInt(literalText);
+        case Decimal -> Double.parseDouble(literalText);
+        case Boolean -> Boolean.parseBoolean(literalText);
+        case String, Other -> literalText.substring(1, literalText.length() - 1);
+        default -> throw new IllegalStateException();
         };
     }
 
@@ -448,20 +456,20 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     public void addImport(String importPath) {
-    	imports.add(importPath);
+        imports.add(importPath);
     }
 
     public void addLanguage(String language) {
         languages.add(language);
     }
-    
+
     public List<String> collectImports() {
         var result = new ArrayList<>(imports);
         imports.clear();
         return result;
-	}
-    
+    }
+
     public Problem.Handler getProblemHandler() {
-		return problemHandler;
-	}
+        return problemHandler;
+    }
 }

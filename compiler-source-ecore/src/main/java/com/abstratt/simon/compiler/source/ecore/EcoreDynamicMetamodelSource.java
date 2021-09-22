@@ -24,66 +24,65 @@ import io.github.classgraph.ScanResult;
 
 public class EcoreDynamicMetamodelSource implements MetamodelSource<EcoreType<EClassifier>> {
 
-	private final Map<String, EPackage> packages;
-	private final ScanResult scanResult;
+    private final Map<String, EPackage> packages;
+    private final ScanResult scanResult;
 
-	private EcoreDynamicMetamodelSource(String javaPackage) {
-		scanResult = new ClassGraph()
-        .enableAnnotationInfo()
-		.acceptPackages(javaPackage)
-        .scan();
-		//System.out.println("URL: " + scanResult.getClasspathURLs());
-		var packageImplementations = scanResult.getClassesWithAnnotation(Meta.Package.class);
-		var mapper = new Java2EcoreMapper();
-		this.packages = packageImplementations.loadClasses().stream()
-				.collect(Collectors.toMap(Class::getName, mapper::map));
-		//System.out.println("*** Packages:\n" + packages);
-	}
+    private EcoreDynamicMetamodelSource(String javaPackage) {
+        scanResult = new ClassGraph().enableAnnotationInfo().acceptPackages(javaPackage).scan();
+        // System.out.println("URL: " + scanResult.getClasspathURLs());
+        var packageImplementations = scanResult.getClassesWithAnnotation(Meta.Package.class);
+        var mapper = new Java2EcoreMapper();
+        this.packages = packageImplementations.loadClasses().stream()
+                .collect(Collectors.toMap(Class::getName, mapper::map));
+        // System.out.println("*** Packages:\n" + packages);
+    }
 
-	@Override
-	public SourceProvider builtInSources() {
-		var builtIns = packages.values().stream().map(p -> p.getEAnnotation("simon/builtIns")).filter(Objects::nonNull).map(EAnnotation::getDetails).map(EMap::map).reduce(new LinkedHashMap<>(), (a, b) -> { a.putAll(b); return a;});
-		return new SimpleSourceProvider(builtIns);
-	}
+    @Override
+    public SourceProvider builtInSources() {
+        var builtIns = packages.values().stream().map(p -> p.getEAnnotation("simon/builtIns")).filter(Objects::nonNull)
+                .map(EAnnotation::getDetails).map(EMap::map).reduce(new LinkedHashMap<>(), (a, b) -> {
+                    a.putAll(b);
+                    return a;
+                });
+        return new SimpleSourceProvider(builtIns);
+    }
 
-	@Override
-	public void close() {
-		scanResult.close();
-	}
+    @Override
+    public void close() {
+        scanResult.close();
+    }
 
-	@Override
-	public EcoreType<EClassifier> resolveType(String typeName, Set<String> languages) {
-		return enabledPackages(languages) //
-				.map(ePackage -> EcoreHelper.findClassifierByName(ePackage, typeName)) //
-				.filter(Objects::nonNull) //
-				.map(eClass -> (EcoreType<EClassifier>) EcoreType.fromClassifier(eClass)) //
-				.findAny().orElse(null);
-	}
+    @Override
+    public EcoreType<EClassifier> resolveType(String typeName, Set<String> languages) {
+        return enabledPackages(languages) //
+                .map(ePackage -> EcoreHelper.findClassifierByName(ePackage, typeName)) //
+                .filter(Objects::nonNull) //
+                .map(eClass -> (EcoreType<EClassifier>) EcoreType.fromClassifier(eClass)) //
+                .findAny().orElse(null);
+    }
 
-	private Stream<EPackage> enabledPackages(Set<String> languages) {
-		return this.packages.values()
-				.stream() //
-				.filter(p -> languages == null || languages.contains(p.getName()));
-	}
+    private Stream<EPackage> enabledPackages(Set<String> languages) {
+        return this.packages.values().stream() //
+                .filter(p -> languages == null || languages.contains(p.getName()));
+    }
 
-	@Override
-	public Stream<EcoreType<EClassifier>> enumerate(Set<String> languages) {
-		return enabledPackages(languages)
-				.flatMap(EcoreHelper::findAllClassifiers) //
-				.map(eClass -> (EcoreType<EClassifier>) EcoreType.fromClassifier(eClass));
-	}
+    @Override
+    public Stream<EcoreType<EClassifier>> enumerate(Set<String> languages) {
+        return enabledPackages(languages).flatMap(EcoreHelper::findAllClassifiers) //
+                .map(eClass -> (EcoreType<EClassifier>) EcoreType.fromClassifier(eClass));
+    }
 
-	public static class Factory implements MetamodelSource.Factory<EcoreType<EClassifier>> {
-		private final String packageName;
+    public static class Factory implements MetamodelSource.Factory<EcoreType<EClassifier>> {
+        private final String packageName;
 
-		public Factory(String packageName) {
-			this.packageName = packageName;
-		}
+        public Factory(String packageName) {
+            this.packageName = packageName;
+        }
 
-		@Override
-		public MetamodelSource<EcoreType<EClassifier>> build() {
-			return new EcoreDynamicMetamodelSource(packageName);
-		}
-		
-	}
+        @Override
+        public MetamodelSource<EcoreType<EClassifier>> build() {
+            return new EcoreDynamicMetamodelSource(packageName);
+        }
+
+    }
 }

@@ -9,9 +9,9 @@ import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreSlotted;
 
 public class EMFModelBackendFactory implements Backend.Factory {
 
-	@Override
-	public Backend<EcoreObjectType, EcoreSlotted<?>, EObject> create() {
-		return new EcoreModelBuilder();
-	}
+    @Override
+    public Backend<EcoreObjectType, EcoreSlotted<?>, EObject> create() {
+        return new EcoreModelBuilder();
+    }
 
 }

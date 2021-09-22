@@ -20,21 +20,22 @@ public class MetamodelSourceTests {
         var resolved = metamodel.resolveType("Application", null);
         assertNotNull(resolved);
     }
-	@Test
-	void dynamicMetamodelSourceResolveType() {
-		var typeSourceFactory = new EcoreDynamicMetamodelSource.Factory(UI.class.getPackageName());
-		try (var typeSource = typeSourceFactory.build()) {
-			var resolved = typeSource.resolveType("application", null);
-			assertNotNull(resolved);
-		}
-	}
-	
-	@Test
-	void dynamicMetamodelResolveTypeConstrained() {
-		var typeSourceFactory = new EcoreDynamicMetamodelSource.Factory(UI.class.getPackageName());
-		try (var typeSource = typeSourceFactory.build()) {
-			var resolved = typeSource.resolveType("application", Collections.emptySet());
-			assertNull(resolved);
-		}
-	}
+
+    @Test
+    void dynamicMetamodelSourceResolveType() {
+        var typeSourceFactory = new EcoreDynamicMetamodelSource.Factory(UI.class.getPackageName());
+        try (var typeSource = typeSourceFactory.build()) {
+            var resolved = typeSource.resolveType("application", null);
+            assertNotNull(resolved);
+        }
+    }
+
+    @Test
+    void dynamicMetamodelResolveTypeConstrained() {
+        var typeSourceFactory = new EcoreDynamicMetamodelSource.Factory(UI.class.getPackageName());
+        try (var typeSource = typeSourceFactory.build()) {
+            var resolved = typeSource.resolveType("application", Collections.emptySet());
+            assertNull(resolved);
+        }
+    }
 }

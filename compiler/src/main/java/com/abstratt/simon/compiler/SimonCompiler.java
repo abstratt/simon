@@ -36,52 +36,53 @@ import com.abstratt.simon.metamodel.Metamodel.Slotted;
  */
 public interface SimonCompiler<T> {
 
-	List<Result<T>> compile(List<String> entryPoints, SourceProvider sources);
+    List<Result<T>> compile(List<String> entryPoints, SourceProvider sources);
 
-	default Result<T> compile(Reader contents) {
-		return compile(ContentProvider.provideContents(contents));
-	}
+    default Result<T> compile(Reader contents) {
+        return compile(ContentProvider.provideContents(contents));
+    }
 
-	/**
-	 * Compiles a single input as provided by the given provider.
-	 * 
-	 * @param input
-	 * @return
-	 */
-	default Result<T> compile(String name, ContentProvider input) {
-		return compile(Arrays.asList(name), new ContentProviderSourceProvider(Collections.singletonMap(name, input))).get(0);
-	}
+    /**
+     * Compiles a single input as provided by the given provider.
+     * 
+     * @param input
+     * @return
+     */
+    default Result<T> compile(String name, ContentProvider input) {
+        return compile(Arrays.asList(name), new ContentProviderSourceProvider(Collections.singletonMap(name, input)))
+                .get(0);
+    }
 
-	default Result<T> compile(ContentProvider input) {
-		return compile("input", input);
-	}
+    default Result<T> compile(ContentProvider input) {
+        return compile("input", input);
+    }
 
-	default Result<T> compile(URI uri) {
-		return compile(() -> new InputStreamReader(uri.toURL().openStream()));
-	}
+    default Result<T> compile(URI uri) {
+        return compile(() -> new InputStreamReader(uri.toURL().openStream()));
+    }
 
-	default Result<T> compile(URL url) {
-		try (InputStream contents = url.openStream()) {
-			return compile(contents);
-		} catch (IOException e) {
-			throw new CompilerException(e);
-		}
-	}
+    default Result<T> compile(URL url) {
+        try (InputStream contents = url.openStream()) {
+            return compile(contents);
+        } catch (IOException e) {
+            throw new CompilerException(e);
+        }
+    }
 
-	default Result<T> compile(InputStream contents) {
-		return compile(() -> new InputStreamReader(contents, StandardCharsets.UTF_8));
-	}
+    default Result<T> compile(InputStream contents) {
+        return compile(() -> new InputStreamReader(contents, StandardCharsets.UTF_8));
+    }
 
-	default Result<T> compile(Path toParse) {
-		return compile(() -> Files.newBufferedReader(toParse));
-	}
+    default Result<T> compile(Path toParse) {
+        return compile(() -> Files.newBufferedReader(toParse));
+    }
 
-	default Result<T> compile(String toParse) {
-		return compile(ContentProvider.provideContents(new StringReader(toParse)));
-	}
-	
-	interface Factory {
-		<T> SimonCompiler<T> create(MetamodelSource.Factory<?> typeSourceFactory,
-				Backend<? extends ObjectType, ? extends Slotted, T> configurationProvider);
-	}
+    default Result<T> compile(String toParse) {
+        return compile(ContentProvider.provideContents(new StringReader(toParse)));
+    }
+
+    interface Factory {
+        <T> SimonCompiler<T> create(MetamodelSource.Factory<?> typeSourceFactory,
+                Backend<? extends ObjectType, ? extends Slotted, T> configurationProvider);
+    }
 }

@@ -20,8 +20,8 @@ public interface Backend<O extends Metamodel.ObjectType, S extends Metamodel.Slo
     <C extends Metamodel.Composition> Parenting<M, C> parenting();
 
     <R> R runOperation(Operation<R> operation);
-    
+
     interface Factory {
-    	<O extends Metamodel.ObjectType, S extends Metamodel.Slotted, M> Backend<O, S, M> create();
+        <O extends Metamodel.ObjectType, S extends Metamodel.Slotted, M> Backend<O, S, M> create();
     }
 }

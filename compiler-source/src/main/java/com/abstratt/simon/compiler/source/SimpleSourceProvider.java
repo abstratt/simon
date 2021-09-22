@@ -5,16 +5,15 @@ import java.util.Map;
 import java.util.Optional;
 
 public class SimpleSourceProvider implements SourceProvider {
-	private final Map<String, String> toParse;
-	public SimpleSourceProvider(Map<String, String> toParse) {
-		this.toParse = toParse;
-	}
+    private final Map<String, String> toParse;
 
-	@Override
-	public ContentProvider access(String sourceName) {
-		return Optional.ofNullable(toParse.get(sourceName))
-				.map(StringReader::new)
-				.map(ContentProvider::provideContents)
-				.orElse(null);
-	}
+    public SimpleSourceProvider(Map<String, String> toParse) {
+        this.toParse = toParse;
+    }
+
+    @Override
+    public ContentProvider access(String sourceName) {
+        return Optional.ofNullable(toParse.get(sourceName)).map(StringReader::new).map(ContentProvider::provideContents)
+                .orElse(null);
+    }
 }

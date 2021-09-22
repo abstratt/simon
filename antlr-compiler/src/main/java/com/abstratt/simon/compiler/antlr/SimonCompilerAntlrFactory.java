@@ -9,10 +9,10 @@ import com.abstratt.simon.metamodel.Metamodel.Slotted;
 
 public class SimonCompilerAntlrFactory implements SimonCompiler.Factory {
 
-	@Override
-	public <T> SimonCompiler<T> create(Factory<?> typeSourceFactory,
-			Backend<? extends ObjectType, ? extends Slotted, T> configurationProvider) {
-		return new SimonCompilerAntlrImpl<>(typeSourceFactory, configurationProvider);
-	}
+    @Override
+    public <T> SimonCompiler<T> create(Factory<?> typeSourceFactory,
+            Backend<? extends ObjectType, ? extends Slotted, T> configurationProvider) {
+        return new SimonCompilerAntlrImpl<>(typeSourceFactory, configurationProvider);
+    }
 
 }

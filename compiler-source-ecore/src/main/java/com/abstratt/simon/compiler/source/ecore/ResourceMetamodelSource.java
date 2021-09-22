@@ -11,20 +11,22 @@ import com.abstratt.simon.compiler.source.MetamodelSourceChain;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 
 public class ResourceMetamodelSource extends EPackageMetamodelSource {
-	protected ResourceMetamodelSource(EPackage ePackage) {
-		super(ePackage);
-	}
+    protected ResourceMetamodelSource(EPackage ePackage) {
+        super(ePackage);
+    }
 
-	public static class Factory implements MetamodelSource.Factory<EcoreType<? extends EClassifier>> {
-		private final Resource resource;
-		public Factory(Resource resource) {
-			this.resource = resource;
-		}
-		@Override
-		public MetamodelSource<EcoreType<? extends EClassifier>> build() {
-			var packages = resource.getContents().stream().map(e -> (EPackage) e);
-			var childSources = packages.map(ResourceMetamodelSource::new).collect(Collectors.toList());
-			return new MetamodelSourceChain(childSources);
-		}
-	}
+    public static class Factory implements MetamodelSource.Factory<EcoreType<? extends EClassifier>> {
+        private final Resource resource;
+
+        public Factory(Resource resource) {
+            this.resource = resource;
+        }
+
+        @Override
+        public MetamodelSource<EcoreType<? extends EClassifier>> build() {
+            var packages = resource.getContents().stream().map(e -> (EPackage) e);
+            var childSources = packages.map(ResourceMetamodelSource::new).collect(Collectors.toList());
+            return new MetamodelSourceChain(childSources);
+        }
+    }
 }

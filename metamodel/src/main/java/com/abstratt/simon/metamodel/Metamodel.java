@@ -19,162 +19,162 @@ import java.util.Collection;
  */
 public interface Metamodel {
 
-	/**
-	 * Model elements that may be named, should implement Named.
-	 */
-	interface Named {
-		String name();
+    /**
+     * Model elements that may be named, should implement Named.
+     */
+    interface Named {
+        String name();
 
-		static boolean isNamed(Object o) {
-			return o instanceof Named;
-		}
-	}
+        static boolean isNamed(Object o) {
+            return o instanceof Named;
+        }
+    }
 
-	/**
-	 * The basic interface for all types.
-	 * 
-	 * @see Metamodel.ObjectType
-	 * @see Metamodel.RecordType
-	 * @see Metamodel.Enumerated
-	 * @see Metamodel.Primitive
-	 */
-	interface Type extends Named {
-		/**
-		 * Whether this type is meant for a top-level element (which does not require a
-		 * parent type).
-		 */
-		boolean isRoot();
+    /**
+     * The basic interface for all types.
+     * 
+     * @see Metamodel.ObjectType
+     * @see Metamodel.RecordType
+     * @see Metamodel.Enumerated
+     * @see Metamodel.Primitive
+     */
+    interface Type extends Named {
+        /**
+         * Whether this type is meant for a top-level element (which does not require a
+         * parent type).
+         */
+        boolean isRoot();
 
-		boolean isInstantiable();
-	}
+        boolean isInstantiable();
+    }
 
-	/**
-	 * An interface for data elements that can have a type.
-	 */
-	interface Typed<T extends Type> extends Named {
-		/**
-		 * Is this piece of data required?
-		 */
-		boolean required();
+    /**
+     * An interface for data elements that can have a type.
+     */
+    interface Typed<T extends Type> extends Named {
+        /**
+         * Is this piece of data required?
+         */
+        boolean required();
 
-		/**
-		 * Can this piece of data admit multiple values?
-		 */
-		boolean multivalued();
+        /**
+         * Can this piece of data admit multiple values?
+         */
+        boolean multivalued();
 
-		/**
-		 * The type.
-		 */
-		T type();
-	}
+        /**
+         * The type.
+         */
+        T type();
+    }
 
-	/**
-	 * A type for values that are made up of slots, such as {@link RecordType} and
-	 * {@link ObjectType}.
-	 */
-	interface Slotted extends Type {
-		Collection<Slot> slots();
+    /**
+     * A type for values that are made up of slots, such as {@link RecordType} and
+     * {@link ObjectType}.
+     */
+    interface Slotted extends Type {
+        Collection<Slot> slots();
 
-		default Slot slotByName(String name) {
-			return slots().stream().filter(s -> name.equals(s.name())).findAny().orElse(null);
-		}
-	}
+        default Slot slotByName(String name) {
+            return slots().stream().filter(s -> name.equals(s.name())).findAny().orElse(null);
+        }
+    }
 
-	/** A trait for types that are made up of {@link Feature}s. */
-	interface Featured extends Type {
-		Collection<Feature> features();
+    /** A trait for types that are made up of {@link Feature}s. */
+    interface Featured extends Type {
+        Collection<Feature> features();
 
-		default Feature featureByName(String name) {
-			return features().stream().filter(s -> name.equals(s.name())).findAny().orElse(null);
-		}
-	}
+        default Feature featureByName(String name) {
+            return features().stream().filter(s -> name.equals(s.name())).findAny().orElse(null);
+        }
+    }
 
-	/**
-	 * An object is a model element that can contain others, and contain reference
-	 * to others.
-	 */
-	interface ObjectType extends Slotted, Featured {
-		Collection<Composition> compositions();
+    /**
+     * An object is a model element that can contain others, and contain reference
+     * to others.
+     */
+    interface ObjectType extends Slotted, Featured {
+        Collection<Composition> compositions();
 
-		Collection<Reference> references();
+        Collection<Reference> references();
 
-		default Composition compositionByName(String name) {
-			return compositions().stream().filter(s -> name.equals(s.name())).findAny().orElse(null);
-		}
+        default Composition compositionByName(String name) {
+            return compositions().stream().filter(s -> name.equals(s.name())).findAny().orElse(null);
+        }
 
-		default Reference referenceByName(String name) {
-			return references().stream().filter(s -> name.equals(s.name())).findAny().orElse(null);
-		}
-	}
+        default Reference referenceByName(String name) {
+            return references().stream().filter(s -> name.equals(s.name())).findAny().orElse(null);
+        }
+    }
 
-	/** A record is a model element that can contain basic values. */
-	interface RecordType extends Slotted, BasicType, Featured {
-		default Collection<Feature> features() {
-			return new ArrayList<>(slots());
-		}
-	}
+    /** A record is a model element that can contain basic values. */
+    interface RecordType extends Slotted, BasicType, Featured {
+        default Collection<Feature> features() {
+            return new ArrayList<>(slots());
+        }
+    }
 
-	/**
-	 * Super type for basic types, such as {@link Enumerated}, {@link Primitive} or
-	 * {@link RecordType}.
-	 */
-	interface BasicType extends Type {
-	}
+    /**
+     * Super type for basic types, such as {@link Enumerated}, {@link Primitive} or
+     * {@link RecordType}.
+     */
+    interface BasicType extends Type {
+    }
 
-	/**
-	 * A type for enumerated values.
-	 *
-	 */
-	interface Enumerated extends BasicType {
-		Object valueForName(String valueName);
-	}
+    /**
+     * A type for enumerated values.
+     *
+     */
+    interface Enumerated extends BasicType {
+        Object valueForName(String valueName);
+    }
 
-	/**
-	 * Primitive types are basic types that are not slotted (like
-	 * {@link RecordType}) or {@link Enumerated}.
-	 * 
-	 * Metamodels may support many primitive types, but they must be of one of the
-	 * kinds described by {@link PrimitiveKind}.
-	 *
-	 */
-	interface Primitive extends BasicType {
-		PrimitiveKind kind();
-	}
+    /**
+     * Primitive types are basic types that are not slotted (like
+     * {@link RecordType}) or {@link Enumerated}.
+     * 
+     * Metamodels may support many primitive types, but they must be of one of the
+     * kinds described by {@link PrimitiveKind}.
+     *
+     */
+    interface Primitive extends BasicType {
+        PrimitiveKind kind();
+    }
 
-	/**
-	 * Metamodels may support many primitive types, but they must be of one of the
-	 * kinds described here.
-	 */
-	enum PrimitiveKind {
-		Integer, Decimal, Boolean, String, Other
-	}
+    /**
+     * Metamodels may support many primitive types, but they must be of one of the
+     * kinds described here.
+     */
+    enum PrimitiveKind {
+        Integer, Decimal, Boolean, String, Other
+    }
 
-	/**
-	 * Some types support features.
-	 */
-	interface Feature<T extends Type> extends Typed<T> {
+    /**
+     * Some types support features.
+     */
+    interface Feature<T extends Type> extends Typed<T> {
 
-	}
+    }
 
-	/**
-	 * A slot is a feature that can hold a basic value.
-	 */
-	interface Slot extends Feature<BasicType> {
+    /**
+     * A slot is a feature that can hold a basic value.
+     */
+    interface Slot extends Feature<BasicType> {
 
-	}
+    }
 
-	/**
-	 * A feature that depicts an owned object.
-	 *
-	 */
-	interface Composition extends Feature<ObjectType> {
+    /**
+     * A feature that depicts an owned object.
+     *
+     */
+    interface Composition extends Feature<ObjectType> {
 
-	}
+    }
 
-	/**
-	 * A feature that depicts a reference to another (non-owned) object.
-	 */
-	interface Reference extends Feature<ObjectType> {
+    /**
+     * A feature that depicts a reference to another (non-owned) object.
+     */
+    interface Reference extends Feature<ObjectType> {
 
-	}
+    }
 }

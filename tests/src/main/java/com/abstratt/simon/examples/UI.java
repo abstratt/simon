@@ -7,159 +7,159 @@ import com.abstratt.simon.metamodel.dsl.Meta;
 @Meta.Package(builtIns = {})
 public interface UI {
 
-	interface Named {
-		@Meta.Required(false)
-		@Meta.Name
-		@Meta.Attribute
-		String name();
-	}
+    interface Named {
+        @Meta.Required(false)
+        @Meta.Name
+        @Meta.Attribute
+        String name();
+    }
 
-	interface Labeled {
-		@Meta.Attribute
-		String label();
-	}
+    interface Labeled {
+        @Meta.Attribute
+        String label();
+    }
 
-	abstract class BaseNamed implements Named {
-		private String name;
+    abstract class BaseNamed implements Named {
+        private String name;
 
-		@Override
-		public String name() {
-			return name;
-		}
-	}
-	
-	interface IComponent extends Named {
-		@Meta.Reference(opposite = "children")
-		@Meta.Required(false)
-		public Container parent();
+        @Override
+        public String name() {
+            return name;
+        }
+    }
 
-		@Meta.Attribute
-		public int index();
-	}
+    interface IComponent extends Named {
+        @Meta.Reference(opposite = "children")
+        @Meta.Required(false)
+        public Container parent();
 
-	abstract class Component extends BaseNamed implements IComponent {
-		private Container parent;
-		private int index;
+        @Meta.Attribute
+        public int index();
+    }
 
-		@Override
-		public Container parent() {
-			return parent;
-		}
+    abstract class Component extends BaseNamed implements IComponent {
+        private Container parent;
+        private int index;
 
-		@Override
-		public int index() {
-			return index;
-		}
-	}
+        @Override
+        public Container parent() {
+            return parent;
+        }
 
-	@Meta.Composite
-	abstract class Container extends Component {
-		private List<IComponent> children;
-		private PanelLayout layout;
+        @Override
+        public int index() {
+            return index;
+        }
+    }
 
-		@Meta.Contained
-		@Meta.Typed(IComponent.class)
-		public List<IComponent> children() {
-			return children;
-		}
+    @Meta.Composite
+    abstract class Container extends Component {
+        private List<IComponent> children;
+        private PanelLayout layout;
 
-		@Meta.Attribute
-		public PanelLayout getLayout() {
-			return layout;
-		}
-	}
+        @Meta.Contained
+        @Meta.Typed(IComponent.class)
+        public List<IComponent> children() {
+            return children;
+        }
 
-	abstract class LabeledComponent extends Component implements Labeled {
-		private String label;
+        @Meta.Attribute
+        public PanelLayout getLayout() {
+            return layout;
+        }
+    }
 
-		@Override
-		public String label() {
-			return label;
-		}
-	}
+    abstract class LabeledComponent extends Component implements Labeled {
+        private String label;
 
-	class Link extends LabeledComponent {
-		private Screen targetScreen;
+        @Override
+        public String label() {
+            return label;
+        }
+    }
 
-		@Meta.Reference
-		public Screen targetScreen() {
-			return targetScreen;
-		}
+    class Link extends LabeledComponent {
+        private Screen targetScreen;
 
-	}
+        @Meta.Reference
+        public Screen targetScreen() {
+            return targetScreen;
+        }
 
-	class Screen extends Container {
-		private String screenName;
-		private Application application;
+    }
 
-		@Meta.Attribute
-		public String screenName() {
-			return screenName;
-		}
+    class Screen extends Container {
+        private String screenName;
+        private Application application;
 
-		@Meta.Reference(opposite = "screens")
-		public Application application() {
-			return application;
-		}
-	}
+        @Meta.Attribute
+        public String screenName() {
+            return screenName;
+        }
 
-	@Meta.Composite(root = true)
-	class Application extends BaseNamed {
-		private List<Screen> screens;
+        @Meta.Reference(opposite = "screens")
+        public Application application() {
+            return application;
+        }
+    }
 
-		@Meta.Contained
-		@Meta.Typed(Screen.class)
-		public List<Screen> screens() {
-			return screens;
-		}
-	}
+    @Meta.Composite(root = true)
+    class Application extends BaseNamed {
+        private List<Screen> screens;
 
-	class Button extends LabeledComponent {
-		private Color backgroundColor;
-		private Color foregroundColor;
+        @Meta.Contained
+        @Meta.Typed(Screen.class)
+        public List<Screen> screens() {
+            return screens;
+        }
+    }
 
-		@Meta.Attribute
-		public Color getBackgroundColor() {
-			return backgroundColor;
-		}
+    class Button extends LabeledComponent {
+        private Color backgroundColor;
+        private Color foregroundColor;
 
-		@Meta.Attribute
-		public Color getForegroundColor() {
-			return foregroundColor;
-		}
-	}
+        @Meta.Attribute
+        public Color getBackgroundColor() {
+            return backgroundColor;
+        }
 
-	enum PanelLayout {
-		Vertical, Horizontal
-	}
+        @Meta.Attribute
+        public Color getForegroundColor() {
+            return foregroundColor;
+        }
+    }
 
-	@Meta.RecordType
-	class Color {
-		private final int red;
-		private final int green;
-		private final int blue;
+    enum PanelLayout {
+        Vertical, Horizontal
+    }
 
-		public Color(int red, int green, int blue) {
-			super();
-			this.red = red;
-			this.green = green;
-			this.blue = blue;
-		}
+    @Meta.RecordType
+    class Color {
+        private final int red;
+        private final int green;
+        private final int blue;
 
-		@Meta.Attribute
-		public int red() {
-			return red;
-		}
+        public Color(int red, int green, int blue) {
+            super();
+            this.red = red;
+            this.green = green;
+            this.blue = blue;
+        }
 
-		@Meta.Attribute
-		public int green() {
-			return green;
-		}
+        @Meta.Attribute
+        public int red() {
+            return red;
+        }
 
-		@Meta.Attribute
-		public int blue() {
-			return blue;
-		}
+        @Meta.Attribute
+        public int green() {
+            return green;
+        }
 
-	}
+        @Meta.Attribute
+        public int blue() {
+            return blue;
+        }
+
+    }
 }

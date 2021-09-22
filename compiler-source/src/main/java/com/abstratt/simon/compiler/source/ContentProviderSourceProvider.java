@@ -4,14 +4,14 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ContentProviderSourceProvider implements SourceProvider {
-	private final Map<String, ContentProvider> toParse;
-	public ContentProviderSourceProvider(Map<String, ContentProvider> toParse) {
-		this.toParse = toParse;
-	}
+    private final Map<String, ContentProvider> toParse;
 
-	@Override
-	public ContentProvider access(String sourceName) {
-		return Optional.ofNullable(toParse.get(sourceName))
-				.orElse(null);
-	}
+    public ContentProviderSourceProvider(Map<String, ContentProvider> toParse) {
+        this.toParse = toParse;
+    }
+
+    @Override
+    public ContentProvider access(String sourceName) {
+        return Optional.ofNullable(toParse.get(sourceName)).orElse(null);
+    }
 }

@@ -7,7 +7,8 @@ public interface SourceProvider {
      * Requests access to a source with the given name.
      *
      * @param sourceName
-     * @return a content provider for accessing such source, or null if one could not be found
+     * @return a content provider for accessing such source, or null if one could
+     *         not be found
      */
     ContentProvider access(String sourceName);
 }
