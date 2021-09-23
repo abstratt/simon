@@ -21,31 +21,26 @@
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-example-languages</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
-			<scope>test</scope>
 		</dependency>		
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-compiler-antlr</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-annotation-dsl</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-compiler-source-ecore</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-compiler-backend-ecore</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

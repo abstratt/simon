@@ -1,5 +1,6 @@
 # Credit: https://vaadin.com/blog/host-your-javadoc-s-online-in-github
 set -x 
+mvn clean
 mvn clean javadoc:javadoc javadoc:aggregate
 mvn com.github.ferstl:depgraph-maven-plugin:aggregate  "-Dincludes=com.abstratt.simon:*"
 dot -Tpng target/dependency-graph.dot -o target/site/apidocs/javadoc/dependencies.png
@@ -13,4 +14,4 @@ git merge --allow-unrelated-histories --no-edit -s ours remotes/javadoc/gh-pages
 git push --set-upstream javadoc master:gh-pages --force
 pwd
 cd -
-mvn clean -N
+
