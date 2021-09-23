@@ -1,4 +1,4 @@
-package com.abstratt.simon.testing;
+package com.abstratt.simon.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

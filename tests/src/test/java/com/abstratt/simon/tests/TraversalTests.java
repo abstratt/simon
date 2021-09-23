@@ -1,6 +1,6 @@
 package com.abstratt.simon.tests;
 
-import static com.abstratt.simon.testing.TestHelper.compileResource;
+import static com.abstratt.simon.tests.TestHelper.compileResource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -22,7 +22,6 @@ import com.abstratt.simon.compiler.backend.ecore.EObjectTraversalProvider;
 import com.abstratt.simon.examples.UI;
 import com.abstratt.simon.genutils.Traversal;
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
-import com.abstratt.simon.testing.TestHelper;
 
 public class TraversalTests {
     private static EObject application;

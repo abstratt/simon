@@ -46,6 +46,7 @@
 		<module>metamodel-ecore</module>
 		<module>compiler-source-ecore</module>
 		<module>compiler-backend-ecore</module>
+		<module>example-languages</module>
 		<module>tests</module>
 	</modules>
 
