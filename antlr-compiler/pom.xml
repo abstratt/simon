@@ -7,24 +7,24 @@
 	<parent>
 		<groupId>com.abstratt.simon</groupId>
 		<artifactId>simon-parent</artifactId>
-		<version>0.0.3</version>
+		<version>0.0.4-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-compiler</artifactId>
-			<version>0.0.3</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-compiler-backend</artifactId>
-			<version>0.0.3</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-parser-antlr</artifactId>
-			<version>0.0.3</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
