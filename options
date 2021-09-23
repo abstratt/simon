@@ -1,0 +1,28 @@
+--class-path
+'/home/rafael/source/simon/target/classes:/home/rafael/source/simon/gen-utils/target/classes:/home/rafael/source/simon/metamodel/target/classes:/home/rafael/source/simon/annotation-dsl/target/classes:/home/rafael/source/simon/compiler-source/target/classes:/home/rafael/source/simon/compiler-backend/target/classes:/home/rafael/source/simon/compiler/target/classes:/home/rafael/source/simon/antlr-parser/target/classes:/home/rafael/source/simon/antlr-compiler/target/classes:/home/rafael/source/simon/metamodel-ecore/target/classes:/home/rafael/source/simon/compiler-source-ecore/target/classes:/home/rafael/source/simon/compiler-backend-ecore/target/classes:/home/rafael/source/simon/example-languages/target/classes:/home/rafael/source/simon/tests/target/classes:/home/rafael/.m2/repository/one/util/streamex/0.7.3/streamex-0.7.3.jar:/home/rafael/.m2/repository/org/antlr/antlr4-runtime/4.9.2/antlr4-runtime-4.9.2.jar:/home/rafael/.m2/repository/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.jar:/home/rafael/.m2/repository/org/apache/commons/commons-text/1.9/commons-text-1.9.jar:/home/rafael/.m2/repository/commons-io/commons-io/2.11.0/commons-io-2.11.0.jar:/home/rafael/.m2/repository/org/eclipse/emf/org.eclipse.emf.ecore/2.25.0/org.eclipse.emf.ecore-2.25.0.jar:/home/rafael/.m2/repository/org/eclipse/emf/org.eclipse.emf.common/2.23.0/org.eclipse.emf.common-2.23.0.jar:/home/rafael/.m2/repository/io/github/classgraph/classgraph/4.8.116/classgraph-4.8.116.jar'
+-encoding
+'UTF-8'
+-protected
+-source
+'15'
+-sourcepath
+'/home/rafael/source/simon/gen-utils/src/main/java:/home/rafael/source/simon/metamodel/src/main/java:/home/rafael/source/simon/annotation-dsl/src/main/java:/home/rafael/source/simon/compiler-source/src/main/java:/home/rafael/source/simon/compiler-backend/src/main/java:/home/rafael/source/simon/compiler/src/main/java:/home/rafael/source/simon/antlr-parser/target/generated-sources/antlr4/com/abstratt/simon/parser/antlr:/home/rafael/source/simon/antlr-compiler/src/main/java:/home/rafael/source/simon/metamodel-ecore/src/main/java:/home/rafael/source/simon/compiler-source-ecore/src/main/java:/home/rafael/source/simon/compiler-backend-ecore/src/main/java:/home/rafael/source/simon/example-languages/src/main/java'
+-author
+-bottom
+'Copyright &#169; 2021 <a href="https://abstratt.com">Abstratt Technologies and Contributors</a>. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'/home/rafael/source/simon/target/site/apidocs/javadoc'
+-docencoding
+'UTF-8'
+-doctitle
+'simon-parent 0.0.4-SNAPSHOT API'
+-linkoffline
+'https://docs.oracle.com/en/java/javase/15/docs/api' '/home/rafael/source/simon/target/javadoc-bundle-options'
+-noqualifier
+'all'
+-use
+-version
+-windowtitle
+'simon-parent 0.0.4-SNAPSHOT API'

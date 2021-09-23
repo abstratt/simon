@@ -1,0 +1,14 @@
+com.abstratt.simon.genutils
+com.abstratt.simon.metamodel
+com.abstratt.simon.metamodel.dsl
+com.abstratt.simon.compiler.source
+com.abstratt.simon.compiler.backend
+com.abstratt.simon.compiler
+com.abstratt.simon.compiler.antlr.impl
+com.abstratt.simon.compiler.antlr
+com.abstratt.simon.metamodel.ecore.impl
+com.abstratt.simon.metamodel.ecore
+com.abstratt.simon.compiler.source.ecore
+com.abstratt.simon.compiler.backend.ecore.impl
+com.abstratt.simon.compiler.backend.ecore
+com.abstratt.simon.examples
