@@ -7,24 +7,24 @@
 	<parent>
 		<groupId>com.abstratt.simon</groupId>
 		<artifactId>simon-parent</artifactId>
-		<version>0.0.3-SNAPSHOT</version>
+		<version>0.0.3</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-gen-utils</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-compiler-backend</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-metamodel-ecore</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.3</version>
 		</dependency>
 	</dependencies>
 </project>
