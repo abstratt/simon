@@ -2,9 +2,9 @@ package com.abstratt.simon.tests;
 
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findByFeature;
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.getValue;
-import static com.abstratt.simon.testing.TestHelper.compileResource;
-import static com.abstratt.simon.testing.TestHelper.ensureSuccess;
-import static com.abstratt.simon.testing.TestHelper.getPrimitiveValue;
+import static com.abstratt.simon.tests.TestHelper.compileResource;
+import static com.abstratt.simon.tests.TestHelper.ensureSuccess;
+import static com.abstratt.simon.tests.TestHelper.getPrimitiveValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import com.abstratt.simon.compiler.Result;
 import com.abstratt.simon.examples.IM;
 import com.abstratt.simon.examples.UI;
-import com.abstratt.simon.testing.TestHelper;
 
 public class RegressionTests {
 

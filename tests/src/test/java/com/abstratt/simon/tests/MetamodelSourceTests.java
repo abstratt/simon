@@ -1,6 +1,6 @@
 package com.abstratt.simon.tests;
 
-import static com.abstratt.simon.testing.TestHelper.UI_PACKAGE;
+import static com.abstratt.simon.tests.TestHelper.UI_PACKAGE;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
