@@ -94,6 +94,7 @@ public @interface Meta {
     @Inherited
     @Type(Type.Nature.Object)
     @interface ObjectType {
+        boolean instantiable() default true;
     }
 
     /**

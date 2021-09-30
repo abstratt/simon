@@ -10,9 +10,9 @@ import com.abstratt.simon.metamodel.dsl.Meta;
 @Meta.Package(builtIns = { "im" })
 public interface IM {
 
-    class Primitive implements BasicType {
+    interface Primitive extends BasicType {
         @Override
-        public java.lang.String name() {
+        default String name() {
             return WordUtils.uncapitalize(getClass().getSimpleName());
         }
     }
@@ -20,146 +20,82 @@ public interface IM {
     interface Named {
         @Meta.Name
         @Meta.Attribute
-        java.lang.String name();
-    }
-
-    abstract class BaseNamed implements Named {
-        private java.lang.String name;
-
-        @Override
-        public java.lang.String name() {
-            return name;
-        }
+        String name();
     }
 
     @Meta.Composite(root = true)
-    class Namespace extends BaseNamed {
-        private Collection<Entity> entities;
-        private Collection<Primitive> primitives;
-
+    interface Namespace extends Named {
         @Meta.Contained
         @Meta.Typed(Entity.class)
-        public Collection<Entity> entities() {
-            return entities;
-        }
+        Collection<Entity> entities();
 
         @Meta.Contained
         @Meta.Typed(Primitive.class)
-        public Collection<Primitive> primitives() {
-            return primitives;
-        }
+        Collection<Primitive> primitives();
     }
 
-    abstract class Feature<T extends Type> extends BaseTyped<T> {
-        private boolean multiple;
-
+    interface Feature<T extends Type> extends TypedElement<T> {
         @Meta.Attribute
-        public boolean multiple() {
-            return multiple;
-        }
+        boolean multiple();
     }
 
-    class Property extends Feature<BasicType> {
-
+    interface Property extends Feature<Type> {
     }
 
-    class Relationship extends Feature<Entity> {
-        private Relationship opposite;
-
+    interface Relationship extends Feature<Entity> {
         @Meta.Reference
-        Relationship opposite() {
-            return this.opposite;
-        }
+        Relationship opposite();
     }
 
-    class Operation extends BaseNamed {
-
-        private Collection<Parameter> parameters;
-        private OperationKind kind;
-        private boolean public_;
-
+    interface Operation extends Named {
         enum OperationKind {
             Action, Constructor, Event, Finder, Retriever
         }
 
         @Meta.Contained
         @Meta.Typed(Parameter.class)
-        Collection<Parameter> parameters() {
-            return this.parameters;
-        }
+        Collection<Parameter> parameters();
 
         @Meta.Attribute
-        public OperationKind kind() {
-            return kind;
-        }
+        public Operation.OperationKind kind();
 
         @Meta.Attribute
-        public boolean public_() {
-            return public_;
-        }
+        public boolean public_();
     }
 
-    class Parameter extends BaseTyped<Type> {
+    interface Parameter extends TypedElement<Type> {
 
     }
 
-    interface TypedElement<T extends Type> {
+    interface TypedElement<T extends Type> extends Named {
         @Meta.Reference
         @Meta.Required
         T type();
     }
 
-    abstract class BaseTyped<T extends Type> extends BaseNamed implements TypedElement<T> {
-        protected T type;
-
-        @Override
-        public T type() {
-            return type;
-        }
-    }
-
-    class Entity extends BaseNamed implements Type {
-        private Collection<Property> properties;
-        private Collection<Relationship> relationships;
-        private Collection<Operation> operations;
-        private Collection<Entity> superTypes;
-        private Collection<Entity> subTypes;
-        private Namespace namespace;
-
+    interface Entity extends Type {
         @Meta.Contained
         @Meta.Typed(Property.class)
-        public Collection<Property> properties() {
-            return properties;
-        }
+        Collection<Property> properties();
 
         @Meta.Reference(opposite = "subTypes")
         @Meta.Typed(Entity.class)
-        public Collection<Entity> superTypes() {
-            return superTypes;
-        }
+        Collection<Entity> superTypes();
 
         @Meta.Reference
         @Meta.Typed(Entity.class)
-        public Collection<Entity> subTypes() {
-            return subTypes;
-        }
+        Collection<Entity> subTypes();
 
         @Meta.Contained
         @Meta.Typed(Operation.class)
-        public Collection<Operation> operations() {
-            return operations;
-        }
+        Collection<Operation> operations();
 
         @Meta.Contained
         @Meta.Typed(Relationship.class)
-        public Collection<Relationship> relationships() {
-            return relationships;
-        }
+        Collection<Relationship> relationships();
 
         @Meta.Reference(opposite = "entities")
-        public Namespace namespace() {
-            return namespace;
-        }
+        Namespace namespace();
     }
 
     interface Type extends Named {
@@ -170,14 +106,10 @@ public interface IM {
 
     }
 
-    class TupleType extends BaseNamed implements BasicType {
-        private List<BasicType> componentTypes;
-
+    interface TupleType extends Type {
         @Meta.Contained
         @Meta.Typed(BasicType.class)
-        public List<BasicType> componentTypes() {
-            return componentTypes;
-        }
+        List<BasicType> componentTypes();
     }
 
 }

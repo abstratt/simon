@@ -23,7 +23,7 @@ import com.abstratt.simon.metamodel.ecore.impl.MappingSession.RootElementBuilder
 public class ContextTest {
     @Test
     void pendingRequests() {
-        MappingSession context = new MappingSession();
+        var context = new MappingSession();
         List<String> log = new ArrayList<>();
         context.addPendingRequest("request 1"::toString, "", true, ctx -> log.add("1"));
         context.addPendingRequest("request 2"::toString, "", true, ctx -> {
@@ -45,8 +45,8 @@ public class ContextTest {
 
     @Test
     void runWithScope() {
-        EcorePackage someElement = EcorePackage.eINSTANCE;
-        MappingSession context = new MappingSession();
+        var someElement = EcorePackage.eINSTANCE;
+        var context = new MappingSession();
         List<ENamedElement> collected = new ArrayList<>();
         context.runWithPackage(someElement, "", ctx -> collected.add(ctx.currentPackage()));
         assertEquals(asList(someElement), collected);
@@ -54,7 +54,7 @@ public class ContextTest {
 
     @Test
     void runWithScopeRequiresScope() {
-        MappingSession context = new MappingSession();
+        var context = new MappingSession();
         assertNull(context.currentPackage());
         List<ENamedElement> collected = new ArrayList<>();
         try {
@@ -68,9 +68,9 @@ public class ContextTest {
 
     @Test
     void resolve() {
-        EPackage someElement = EcoreFactory.eINSTANCE.createEPackage();
-        Class<ContextTest> someClass = ContextTest.class;
-        MappingSession context = new MappingSession();
+        var someElement = EcoreFactory.eINSTANCE.createEPackage();
+        var someClass = ContextTest.class;
+        var context = new MappingSession();
         List<EPackage> collected = new ArrayList<>();
         Consumer<EPackage> consumer = collected::add;
         RootElementBuilder builder = (ctx, clazz) -> someElement;

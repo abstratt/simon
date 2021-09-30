@@ -7,6 +7,7 @@ import com.abstratt.simon.metamodel.dsl.Meta;
 @Meta.Package(builtIns = {})
 public interface UI {
 
+    @Meta.ObjectType(instantiable = false)
     interface Named {
         @Meta.Required(false)
         @Meta.Name

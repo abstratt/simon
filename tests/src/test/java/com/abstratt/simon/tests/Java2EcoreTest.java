@@ -82,10 +82,10 @@ public class Java2EcoreTest {
     }
 
     @Test
-    void interfaces() {
+    void instantiable() {
         EClass named = build(UI.Named.class);
         assertTrue(named.isAbstract());
-        assertTrue(named.isInterface());
+        assertFalse(named.isInterface());
     }
 
     @Test

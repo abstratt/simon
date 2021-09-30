@@ -10,8 +10,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -25,7 +23,6 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
-import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.EEnum;
 import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
@@ -41,6 +38,8 @@ import com.abstratt.simon.metamodel.dsl.Meta.Required;
 import com.abstratt.simon.metamodel.ecore.impl.MappingSession;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 
+import static com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper.*;
+
 /**
  * Builds an EMF-based metamodel from Java classes that have been marked with
  * Simon DSL annotations as defined in {@link Meta}.
@@ -55,7 +54,7 @@ public class Java2EcoreMapper {
         // Throwable().fillInStackTrace().getStackTrace()).skip(1)
         // .findFirst().get().toString());
 
-        MappingSession mappingSession = new MappingSession();
+        var mappingSession = new MappingSession();
         Object[] result = { null };
         buildIfNeeded(clazz, mappingSession, debug("building if needed", r -> result[0] = r));
         // System.out.println("**** Resolving pending requests");
@@ -68,7 +67,7 @@ public class Java2EcoreMapper {
     /**
      * Builds the model element corresponding to the given Java type, if needed.
      * 
-     * @param <E>            the concrete model element
+     * @param <E>            the instantiable model element
      * @param clazz          the Java type
      * @param mappingSession the resolution mappingSession
      * @param consumer       a consumer for the built or resolved element
@@ -86,7 +85,7 @@ public class Java2EcoreMapper {
             return;
         }
 
-        Class<?> packageClass = getPackageClass(clazz);
+        var packageClass = getPackageClass(clazz);
         if (!MetaEcoreHelper.isPackage(packageClass))
             // TODO-RC not a metamodel class, what to do?
             throw new IllegalArgumentException("Not a metamodel class:" + clazz.getName());
@@ -127,7 +126,7 @@ public class Java2EcoreMapper {
     }
 
     private EPackage buildPackage(MappingSession mappingSession, Class<?> packageClass) {
-        EPackage ePackage = EcoreFactory.eINSTANCE.createEPackage();
+        var ePackage = EcoreFactory.eINSTANCE.createEPackage();
         ePackage.setNsURI(packageClass.getSimpleName());
         ePackage.setNsPrefix(packageClass.getSimpleName());
         ePackage.setName(packageClass.getSimpleName());
@@ -176,13 +175,13 @@ public class Java2EcoreMapper {
 
     private EClass buildPrimitiveType(MappingSession mappingSession, Class<?> clazz) {
         // a primitive type is a class without any features
-        String className = clazz.getSimpleName();
+        var className = clazz.getSimpleName();
         // System.out.println("Building primitive type " + className);
-        EClass eClass = EcoreFactory.eINSTANCE.createEClass();
+        var eClass = EcoreFactory.eINSTANCE.createEClass();
         eClass.setName(className);
-        EAttribute eAttribute = EcoreFactory.eINSTANCE.createEAttribute();
+        var eAttribute = EcoreFactory.eINSTANCE.createEAttribute();
         eAttribute.setName(MetaEcoreHelper.PRIMITIVE_VALUE_FEATURE);
-        EDataType primitiveType = MetaEcoreHelper.getPrimitiveEType(clazz);
+        var primitiveType = MetaEcoreHelper.getPrimitiveEType(clazz);
         eAttribute.setEType(primitiveType);
         eClass.getEStructuralFeatures().add(eAttribute);
         MetaEcoreHelper.makePrimitiveType(eClass, MetaEcoreHelper.getPrimitiveKind(primitiveType));
@@ -209,9 +208,9 @@ public class Java2EcoreMapper {
     }
 
     private EClass buildRecordType(MappingSession mappingSession, Class<?> clazz) {
-        String className = clazz.getSimpleName();
+        var className = clazz.getSimpleName();
         // System.out.println("Building record type " + className);
-        EClass eClass = EcoreFactory.eINSTANCE.createEClass();
+        var eClass = EcoreFactory.eINSTANCE.createEClass();
         eClass.setName(className);
         MetaEcoreHelper.makeRecordType(eClass);
         resolvePackageAndAddClassifier(mappingSession, clazz, eClass);
@@ -221,12 +220,12 @@ public class Java2EcoreMapper {
     }
 
     private EClass buildObjectType(MappingSession mappingSession, Class<?> clazz) {
-        String className = clazz.getSimpleName();
+        var className = clazz.getSimpleName();
         System.out.println("Building object type " + className);
-        boolean isInterface = Modifier.isInterface(clazz.getModifiers());
-        boolean isAbstractClass = Modifier.isAbstract(clazz.getModifiers());
-        boolean isRootComposite = MetaEcoreHelper.isRootComposite(clazz);
-        EClass eClass = EcoreFactory.eINSTANCE.createEClass();
+        var instantiable = getAnnotationValue(clazz, Meta.ObjectType.class, Meta.ObjectType::instantiable).orElse(true);
+        var isAbstractClass = !instantiable || (Modifier.isAbstract(clazz.getModifiers()) && !Modifier.isInterface(clazz.getModifiers()));
+        var isRootComposite = MetaEcoreHelper.isRootComposite(clazz);
+        var eClass = EcoreFactory.eINSTANCE.createEClass();
         if (isRootComposite) {
             EcoreUtil.setAnnotation(eClass, MetaEcoreHelper.SIMON_ANNOTATION, MetaEcoreHelper.ROOT_COMPOSITE_VALUE,
                     Boolean.toString(true));
@@ -235,7 +234,7 @@ public class Java2EcoreMapper {
 
         eClass.setName(className);
         eClass.setAbstract(isAbstractClass);
-        eClass.setInterface(isInterface);
+        eClass.setInterface(false);
         addContainments(mappingSession, clazz, eClass);
         addReferences(mappingSession, clazz, eClass);
         addAttributes(mappingSession, clazz, eClass);
@@ -244,7 +243,7 @@ public class Java2EcoreMapper {
     }
 
     private void addSupertypes(MappingSession mappingSession, Class<?> clazz, EClass eClass) {
-        Class<?> superJavaClass = clazz.getSuperclass();
+        var superJavaClass = clazz.getSuperclass();
         if (superJavaClass != null) {
             collectSuperType(mappingSession, clazz, superJavaClass,
                     debug("Setting super type on " + eClass.getName(), eClass.getESuperTypes()::add));
@@ -266,7 +265,7 @@ public class Java2EcoreMapper {
 
     private Class<?> getPackageClass(Class<?> containedClazz) {
         assert containedClazz.isMemberClass() : containedClazz;
-        Class<?> packageClass = containedClazz.getEnclosingClass();
+        var packageClass = containedClazz.getEnclosingClass();
         while (packageClass.getEnclosingClass() != null)
             packageClass = packageClass.getEnclosingClass();
         return packageClass;
@@ -305,7 +304,7 @@ public class Java2EcoreMapper {
                 return false;
             if (getClass() != obj.getClass())
                 return false;
-            SuperClassRequest other = (SuperClassRequest) obj;
+            var other = (SuperClassRequest) obj;
             if (baseJavaClass == null) {
                 if (other.baseJavaClass != null)
                     return false;
@@ -341,8 +340,8 @@ public class Java2EcoreMapper {
     }
 
     private void addAttributes(MappingSession mappingSession, Class<?> clazz, EClass eClass) {
-        final Stream<Method> attributeAccessors = getMethodsWithAnnotation(clazz, Meta.Attribute.class);
-        Stream<EAttribute> eAttributes = attributeAccessors.map(wrapBuilder(mappingSession, this::buildAttribute));
+        final var attributeAccessors = getMethodsWithAnnotation(clazz, Meta.Attribute.class);
+        var eAttributes = attributeAccessors.map(wrapBuilder(mappingSession, this::buildAttribute));
         eAttributes.forEach(debug("adding attribute to " + eClass.getName() + " (" + eClass + ")",
                 eClass.getEStructuralFeatures()::add));
     }
@@ -359,8 +358,8 @@ public class Java2EcoreMapper {
 
     private void doAddReferences(MappingSession mappingSession, Class<?> clazz, EClass eClass,
             Class<? extends Annotation> annotationClass, Function<Method, EReference> builder) {
-        Stream<Method> accessors = getMethodsWithAnnotation(clazz, annotationClass);
-        List<EReference> references = accessors.map(builder).collect(Collectors.toList());
+        var accessors = getMethodsWithAnnotation(clazz, annotationClass);
+        var references = accessors.map(builder).collect(Collectors.toList());
         references.forEach(debug("Adding reference to " + eClass.getName(), eClass.getEStructuralFeatures()::add));
     }
 
@@ -372,10 +371,14 @@ public class Java2EcoreMapper {
     private Consumer<EReference> referenceConnector(String oppositeName) {
         return StringUtils.isEmpty(oppositeName) ? r -> {
         } : thisSide -> {
-            EReference opposite = thisSide.getEReferenceType().getEReferences().stream()
-                    .filter(r -> oppositeName.equals(r.getName())).findFirst().get();
+            var opposite = getOppositeReference(oppositeName, thisSide);
             markAsOpposite(thisSide, opposite);
         };
+    }
+
+    private EReference getOppositeReference(String oppositeName, EReference thisSide) {
+        return thisSide.getEReferenceType().getEReferences().stream()
+                .filter(r -> oppositeName.equals(r.getName())).findFirst().get();
     }
 
     private void markAsOpposite(EReference thisSide, EReference opposite) {
@@ -385,8 +388,7 @@ public class Java2EcoreMapper {
     }
 
     private EReference buildReference(MappingSession mappingSession, Method accessor) {
-        String oppositeName = MetaEcoreHelper
-                .getAnnotationValue(accessor, Meta.Reference.class, Meta.Reference::opposite).get();
+        var oppositeName = getAnnotationValue(accessor, Meta.Reference.class, Meta.Reference::opposite).get();
         return doBuildReference(mappingSession, accessor, referenceConnector(oppositeName));
     }
 
@@ -401,7 +403,7 @@ public class Java2EcoreMapper {
 
     private EReference doBuildReference(MappingSession mappingSession, Method accessor,
             Consumer<EReference> customizer) {
-        EReference eReference = EcoreFactory.eINSTANCE.createEReference();
+        var eReference = EcoreFactory.eINSTANCE.createEReference();
         eReference.setName(accessor.getName());
         markOptional(accessor, eReference);
         Consumer<EClass> typeSetter = eReference::setEType;
@@ -412,8 +414,8 @@ public class Java2EcoreMapper {
     }
 
     private EAttribute buildAttribute(MappingSession mappingSession, Method accessor) {
-        EAttribute eAttribute = EcoreFactory.eINSTANCE.createEAttribute();
-        String attributeName = WordUtils.uncapitalize(accessor.getName().replaceFirst("^get", ""));
+        var eAttribute = EcoreFactory.eINSTANCE.createEAttribute();
+        var attributeName = WordUtils.uncapitalize(accessor.getName().replaceFirst("^get", ""));
         eAttribute.setName(attributeName);
         markOptional(accessor, eAttribute);
         buildIfNeeded(MetaEcoreHelper.getType(accessor), mappingSession, debug(
@@ -425,7 +427,7 @@ public class Java2EcoreMapper {
             EAttribute attribute) {
         return classifier -> {
             attribute.setEType(classifier);
-            String requestId = attribute.getName() + " : " + classifier.getName();
+            var requestId = attribute.getName() + " : " + classifier.getName();
             mappingSession.addPendingRequest(requestId::toString, "setAttributeType(" + attribute.getName() + ")",
                     false, ctx -> {
                         EClass eContainingClass = attribute.getEContainingClass();
@@ -445,8 +447,8 @@ public class Java2EcoreMapper {
     }
 
     private void markOptional(Method accessor, EStructuralFeature feature) {
-        Optional<Boolean> required = MetaEcoreHelper.getAnnotationValue(accessor, Meta.Required.class, Required::value);
-        boolean multivalued = Iterable.class.isAssignableFrom(accessor.getReturnType())
+        var required = getAnnotationValue(accessor, Meta.Required.class, Required::value);
+        var multivalued = Iterable.class.isAssignableFrom(accessor.getReturnType())
                 || Array.class.isAssignableFrom(accessor.getReturnType());
         if (multivalued) {
             feature.setLowerBound(required.map(v -> v ? 1 : 0).orElse(0));
