@@ -4,7 +4,7 @@
 namespace communications {
     entities {
     
-      entity Member {
+      entity Member(abstract: true) {
         properties {
           property name{type: im.StringValue}
         }      

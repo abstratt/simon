@@ -175,10 +175,8 @@ public class Java2EcoreMapper {
 
     private EClass buildPrimitiveType(MappingSession mappingSession, Class<?> clazz) {
         // a primitive type is a class without any features
-        var className = clazz.getSimpleName();
-        // System.out.println("Building primitive type " + className);
         var eClass = EcoreFactory.eINSTANCE.createEClass();
-        eClass.setName(className);
+        eClass.setName(toEcoreClassifierName(clazz));
         var eAttribute = EcoreFactory.eINSTANCE.createEAttribute();
         eAttribute.setName(MetaEcoreHelper.PRIMITIVE_VALUE_FEATURE);
         var primitiveType = MetaEcoreHelper.getPrimitiveEType(clazz);
@@ -190,10 +188,8 @@ public class Java2EcoreMapper {
     }
 
     private EEnum buildEnumType(MappingSession mappingSession, Class<?> clazz) {
-        var className = clazz.getSimpleName();
-        // System.out.println("Building enum type " + className);
         var eEnum = EcoreFactory.eINSTANCE.createEEnum();
-        eEnum.setName(className);
+        eEnum.setName(toEcoreClassifierName(clazz));
         var enumConstants = clazz.getEnumConstants();
         for (Object it : enumConstants) {
             var asEnumConst = (Enum<?>) it;
@@ -208,10 +204,8 @@ public class Java2EcoreMapper {
     }
 
     private EClass buildRecordType(MappingSession mappingSession, Class<?> clazz) {
-        var className = clazz.getSimpleName();
-        // System.out.println("Building record type " + className);
-        var eClass = EcoreFactory.eINSTANCE.createEClass();
-        eClass.setName(className);
+    	var eClass = EcoreFactory.eINSTANCE.createEClass();
+        eClass.setName(toEcoreClassifierName(clazz));
         MetaEcoreHelper.makeRecordType(eClass);
         resolvePackageAndAddClassifier(mappingSession, clazz, eClass);
         addSupertypes(mappingSession, clazz, eClass);
@@ -220,8 +214,6 @@ public class Java2EcoreMapper {
     }
 
     private EClass buildObjectType(MappingSession mappingSession, Class<?> clazz) {
-        var className = clazz.getSimpleName();
-        System.out.println("Building object type " + className);
         var instantiable = getAnnotationValue(clazz, Meta.ObjectType.class, Meta.ObjectType::instantiable).orElse(true);
         var isAbstractClass = !instantiable || (Modifier.isAbstract(clazz.getModifiers()) && !Modifier.isInterface(clazz.getModifiers()));
         var isRootComposite = MetaEcoreHelper.isRootComposite(clazz);
@@ -232,7 +224,7 @@ public class Java2EcoreMapper {
         }
         addSupertypes(mappingSession, clazz, eClass);
 
-        eClass.setName(className);
+        eClass.setName(toEcoreClassifierName(clazz));
         eClass.setAbstract(isAbstractClass);
         eClass.setInterface(false);
         addContainments(mappingSession, clazz, eClass);
@@ -404,7 +396,7 @@ public class Java2EcoreMapper {
     private EReference doBuildReference(MappingSession mappingSession, Method accessor,
             Consumer<EReference> customizer) {
         var eReference = EcoreFactory.eINSTANCE.createEReference();
-        eReference.setName(accessor.getName());
+        eReference.setName(toEcoreFeatureName(accessor));
         markOptional(accessor, eReference);
         Consumer<EClass> typeSetter = eReference::setEType;
         mappingSession.mapChild(accessor, MetaEcoreHelper.getType(accessor), this::buildObjectType,
@@ -413,10 +405,27 @@ public class Java2EcoreMapper {
         return eReference;
     }
 
+	private String toEcoreFeatureName(Method accessor) {
+		return toEcoreFeatureName(accessor.getName());
+	}
+
+	private String toEcoreFeatureName(String methodName) {
+		var featureName = WordUtils.uncapitalize(methodName.replaceFirst("^get", "")).replaceFirst("_$", "");
+		return featureName;
+	}
+	
+	private String toEcoreClassifierName(String className) {
+		return className;
+	}
+	
+	private String toEcoreClassifierName(Class<?> javaClass) {
+		return javaClass.getSimpleName();
+	}
+
+
     private EAttribute buildAttribute(MappingSession mappingSession, Method accessor) {
         var eAttribute = EcoreFactory.eINSTANCE.createEAttribute();
-        var attributeName = WordUtils.uncapitalize(accessor.getName().replaceFirst("^get", ""));
-        eAttribute.setName(attributeName);
+        eAttribute.setName(toEcoreFeatureName(accessor));
         markOptional(accessor, eAttribute);
         buildIfNeeded(MetaEcoreHelper.getType(accessor), mappingSession, debug(
                 "Setting type of attribute " + eAttribute.getName(), setAttributeType(mappingSession, eAttribute)));

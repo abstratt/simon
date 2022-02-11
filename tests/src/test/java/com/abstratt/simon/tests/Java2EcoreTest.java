@@ -388,6 +388,14 @@ public class Java2EcoreTest {
         assertNotNull(subTypes);
         assertSame(subTypes, superTypes.getEOpposite());
     }
+    
+    @Test
+    void escaping() {
+        EClass entityEClass = build(IM.Entity.class);
+        var abstract_ = entityEClass.getEStructuralFeature("abstract");
+        assertNotNull(abstract_);
+        assertEquals("abstract", abstract_.getName());
+    }
 
     @Test
     void typeDeclaration() {

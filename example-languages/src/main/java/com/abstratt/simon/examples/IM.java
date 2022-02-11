@@ -96,6 +96,9 @@ public interface IM {
 
         @Meta.Reference(opposite = "entities")
         Namespace namespace();
+        
+        @Meta.Attribute
+        boolean abstract_();
     }
 
     interface Type extends Named {
