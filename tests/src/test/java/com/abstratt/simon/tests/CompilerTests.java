@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -344,6 +345,28 @@ public class CompilerTests {
         assertEquals("Primitive", descriptionPropertyType.eClass().getName());
         assertEquals("StringValue", getPrimitiveValue(descriptionPropertyType, "name"));
     }
+    
+    @Test
+    void annotations() {
+        var toParse = """
+                @language IM
+                @import 'im'
+                namespace {
+                    entities {
+                        [abstract] entity Product
+                    }
+                }""";
+        var namespace = compileUsingIM(toParse);
+        List<EObject> entities = getValue(namespace, "entities");
+        assertEquals(1, entities.size());
+        EObject productEntity = entities.get(0);
+        assertNotNull(productEntity);
+        assertEquals("Product", getPrimitiveValue(productEntity, "name"));
+        var abstract_ = getValue(productEntity, "abstract");
+        assertNotNull(abstract_);
+        assertTrue((boolean) getPrimitiveValue(productEntity, "abstract")); 
+    }
+
 
     @Test
     void recordSlot() {

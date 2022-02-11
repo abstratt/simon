@@ -3,6 +3,7 @@ package com.abstratt.simon.compiler.antlr.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,6 +33,7 @@ import com.abstratt.simon.metamodel.Metamodel.Enumerated;
 import com.abstratt.simon.metamodel.Metamodel.Feature;
 import com.abstratt.simon.metamodel.Metamodel.ObjectType;
 import com.abstratt.simon.metamodel.Metamodel.Primitive;
+import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
 import com.abstratt.simon.metamodel.Metamodel.RecordType;
 import com.abstratt.simon.metamodel.Metamodel.Reference;
 import com.abstratt.simon.metamodel.Metamodel.Slot;
@@ -39,27 +41,35 @@ import com.abstratt.simon.metamodel.Metamodel.Slotted;
 import com.abstratt.simon.metamodel.Metamodel.Type;
 import com.abstratt.simon.parser.antlr.SimonBaseListener;
 import com.abstratt.simon.parser.antlr.SimonParser;
+import com.abstratt.simon.parser.antlr.SimonParser.ChildObjectContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ComponentContext;
 import com.abstratt.simon.parser.antlr.SimonParser.FeatureNameContext;
 import com.abstratt.simon.parser.antlr.SimonParser.LanguageDeclarationContext;
 import com.abstratt.simon.parser.antlr.SimonParser.LinkContext;
+import com.abstratt.simon.parser.antlr.SimonParser.ModifierContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ObjectClassContext;
 import com.abstratt.simon.parser.antlr.SimonParser.ObjectHeaderContext;
 import com.abstratt.simon.parser.antlr.SimonParser.PropertiesContext;
 import com.abstratt.simon.parser.antlr.SimonParser.RecordLiteralContext;
 import com.abstratt.simon.parser.antlr.SimonParser.RootObjectContext;
+import com.abstratt.simon.parser.antlr.SimonParser.SimpleIdentifierContext;
 import com.abstratt.simon.parser.antlr.SimonParser.SlotContext;
+import com.abstratt.simon.parser.antlr.SimonParser.SlotValueContext;
 
 class SimonBuilder<T> extends SimonBaseListener {
 
     class ElementInfo {
         private String sourceName;
+        /** The object this element represents. */
         private final T object;
+        /** The type of the object. */
         private final Slotted type;
+        private List<ModifierContext> modifiers;
 
-        public ElementInfo(String sourceName, T object, Slotted type) {
+        public ElementInfo(String sourceName, T object, Slotted type, List<ModifierContext> modifiers) {
             this.object = object;
             this.type = type;
+            this.modifiers = modifiers;
         }
 
         public Slotted getType() {
@@ -82,6 +92,9 @@ class SimonBuilder<T> extends SimonBaseListener {
         public Slotted getSlotted() {
             return type;
         }
+        public List<ModifierContext> getModifiers() {
+			return modifiers;
+		}
     }
 
     private final Problem.Handler problemHandler;
@@ -94,6 +107,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     private final List<ElementInfo> built = new LinkedList<>();
     private final List<ResolutionRequest> resolutionRequests = new LinkedList<>();
     private final List<String> imports = new ArrayList<>();
+    private final List<ModifierContext> availableModifiers = new ArrayList<>();
     private Set<String> languages;
     private String sourceName;
 
@@ -342,8 +356,33 @@ class SimonBuilder<T> extends SimonBaseListener {
         debug("Removing record", currentScope());
         dropScope();
     }
+    
+    private List<ModifierContext> consumeModifiers() {
+    	var snapshot = new ArrayList<>(this.availableModifiers);
+    	availableModifiers.clear();
+    	System.out.println("Modifiers: " + snapshot);
+    	return snapshot; 
+    }
 
     @Override
+    public void exitEveryRule(ParserRuleContext ctx) {
+    	currentScope().ifPresent(info -> applyModifiers(ctx, info));
+    }
+
+	private void applyModifiers(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info) {
+		T target = info.getObject();
+		var modifiers = info.getModifiers();
+		modifiers.forEach(it -> applyModifier(ctx, info, it));
+	}
+	
+	private void applyModifier(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info, ModifierContext modifier) {
+		FeatureNameProvider<ModifierContext, SimpleIdentifierContext> featureNameProvider = ModifierContext::simpleIdentifier;
+		SlotValueBuilder<ModifierContext> valueBuilder = this::buildModifierValue;
+    	parseSlotValue(modifier, info.getType(), featureNameProvider, valueBuilder, (Slot slot, Object value) -> modelHandling.valueSetting().setValue(slot, info.getObject(), value));
+	}
+
+
+	@Override
     public void enterRecordLiteral(RecordLiteralContext ctx) {
         SlotContext slotContext = findParent(ctx, SlotContext.class);
         ElementInfo info = currentScope().get();
@@ -372,51 +411,83 @@ class SimonBuilder<T> extends SimonBaseListener {
         }
         return (PRC) candidate;
     }
+    
+    @Override
+    public void exitModifier(ModifierContext ctx) {
+    	availableModifiers.add(ctx);
+    }
 
     @Override
     public void exitSlot(SlotContext ctx) {
-        ElementInfo info = currentScope().get();
-
+        var info = currentScope().get();
         T target = info.getObject();
-        parseSlotValue(ctx, info.getType(),
-                (slot, value) -> modelHandling.valueSetting().setValue(slot, target, value));
+        parseSlotValue(ctx, info.getType(), SlotContext::featureName, this::buildSlotValue, (slot, value) -> modelHandling.valueSetting().setValue(slot, target, value));
     }
 
-    private void parseSlotValue(SlotContext ctx, Slotted slotOwner, BiConsumer<Slot, Object> consumer) {
-        String propertyName = getIdentifier(ctx.featureName());
-        Slot slot = slotOwner.slotByName(propertyName);
+    private <CTX extends ParserRuleContext, FCTX extends ParserRuleContext> void parseSlotValue(CTX ctx, Slotted slotOwner, FeatureNameProvider<CTX, FCTX> featureName, SlotValueBuilder<CTX> valueBuilder, BiConsumer<Slot, Object> valueConsumer) {
+		var slot = getSlotByFeatureName(slotOwner, featureName.get(ctx));
+        Object slotValue = valueBuilder.build((CTX) ctx, slot.type());
+        valueConsumer.accept(slot, slotValue);
+    }
+    
+    interface SlotValueBuilder<CTX extends ParserRuleContext> {
+    	Object build(CTX context, BasicType slotType);
+    }
+    
+    interface FeatureNameProvider<CTX extends ParserRuleContext, FCTX extends ParserRuleContext> {
+    	FCTX get(CTX context);
+    }
+
+	private Slot getSlotByFeatureName(Slotted slotOwner, ParserRuleContext slotName) {
+		var propertyName = getIdentifier(slotName);
+        var slot = getSlotByName(slotOwner, propertyName);
+		return slot;
+	}
+
+	private Slot getSlotByName(Slotted slotOwner, String propertyName) {
+		var slot = slotOwner.slotByName(propertyName);
         if (slot == null) {
             List<String> slotNames = slotOwner.slots().stream().map(Slot::name).collect(Collectors.toList());
             throw new CompilerException("Unknown property: " + propertyName + " in element " + slotOwner.name()
                     + " - slots are: " + slotNames);
         }
+		return slot;
+	}
 
-        Object slotValue = buildValue(ctx, slot);
-        consumer.accept(slot, slotValue);
-    }
-
-    private Object buildValue(SlotContext ctx, Slot slot) {
-        Object slotValue;
-        BasicType slotType = slot.type();
-        if (slotType instanceof Primitive) {
-            slotValue = parsePrimitiveLiteral((Primitive) slotType, ctx.slotValue().literal().getText());
+	private Object buildSlotValue(SlotContext ctx, BasicType slotType) {
+		Object slotValue;
+        SlotValueContext slotValueContext = ctx.slotValue();
+		if (slotType instanceof Primitive) {
+            slotValue = parsePrimitiveLiteral((Primitive) slotType, slotValueContext.literal().getText());
         } else if (slotType instanceof Enumerated) {
-            slotValue = parseEnumeratedLiteral((Enumerated) slotType, ctx.slotValue().literal().getText());
+            slotValue = parseEnumeratedLiteral((Enumerated) slotType, slotValueContext.literal().getText());
         } else if (slotType instanceof RecordType) {
             RecordType slotTypeAsRecordType = (RecordType) slotType;
-            slotValue = parseRecordLiteral(slotTypeAsRecordType, ctx.slotValue().literal().recordLiteral());
+            slotValue = parseRecordLiteral(slotTypeAsRecordType, slotValueContext.literal().recordLiteral());
         } else {
             throw new IllegalStateException("Unsupported basic type: " + slotType.name());
         }
         return slotValue;
-    }
-
+	}
+	
+	private Object buildModifierValue(ModifierContext ctx, BasicType slotType) {
+		Object slotValue;
+		if (slotType instanceof Primitive && ((Primitive) slotType).kind() == PrimitiveKind.Boolean) {
+			slotValue = true;
+        } else if (slotType instanceof Enumerated) {
+            slotValue = parseEnumeratedLiteral((Enumerated) slotType, ctx.simpleIdentifier().getText());
+        } else {
+        	throw new IllegalStateException("Unsupported basic type for a modifier: " + slotType.name() + " (only booleans/enums allowed)");
+        }
+        return slotValue;
+	}
+	
     private Object parseRecordLiteral(RecordType recordType, RecordLiteralContext recordLiteralContext) {
         T newRecord = modelHandling.instantiation().createObject(recordType.isRoot(), recordType);
         PropertiesContext properties = recordLiteralContext.properties();
         List<SlotContext> slots = properties.slot();
         for (SlotContext slotContext : slots) {
-            parseSlotValue(slotContext, recordType, (Slot slot, Object newValue) -> modelHandling.valueSetting()
+            parseSlotValue(slotContext, recordType, SlotContext::featureName, this::buildSlotValue, (Slot slot, Object newValue) -> modelHandling.valueSetting()
                     .setValue(slot, newRecord, (T) newValue));
         }
         return newRecord;
@@ -450,7 +521,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private void newScope(Slotted type, T created) {
-        ElementInfo newInfo = new ElementInfo(sourceName, created, type);
+        ElementInfo newInfo = new ElementInfo(sourceName, created, type, consumeModifiers());
         String name = modelHandling.nameQuerying().getName(newInfo.getObject());
         currentScope.push(debug("Pushing (" + currentScope.size() + ")" + name, newInfo));
     }

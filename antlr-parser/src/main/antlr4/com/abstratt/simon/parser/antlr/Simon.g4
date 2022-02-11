@@ -20,7 +20,11 @@ object: objectHeader
 properties?
 components?;
 
-objectHeader: objectClass objectName?;
+objectHeader: modifiers? objectClass objectName?;
+
+modifiers: '[' modifier* ']';
+
+modifier: simpleIdentifier;
 
 objectClass: qualifiedIdentifier;
 
