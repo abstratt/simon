@@ -1,9 +1,5 @@
 grammar Simon;
 
-@header {
-    package com.abstratt.simon.parser.antlr;
-}
-
 program: declarations rootObjects EOF;
 
 languageName: IDENT;

@@ -36,9 +36,6 @@
 							<goal>antlr4</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>
-								${project.build.directory}/generated-sources/antlr4/com/abstratt/simon/parser/antlr
-							</outputDirectory>
 						</configuration>
 					</execution>
 				</executions>
