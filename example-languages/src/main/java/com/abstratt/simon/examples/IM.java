@@ -35,6 +35,10 @@ public interface IM {
     }
 
     interface Feature<T extends Type> extends TypedElement<T> {
+        public enum Visibility {
+    		Public,Protected,Private;
+		}
+
         @Meta.Attribute
         boolean multiple();
     }
@@ -60,7 +64,7 @@ public interface IM {
         public Operation.OperationKind kind();
 
         @Meta.Attribute
-        public boolean public_();
+        public Feature.Visibility visibility();
     }
 
     interface Parameter extends TypedElement<Type> {

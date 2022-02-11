@@ -347,13 +347,17 @@ public class CompilerTests {
     }
     
     @Test
-    void annotations() {
+    void modifiers() {
         var toParse = """
                 @language IM
                 @import 'im'
                 namespace {
                     entities {
-                        [abstract] entity Product
+                        [abstract] entity Product {
+                        	operations {
+                				[public action] operation doIt;
+            				}
+                        }
                     }
                 }""";
         var namespace = compileUsingIM(toParse);
