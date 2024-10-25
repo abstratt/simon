@@ -1,0 +1,12 @@
+@language IM
+
+namespace im {
+    primitives {
+	    primitive StringValue
+		primitive BooleanValue
+		primitive DecimalValue
+		primitive DateValue
+		primitive DateTimeValue
+		primitive TimeValue
+    }
+}

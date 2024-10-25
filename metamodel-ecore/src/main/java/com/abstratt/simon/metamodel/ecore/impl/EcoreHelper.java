@@ -131,7 +131,7 @@ public class EcoreHelper {
     }
 
     public static EClassifier findClassifierByName(EPackage ePackage, String typeName) {
-        return ePackage.getEClassifiers().stream().filter(it -> typeName.equalsIgnoreCase(it.getName())).findAny()
+        return ePackage.getEClassifiers().stream().filter(it -> typeName.equals(it.getName())).findAny()
                 .orElse(null);
     }
 

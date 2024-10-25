@@ -92,8 +92,8 @@ public class CompilerTests {
                 @language IM
                 Namespace customers {
                   entities {
-                    Entity Customer
-                    Entity Order {
+                    entity Customer
+                    entity Order {
                       relationships {
                         relationship { type: Customer }
                       }
@@ -157,9 +157,9 @@ public class CompilerTests {
     void unresolvedReference() {
         var results = compileProject(IM_PACKAGE, """
                     @language IM
-                    Namespace orders {
+                    namespace orders {
                         entities {
-                            Entity Order {
+                            entity Order {
                                 relationships {
                                     relationship customer { type: FOOBAR }
                                 }
@@ -303,7 +303,7 @@ public class CompilerTests {
     void namespaceWithTwoEntities() {
         String[] toParse = { """
                 @language IM
-                Namespace myapp {
+                namespace myapp {
                         entities {
                                 Entity Customer
                                 Entity Order

@@ -6,6 +6,8 @@ Simon is a framework that supports implementation of DSLs driven by user-provide
 
 Imagine there was a conventional way of textually representing object models?
 
+
+
 ### Simon can represent graphs, not only trees
 
 JSON and YAML work fine for object trees. However, object models are more diverse than trees. Simon supports associations between objects.

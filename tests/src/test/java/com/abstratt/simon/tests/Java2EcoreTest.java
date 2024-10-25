@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
+import com.abstratt.simon.compiler.source.ecore.Java2EcoreMapper;
+import com.abstratt.simon.examples.JavaExampleLanguages;
 import org.eclipse.emf.common.util.BasicDiagnostic;
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.TreeIterator;
@@ -25,17 +28,9 @@ import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.util.Diagnostician;
 import org.eclipse.emf.ecore.util.EcoreValidator;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
-import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
-import com.abstratt.simon.compiler.source.ecore.Java2EcoreMapper;
-import com.abstratt.simon.examples.IM;
-import com.abstratt.simon.examples.UI;
-import com.abstratt.simon.examples.UI.Application;
-import com.abstratt.simon.examples.UI.PanelLayout;
-import com.abstratt.simon.examples.UI.Screen;
-import com.abstratt.simon.examples.UI2;
-import com.abstratt.simon.examples.UI3;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 
 /**
@@ -44,21 +39,67 @@ import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
  */
 public class Java2EcoreTest {
 
+    class ClassConstants {
+        public Class<?> IM_BASIC_TYPE_CLASS = getClass("IM.BasicType");
+        public Class<?> IM_ENTITY_CLASS = getClass("IM.Entity");
+        public Class<?> IM_NAMED_CLASS = getClass("IM.Named");
+        public Class<?> IM_NAMESPACE_CLASS = getClass("IM.Namespace");
+        public Class<?> IM_PRIMITIVE_CLASS = getClass("IM.Primitive");
+        public Class<?> RELATIONSHIP_CLASS = getClass("IM.Relationship");
+        public Class<?> IM_TYPE_CLASS = getClass("IM.Type");
+        public Class<?> IM_CLASS = getClass("IM");
+        public Class<?> UI_APPLICATION_CLASS = getClass("UI.Application");
+        public Class<?> UI_BUTTON_CLASS = getClass("UI.Button");
+        public Class<?> UI_COLOR_CLASS = getClass("UI.Color");
+        public Class<?> UI_COMPONENT_CLASS = getClass("UI.Component");
+        public Class<?> UI_CONTAINER_CLASS = getClass("UI.Container");
+        public Class<?> UI_LINK_CLASS = getClass("UI.Link");
+        public Class<?> UI_NAMED_CLASS = getClass("UI.Named");
+        public Class<?> UI_PANEL_LAYOUT_CLASS = getClass("UI.PanelLayout");
+        public Class<?> UI_SCREEN_CLASS = getClass("UI.Screen");
+        public Class<?> UI2_FORM_CLASS = getClass("UI2.Form");
+        public Class<?> UI2_CLASS = getClass("UI2");
+        public Class<?> UI3_PROTOTYPE_CLASS = getClass("UI3.IPrototype");
+        public Class<?> UI3_CLASS = getClass("UI3");
+        public Class<?> UI_CLASS = getClass("UI");
+        protected Class<?> getClass(String name) {
+            try {
+                String packageName = getLanguagePackage();
+                String javaClassName = packageName + "." + name.replace(".", "$");
+                Class<?> aClass = Class.forName(javaClassName);
+                System.out.println("Class for " + name + ": " + aClass);
+                return aClass;
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        protected String getLanguagePackage() {
+            return JavaExampleLanguages.class.getPackageName();
+        }
+    }
+
+    private ClassConstants classConstants = getClassConstants();
+
+    @NotNull
+    protected ClassConstants getClassConstants() {
+        return new ClassConstants();
+    }
+
     @Test
     void objectType() {
-        var result = build(IM.Namespace.class);
-        assertEquals(IM.Namespace.class.getSimpleName(), result.getName());
+        var result = build(classConstants.IM_NAMESPACE_CLASS);
+        assertEquals(classConstants.IM_NAMESPACE_CLASS.getSimpleName(), result.getName());
     }
 
     @Test
     void objectTypeFromAccessor() throws Exception {
-        var type = MetaEcoreHelper.getType(Screen.class.getMethod("application"));
-        assertEquals(UI.Application.class, type);
+        var type = MetaEcoreHelper.getType(classConstants.UI_SCREEN_CLASS.getMethod("application"));
+        assertEquals(classConstants.UI_APPLICATION_CLASS, type);
     }
 
     @Test
     void isObjectType() throws Exception {
-        var type = UI.Application.class;
+        var type = classConstants.UI_APPLICATION_CLASS;
         var annotations = MetaEcoreHelper.getTypeAnnotations(type).collect(Collectors.toList());
         assertEquals(Collections.emptyList(), annotations);
         assertFalse(MetaEcoreHelper.isExplicitlyObjectType(type));
@@ -68,30 +109,30 @@ public class Java2EcoreTest {
 
     @Test
     void rootType() {
-        assertTrue(MetaEcoreHelper.isRootComposite(UI.Application.class));
-        EClass result = build(IM.Namespace.class);
+        assertTrue(MetaEcoreHelper.isRootComposite(classConstants.UI_APPLICATION_CLASS));
+        EClass result = build(classConstants.IM_NAMESPACE_CLASS);
         assertTrue(MetaEcoreHelper.isRootComposite(result));
     }
 
     @Test
     void abstractClass() {
-        EClass component = build(UI.Component.class);
-        EClass button = build(UI.Button.class);
+        EClass component = build(classConstants.UI_COMPONENT_CLASS);
+        EClass button = build(classConstants.UI_BUTTON_CLASS);
         assertTrue(!button.isAbstract());
         assertTrue(component.isAbstract());
     }
 
     @Test
     void instantiable() {
-        EClass named = build(UI.Named.class);
+        EClass named = build(classConstants.UI_NAMED_CLASS);
         assertTrue(named.isAbstract());
         assertFalse(named.isInterface());
     }
 
     @Test
     void recordType() {
-        EClass result = build(UI.Color.class);
-        assertEquals(UI.Color.class.getSimpleName(), result.getName());
+        EClass result = build(classConstants.UI_COLOR_CLASS);
+        assertEquals(classConstants.UI_COLOR_CLASS.getSimpleName(), result.getName());
         var attributes = result.getEAttributes();
         var red = find(attributes, a -> a.getName().equals("red"));
         var green = find(attributes, a -> a.getName().equals("green"));
@@ -103,8 +144,8 @@ public class Java2EcoreTest {
 
     @Test
     void recordTypeAttributes() {
-        EClass result = build(UI.Color.class);
-        assertEquals(UI.Color.class.getSimpleName(), result.getName());
+        EClass result = build(classConstants.UI_COLOR_CLASS);
+        assertEquals(classConstants.UI_COLOR_CLASS.getSimpleName(), result.getName());
         var attributes = result.getEAttributes();
         var red = find(attributes, a -> a.getName().equals("red"));
         assertNotNull(red);
@@ -114,8 +155,8 @@ public class Java2EcoreTest {
 
     @Test
     void primitiveSlot() {
-        EPackage result = build(UI.class);
-        var application = (EClass) result.getEClassifier(Application.class.getSimpleName());
+        EPackage result = build(classConstants.UI_CLASS);
+        var application = (EClass) result.getEClassifier(classConstants.UI_APPLICATION_CLASS.getSimpleName());
         var name = application.getEStructuralFeature("name");
         assertNotNull(name.getEType().getEPackage());
         var nameType = MetaEcoreHelper.getValueType(name);
@@ -124,8 +165,8 @@ public class Java2EcoreTest {
 
     @Test
     void primitive() {
-        EClass result = build(UI.Color.class);
-        assertEquals(UI.Color.class.getSimpleName(), result.getName());
+        EClass result = build(classConstants.UI_COLOR_CLASS);
+        assertEquals(classConstants.UI_COLOR_CLASS.getSimpleName(), result.getName());
         var attributes = result.getEAttributes();
 
         var red = find(attributes, a -> a.getName().equals("red"));
@@ -136,7 +177,7 @@ public class Java2EcoreTest {
 
     @Test
     void enumSlot() {
-        EClass result = build(UI.Container.class);
+        EClass result = build(classConstants.UI_CONTAINER_CLASS);
         var attributes = result.getEAttributes();
         var layout = find(attributes, a -> a.getName().equals("layout"));
         var layoutType = layout.getEType();
@@ -145,21 +186,20 @@ public class Java2EcoreTest {
 
     @Test
     void enumType() {
-        EEnum result = build(UI.PanelLayout.class);
-        assertEquals(UI.PanelLayout.class.getSimpleName(), result.getName());
+        EEnum result = build(classConstants.UI_PANEL_LAYOUT_CLASS);
+        assertEquals(classConstants.UI_PANEL_LAYOUT_CLASS.getSimpleName(), result.getName());
         var literals = result.getELiterals();
-        UI.PanelLayout[] javaValues = UI.PanelLayout.values();
-        for (var panelLayout : javaValues) {
-            var found = find(literals, l -> panelLayout.name().equals(l.getLiteral()));
+        for (var panelLayout : classConstants.UI_PANEL_LAYOUT_CLASS.getEnumConstants()) {
+            var found = find(literals, l -> ((Enum) panelLayout).name().equals(l.getLiteral()));
             assertNotNull(found);
         }
     }
 
     @Test
     void parent() {
-        EPackage uiPackage = build(UI.class);
-        var containerEClass = (EClass) uiPackage.getEClassifier(name(UI.Container.class));
-        var componentEClass = (EClass) uiPackage.getEClassifier(name(UI.Component.class));
+        EPackage uiPackage = build(classConstants.UI_CLASS);
+        var containerEClass = (EClass) uiPackage.getEClassifier(name(classConstants.UI_CONTAINER_CLASS));
+        var componentEClass = (EClass) uiPackage.getEClassifier(name(classConstants.UI_COMPONENT_CLASS));
         var containerParent = find(containerEClass.getEAllReferences(), e -> e.getName().equals("parent"));
         var containerChildren = find(containerEClass.getEAllReferences(), e -> e.getName().equals("children"));
         var componentParent = find(componentEClass.getEAllReferences(), e -> e.getName().equals("parent"));
@@ -171,9 +211,9 @@ public class Java2EcoreTest {
 
     @Test
     void superClass() {
-        EPackage uiPackage = build(UI.class);
-        var componentEClass = (EClass) uiPackage.getEClassifier(name(UI.Component.class));
-        var containerEClass = (EClass) uiPackage.getEClassifier(name(UI.Container.class));
+        EPackage uiPackage = build(classConstants.UI_CLASS);
+        var componentEClass = (EClass) uiPackage.getEClassifier(name(classConstants.UI_COMPONENT_CLASS));
+        var containerEClass = (EClass) uiPackage.getEClassifier(name(classConstants.UI_CONTAINER_CLASS));
         var namedEClass = (EClass) uiPackage.getEClassifier("Named");
 
         assertTrue(componentEClass.isSuperTypeOf(containerEClass));
@@ -186,11 +226,11 @@ public class Java2EcoreTest {
 
     @Test
     void superClass2() {
-        EPackage uiPackage = build(IM.class);
-        var namedEClass = (EClass) uiPackage.getEClassifier(name(IM.Named.class));
-        var typeEClass = (EClass) uiPackage.getEClassifier(name(IM.Type.class));
-        var basicTypeEClass = (EClass) uiPackage.getEClassifier(name(IM.BasicType.class));
-        var primitiveEClass = (EClass) uiPackage.getEClassifier(name(IM.Primitive.class));
+        EPackage uiPackage = build(classConstants.IM_CLASS);
+        var namedEClass = (EClass) uiPackage.getEClassifier(name(classConstants.IM_NAMED_CLASS));
+        var typeEClass = (EClass) uiPackage.getEClassifier(name(classConstants.IM_TYPE_CLASS));
+        var basicTypeEClass = (EClass) uiPackage.getEClassifier(name(classConstants.IM_BASIC_TYPE_CLASS));
+        var primitiveEClass = (EClass) uiPackage.getEClassifier(name(classConstants.IM_PRIMITIVE_CLASS));
 
         assertTrue(namedEClass.getESuperTypes().isEmpty());
         assertTrue(namedEClass.isSuperTypeOf(typeEClass));
@@ -200,7 +240,7 @@ public class Java2EcoreTest {
 
     @Test
     void packages() {
-        EPackage imPackage = build(IM.class);
+        EPackage imPackage = build(classConstants.IM_CLASS);
         assertNotNull(imPackage);
         var allClassifiers = imPackage.getEClassifiers();
         var entityClass = find(allClassifiers, pred((EClassifier eo) -> eo instanceof EClass)//
@@ -210,24 +250,24 @@ public class Java2EcoreTest {
 
     @Test
     void containingPackage() {
-        EPackage imPackage = build(IM.class);
+        EPackage imPackage = build(classConstants.IM_CLASS);
         assertNotNull(imPackage);
-        var entityEClass = imPackage.getEClassifier(name(IM.Entity.class));
+        var entityEClass = imPackage.getEClassifier(name(classConstants.IM_ENTITY_CLASS));
         assertNotNull(entityEClass);
         assertSame(imPackage, entityEClass.getEPackage());
     }
 
     @Test
     void optional() {
-        EPackage uiPackage = build(UI.class);
-        var componentEClass = (EClass) uiPackage.getEClassifier(name(UI.Component.class));
+        EPackage uiPackage = build(classConstants.UI_CLASS);
+        var componentEClass = (EClass) uiPackage.getEClassifier(name(classConstants.UI_COMPONENT_CLASS));
         var componentParent = find(componentEClass.getEAllReferences(), e -> e.getName().equals("parent"));
         assertFalse(componentParent.isRequired());
     }
 
     @Test
     void reflexiveHierarchy() {
-        EClass containerEClass = build(UI.Container.class);
+        EClass containerEClass = build(classConstants.UI_CONTAINER_CLASS);
         var containerChildren = find(containerEClass.getEAllReferences(),
                 pred(EReference::isContainment).and(e -> e.getName().equals("children")));
         assertNotNull(containerChildren.getEOpposite());
@@ -239,7 +279,7 @@ public class Java2EcoreTest {
 
     @Test
     void reflexive() {
-        EClass containerEClass = build(UI.Container.class);
+        EClass containerEClass = build(classConstants.UI_CONTAINER_CLASS);
         var containerChildren = find(containerEClass.getEReferences(), e -> e.getName().equals("children"));
         assertNotNull(containerChildren.getEOpposite());
         var containerParent = find(containerEClass.getEAllReferences(), e -> e.getName().equals("parent"));
@@ -249,7 +289,7 @@ public class Java2EcoreTest {
 
     @Test
     void children() {
-        EClass namespaceEClass = build(IM.Namespace.class);
+        EClass namespaceEClass = build(classConstants.IM_NAMESPACE_CLASS);
         var entities = find(namespaceEClass.getEAllReferences(),
                 pred(EReference::isContainment).and(e -> e.getName().equals("entities")));
         assertNotNull(entities);
@@ -264,7 +304,7 @@ public class Java2EcoreTest {
 
     @Test
     void related() {
-        EClass linkEClass = build(UI.Link.class);
+        EClass linkEClass = build(classConstants.UI_LINK_CLASS);
         var targetScreen = find(linkEClass.getEAllReferences(),
                 pred(EReference::isContainment).negate().and(e -> e.getName().equals("targetScreen")));
         assertNotNull(targetScreen);
@@ -274,7 +314,7 @@ public class Java2EcoreTest {
 
     @Test
     void interfaceAttributes() {
-        EClass namedEclass = build(UI.Named.class);
+        EClass namedEclass = build(classConstants.UI_NAMED_CLASS);
         var allAttributes = namedEclass.getEAllAttributes();
         assertFalse(allAttributes.isEmpty());
         var name = find(allAttributes, e -> e.getName().equals("name"));
@@ -285,16 +325,16 @@ public class Java2EcoreTest {
 
     @Test
     void abstractClassAttributes() {
-        EClass containerEclass = build(UI.Container.class);
+        EClass containerEclass = build(classConstants.UI_CONTAINER_CLASS);
         var layout = find(containerEclass.getEAllAttributes(), e -> e.getName().equals("layout"));
         assertNotNull(layout);
         var layoutEType = ((EEnum) layout.getEType());
-        assertEquals(PanelLayout.class.getSimpleName(), layoutEType.getName());
+        assertEquals(classConstants.UI_PANEL_LAYOUT_CLASS.getSimpleName(), layoutEType.getName());
     }
 
     @Test
     void ownAttributes() {
-        EClass linkEclass = build(UI.Link.class);
+        EClass linkEclass = build(classConstants.UI_LINK_CLASS);
         var label = find(linkEclass.getEAllAttributes(), e -> e.getName().equals("label"));
         assertNotNull(label);
         assertSame(EcorePackage.Literals.ESTRING,
@@ -303,7 +343,7 @@ public class Java2EcoreTest {
 
     @Test
     void inheritedAttributes() {
-        EClass applicationEclass = build(UI.Application.class);
+        EClass applicationEclass = build(classConstants.UI_APPLICATION_CLASS);
         var name = find(applicationEclass.getEAllAttributes(), e -> e.getName().equals("name"));
         assertNotNull(name);
         var nameEType = MetaEcoreHelper.getValueType(name);
@@ -312,7 +352,7 @@ public class Java2EcoreTest {
 
     @Test
     void inheritedReferences() {
-        EClass relationshipEclass = build(IM.Relationship.class);
+        EClass relationshipEclass = build(classConstants.RELATIONSHIP_CLASS);
         assertNotNull(relationshipEclass.getEPackage());
         var typeReference = find(relationshipEclass.getEAllReferences(), e -> e.getName().equals("type"));
         assertNotNull(typeReference);
@@ -323,17 +363,17 @@ public class Java2EcoreTest {
 
     @Test
     void dependentPackageViaInheritance() {
-        EPackage ui2Package = build(UI2.class);
+        EPackage ui2Package = build(classConstants.UI2_CLASS);
 
         assertNotNull(ui2Package);
         assertEquals("UI2", ui2Package.getName());
-        var formClass = (EClass) ui2Package.getEClassifier(UI2.Form.class.getSimpleName());
+        var formClass = (EClass) ui2Package.getEClassifier(classConstants.UI2_FORM_CLASS.getSimpleName());
         assertNotNull(formClass);
 
         var superTypes = formClass.getESuperTypes();
         assertEquals(1, superTypes.size());
         var componentClass = superTypes.get(0);
-        assertEquals(UI.Container.class.getSimpleName(), componentClass.getName());
+        assertEquals(classConstants.UI_CONTAINER_CLASS.getSimpleName(), componentClass.getName());
         assertNotNull(componentClass.getEPackage());
         assertEquals("UI", componentClass.getEPackage().getName());
         var uiPackage = componentClass.getEPackage();
@@ -365,10 +405,10 @@ public class Java2EcoreTest {
 
     @Test
     void dependentPackageViaReference() {
-        EPackage ui3Package = build(UI3.class);
+        EPackage ui3Package = build(classConstants.UI3_CLASS);
         assertNotNull(ui3Package);
         assertEquals("UI3", ui3Package.getName());
-        var prototypeClass = (EClass) ui3Package.getEClassifier(UI3.IPrototype.class.getSimpleName());
+        var prototypeClass = (EClass) ui3Package.getEClassifier(classConstants.UI3_PROTOTYPE_CLASS.getSimpleName());
         assertNotNull(prototypeClass);
         var applicationsRef = find(prototypeClass.getEAllReferences(), ref -> ref.getName().equals("applications"));
         var applicationEClass = applicationsRef.getEReferenceType();
@@ -379,7 +419,7 @@ public class Java2EcoreTest {
 
     @Test
     void opposite() {
-        EClass entityEClass = build(IM.Entity.class);
+        EClass entityEClass = build(classConstants.IM_ENTITY_CLASS);
         var superTypes = find(entityEClass.getEAllReferences(),
                 pred(EReference::isContainment).negate().and(e -> e.getName().equals("superTypes")));
         var subTypes = find(entityEClass.getEAllReferences(),
@@ -391,7 +431,7 @@ public class Java2EcoreTest {
     
     @Test
     void escaping() {
-        EClass entityEClass = build(IM.Entity.class);
+        EClass entityEClass = build(classConstants.IM_ENTITY_CLASS);
         var abstract_ = entityEClass.getEStructuralFeature("abstract");
         assertNotNull(abstract_);
         assertEquals("abstract", abstract_.getName());
@@ -399,16 +439,16 @@ public class Java2EcoreTest {
 
     @Test
     void typeDeclaration() {
-        EClass applicationClass = build(UI.Application.class);
+        EClass applicationClass = build(classConstants.UI_APPLICATION_CLASS);
         var screens = applicationClass.getEStructuralFeature("screens");
         assertNotNull(screens.getEType().getEPackage());
         assertTrue(screens.isMany());
-        assertEquals(Screen.class.getSimpleName(), screens.getEType().getName());
+        assertEquals(classConstants.UI_SCREEN_CLASS.getSimpleName(), screens.getEType().getName());
     }
 
     @Test
     void typeResolution() {
-        EPackage uiPackage = build(UI.class);
+        EPackage uiPackage = build(classConstants.UI_CLASS);
         var typeSource = new EPackageMetamodelSource.Factory(uiPackage).build();
         var resolved = typeSource.resolveType("Application", null);
         assertNotNull(resolved);
