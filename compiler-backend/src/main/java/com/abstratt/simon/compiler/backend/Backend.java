@@ -2,7 +2,15 @@ package com.abstratt.simon.compiler.backend;
 
 import com.abstratt.simon.metamodel.Metamodel;
 
+/**
+ * Defines the contract for various backend operations in the Simon compiler.
+ *
+ * @param <O> the type of object being handled
+ * @param <S> the type of slotted element being handled
+ * @param <M> the type of model element being handled
+ */
 public interface Backend<O extends Metamodel.ObjectType, S extends Metamodel.Slotted, M> {
+
     NameSetting<M> nameSetting();
 
     NameQuerying<M> nameQuerying();
@@ -21,6 +29,9 @@ public interface Backend<O extends Metamodel.ObjectType, S extends Metamodel.Slo
 
     <R> R runOperation(Operation<R> operation);
 
+    /**
+     * Factory interface for creating Backend instances.
+     */
     interface Factory {
         <O extends Metamodel.ObjectType, S extends Metamodel.Slotted, M> Backend<O, S, M> create();
     }

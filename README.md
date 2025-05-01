@@ -142,3 +142,7 @@ application myApplication {
 * tests - all tests live here 
 
 ![alt text](https://abstratt.github.io/simon/dependencies.png)
+
+### Documentation
+
+For detailed documentation of all the abstractions for each module and their relationships, please refer to the [Abstractions Overview](docs/abstractions.md).

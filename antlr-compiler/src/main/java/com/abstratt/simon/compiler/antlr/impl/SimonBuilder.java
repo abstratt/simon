@@ -56,13 +56,20 @@ import com.abstratt.simon.parser.antlr.SimonParser.SimpleIdentifierContext;
 import com.abstratt.simon.parser.antlr.SimonParser.SlotContext;
 import com.abstratt.simon.parser.antlr.SimonParser.SlotValueContext;
 
+/**
+ * SimonBuilder is responsible for building the Simon model from the parsed input.
+ * It handles the creation of objects, setting their properties, resolving references, and managing the scope of elements during the parsing process.
+ *
+ * @param <T> the type of model being built
+ */
 class SimonBuilder<T> extends SimonBaseListener {
 
+    /**
+     * Represents information about an element being built.
+     */
     class ElementInfo {
         private String sourceName;
-        /** The object this element represents. */
         private final T object;
-        /** The type of the object. */
         private final Slotted type;
         private List<ModifierContext> modifiers;
 
@@ -100,9 +107,6 @@ class SimonBuilder<T> extends SimonBaseListener {
     private final Problem.Handler problemHandler;
     private final Backend<ObjectType, Slotted, T> modelHandling;
     private final MetamodelSource<?> metamodelSource;
-    /**
-     * Scopes can be nested.
-     */
     private final Deque<ElementInfo> currentScope = new LinkedList<>();
     private final List<ElementInfo> built = new LinkedList<>();
     private final List<ResolutionRequest> resolutionRequests = new LinkedList<>();
@@ -111,10 +115,18 @@ class SimonBuilder<T> extends SimonBaseListener {
     private Set<String> languages;
     private String sourceName;
 
+    /**
+     * Interface for resolving references.
+     *
+     * @param <R> the type of the resolved reference
+     */
     interface Resolver<R> {
         void resolve(R resolved);
     }
 
+    /**
+     * Represents a request for resolving a reference.
+     */
     class ResolutionRequest {
         private final ParserRuleContext context;
         private final T scope;
@@ -352,8 +364,6 @@ class SimonBuilder<T> extends SimonBaseListener {
 
     @Override
     public void exitRecordLiteral(RecordLiteralContext ctx) {
-        // take the record out of the stack
-        debug("Removing record", currentScope());
         dropScope();
     }
     
@@ -396,7 +406,6 @@ class SimonBuilder<T> extends SimonBaseListener {
                     + " - slots are: " + slotNames);
         }
         if (!(slot.type() instanceof RecordType)) {
-            // no instance required
             return;
         }
         RecordType asRecordType = (RecordType) slot.type();
