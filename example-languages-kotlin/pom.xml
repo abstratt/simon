@@ -27,11 +27,10 @@
 			<version>0.0.4-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
-<!--		<dependency>-->
-<!--			<groupId>com.abstratt.simon</groupId>-->
-<!--			<artifactId>simon-kotlin-compiler-plugin</artifactId>-->
-<!--			<version>0.0.4-SNAPSHOT</version>-->
-<!--		</dependency>-->
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-reflect</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
