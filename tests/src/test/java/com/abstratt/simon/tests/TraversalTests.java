@@ -1,6 +1,6 @@
 package com.abstratt.simon.tests;
 
-import static com.abstratt.simon.tests.TestHelper.compileResource;
+import static com.abstratt.simon.tests.fixtures.TestHelper.compileResource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.abstratt.simon.tests.fixtures.TestHelper;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EObject;

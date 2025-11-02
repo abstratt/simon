@@ -32,7 +32,8 @@
 		<funcj.parser.version>0.6.15</funcj.parser.version>
 
 		<auto-service.version>1.0.1</auto-service.version>
-		<kotlin.version>2.0.0</kotlin.version>
+		<kotlin.version>2.0.21</kotlin.version>
+		<manifold.version>2024.1.37</manifold.version>
 
 		<maven.compiler.target>21</maven.compiler.target>
 		<maven.compiler.source>21</maven.compiler.source>
@@ -54,7 +55,11 @@
 		<module>compiler-backend-ecore</module>
 		<module>example-languages</module>
 		<module>example-languages-kotlin</module>
+		<!--<module>manifold-support</module>-->
+		<!--<module>lsp-server</module>-->
+		<module>test-fixtures</module>
 		<module>tests</module>
+		<!--<module>tests-kt</module>-->
     </modules>
 
 	<build>
@@ -178,6 +183,11 @@
 				<groupId>org.jetbrains.kotlin</groupId>
 				<artifactId>kotlin-reflect</artifactId>
 				<version>${kotlin.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>systems.manifold</groupId>
+				<artifactId>manifold</artifactId>
+				<version>${manifold.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

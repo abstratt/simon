@@ -1,34 +1,11 @@
-package com.abstratt.simon.tests;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import org.apache.commons.io.FilenameUtils;
-import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EClassifier;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EPackage;
-import org.eclipse.emf.ecore.resource.Resource;
+package com.abstratt.simon.tests.fixtures;
 
 import com.abstratt.simon.compiler.Problem;
 import com.abstratt.simon.compiler.Result;
 import com.abstratt.simon.compiler.antlr.SimonCompilerAntlrFactory;
 import com.abstratt.simon.compiler.backend.ecore.EMFModelBackendFactory;
-import com.abstratt.simon.compiler.source.MetamodelSource;
+import com.abstratt.simon.compiler.source.*;
 import com.abstratt.simon.compiler.source.MetamodelSource.Factory;
-import com.abstratt.simon.compiler.source.MetamodelSourceChain;
-import com.abstratt.simon.compiler.source.SimpleSourceProvider;
-import com.abstratt.simon.compiler.source.SourceProvider;
-import com.abstratt.simon.compiler.source.URISourceProvider;
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.EcoreDynamicMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.Java2EcoreMapper;
@@ -39,6 +16,19 @@ import com.abstratt.simon.examples.UI2;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
+import org.apache.commons.io.FilenameUtils;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EClassifier;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.resource.Resource;
+
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TestHelper {
 

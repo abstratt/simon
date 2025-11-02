@@ -7,7 +7,7 @@ import org.apache.commons.text.WordUtils
 interface IM {
     interface Primitive : BasicType {
         override fun name(): String {
-            return WordUtils.uncapitalize(javaClass.getSimpleName())
+            return WordUtils.uncapitalize(javaClass.simpleName)
         }
     }
 

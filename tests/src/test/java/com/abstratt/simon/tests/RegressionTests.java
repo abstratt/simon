@@ -2,14 +2,15 @@ package com.abstratt.simon.tests;
 
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findByFeature;
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.getValue;
-import static com.abstratt.simon.tests.TestHelper.compileResource;
-import static com.abstratt.simon.tests.TestHelper.ensureSuccess;
-import static com.abstratt.simon.tests.TestHelper.getPrimitiveValue;
+import static com.abstratt.simon.tests.fixtures.TestHelper.compileResource;
+import static com.abstratt.simon.tests.fixtures.TestHelper.ensureSuccess;
+import static com.abstratt.simon.tests.fixtures.TestHelper.getPrimitiveValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
 
+import com.abstratt.simon.tests.fixtures.TestHelper;
 import org.eclipse.emf.ecore.EEnumLiteral;
 import org.eclipse.emf.ecore.EObject;
 import org.junit.jupiter.api.Test;
