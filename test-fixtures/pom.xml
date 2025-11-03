@@ -71,11 +71,11 @@
 			<artifactId>simon-compiler-source-ecore</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>com.abstratt.simon</groupId>
-			<artifactId>simon-manifold-support</artifactId>
-			<version>0.0.4-SNAPSHOT</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.abstratt.simon</groupId>-->
+<!--			<artifactId>simon-manifold-support</artifactId>-->
+<!--			<version>0.0.4-SNAPSHOT</version>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
 			<artifactId>kotlin-stdlib</artifactId>
