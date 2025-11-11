@@ -98,7 +98,7 @@ booleanOperator:
 property: IDENT;
 
 WHITESPACE: [ \t\r\n]-> skip;
-
+LINE_COMMENT: '//' ~[\r\n]* -> skip;
 
 AND: 'AND';
 

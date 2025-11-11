@@ -346,7 +346,36 @@ public class CompilerTests {
         assertEquals("Primitive", descriptionPropertyType.eClass().getName());
         assertEquals("StringValue", getPrimitiveValue(descriptionPropertyType, "name"));
     }
-    
+
+    @Test
+    void singleLineComments() {
+        var toParse = """
+                @language IM
+                @import 'im'
+                // comment
+                
+                // comment
+                namespace {
+                // comment
+                
+                // comment
+                // comment
+                entities { //comment
+                    // comment
+                    Entity Customer //comment
+                    // comment
+                    //comment Entity Foo
+                } //
+                // comment
+                // comment
+                }
+                // comment
+        """;
+        var namespace = compileUsingIM(toParse);
+        List<EObject> entities = getValue(namespace, "entities");
+        assertEquals(1, entities.size());
+    }
+
     @Test
     void annotations() {
         var toParse = """
