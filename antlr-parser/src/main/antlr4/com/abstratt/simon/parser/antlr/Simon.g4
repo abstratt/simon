@@ -4,7 +4,7 @@ program: declarations rootObjects EOF;
 
 languageName: IDENT;
 
-declarations: declaration*;
+declarations: (modelComment | declaration)*;
 
 declaration: (languageDeclaration | importDeclaration);
 
@@ -12,7 +12,7 @@ languageDeclaration: '@language' IDENT;
 
 importDeclaration: '@import' CHAR_LITERAL;
 
-rootObjects: rootObject*;
+rootObjects: (modelComment | rootObject)*;
 
 rootObject: object;
 
@@ -39,14 +39,14 @@ objectName: IDENT;
 objectNameRef: qualifiedIdentifier;
 
 properties:
-'('
+LPAREN
     slot*
-')';
+RPAREN;
 
 
 components:
 OPEN_BRACKET
-    componentOrLink*
+    (modelComment | componentOrLink)*
 CLOSE_BRACKET;
 
 componentOrLink: component | link;
@@ -58,10 +58,13 @@ link:
     featureName? keyValueSep objectNameRef;
     
 childObjects:
-	childObject*;    
+	(modelComment | childObject)*;    
     
 childObject:
     object;
+
+modelComment:
+    MODEL_COMMENT;
 
 slot: 
     featureName? keyValueSep slotValue;
@@ -84,7 +87,7 @@ compositeExpression:
 resolvedExpression:
     comparisonExpression | nestedExpression;
 
-nestedExpression: '(' expression ')';
+nestedExpression: LPAREN expression RPAREN;
 
 comparisonExpression:
     property comparisonOperator literal;
@@ -100,6 +103,7 @@ property: IDENT;
 WHITESPACE: [ \t\r\n]-> skip;
 LINE_COMMENT: '//' ~[\r\n]* -> skip;
 BLOCK_COMMENT: '/*' ( . | '\r' | '\n' )*? '*/' -> skip;
+MODEL_COMMENT: '(*' ( . | '\r' | '\n' )*? '*)';
 
 AND: 'AND';
 
@@ -119,6 +123,8 @@ GE: 'ge';
 
 OPEN_BRACKET: '{';
 CLOSE_BRACKET: '}';
+LPAREN: '(';
+RPAREN: ')';
 
 
 literal:
