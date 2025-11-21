@@ -1,5 +1,9 @@
 @language UI
 
+
+/*
+    This example is used as a playground and to track regression tests.
+ */
 application myApplication {
   screens {
     screen screen1 (layout : Vertical) {
@@ -19,6 +23,7 @@ application myApplication {
             button btn2a (label : 'Ok')
         }
     }
+    /* An empty screen */
     screen screen3 {}
   }
 }

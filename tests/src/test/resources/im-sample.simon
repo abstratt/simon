@@ -1,10 +1,16 @@
 @language IM
 @import 'im'
+/*
+    This example is used as a playground and to track regression tests.
+ */
 
+// namespace
 namespace communications {
+    // entities
     entities {
-    
+
       [abstract] entity Member {
+        // properties
         properties {
           property name{type: im.StringValue}
         }      
