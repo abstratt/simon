@@ -298,7 +298,8 @@ class SimonBuilder<T> extends SimonBaseListener {
     public void exitComponent(ComponentContext ctx) {
         if (hasFatalError())
             return;
-        int childCount = ctx.childObjects().getChildCount();
+        // Only count actual childObject nodes; pascalComment entries do not create scopes
+        int childCount = ctx.childObjects().childObject().size();
         List<T> components = new ArrayList<>(childCount);
         for (int i = 0; i < childCount; i++) {
             SimonBuilder<T>.ElementInfo last = dropScope();
