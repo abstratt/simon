@@ -407,6 +407,29 @@ public class CompilerTests {
     }
 
     @Test
+    void modelComments_PascalStyle() {
+        // Model comments should support (* ... *). Keep this test focused only on model comments.
+        var toParse = """
+                @language IM
+                @import 'im'
+                (* model comment before namespace *)
+                namespace { (* inside namespace header *)
+                    (* before entities block *)
+                    entities {
+                        (* before entity *)
+                        Entity Customer
+                        (* after entity *)
+                    }
+                    (* after entities block *)
+                }
+                (* after namespace *)
+        """;
+        var namespace = compileUsingIM(toParse);
+        List<EObject> entities = getValue(namespace, "entities");
+        assertEquals(1, entities.size());
+    }
+
+    @Test
     void annotations() {
         var toParse = """
                 @language IM
