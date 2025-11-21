@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 import com.abstratt.simon.tests.fixtures.TestHelper;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
@@ -407,7 +408,7 @@ public class CompilerTests {
     }
 
     @Test
-    void modelComments_PascalStyle() {
+    void modelComments() {
         // Model comments should support (* ... *). Keep this test focused only on model comments.
         var toParse = """
                 @language IM
@@ -425,8 +426,10 @@ public class CompilerTests {
                 (* after namespace *)
         """;
         var namespace = compileUsingIM(toParse);
+        assertEquals("model comment before namespace", EcoreHelper.getModelComment(namespace).orElse(null));
         List<EObject> entities = getValue(namespace, "entities");
         assertEquals(1, entities.size());
+        assertEquals("before entity", EcoreHelper.getModelComment(entities.get(0)).orElse(null));
     }
 
     @Test
