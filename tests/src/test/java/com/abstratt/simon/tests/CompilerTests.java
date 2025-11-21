@@ -88,7 +88,7 @@ public class CompilerTests {
     }
 
     @Test
-    void typeReference() {
+    void relationshipsAndTypeReference() {
         var source = """
                 @language IM
                 Namespace customers {
@@ -319,7 +319,7 @@ public class CompilerTests {
 
     @Test
     // issue https://github.com/abstratt/simon/issues/3
-    void primitiveTypes() {
+    void propertiesAndPrimitiveTypes() {
         var toParse = """
                 @language IM
                 @import 'im'
