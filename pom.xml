@@ -35,8 +35,8 @@
 		<kotlin.version>2.2.21</kotlin.version>
 		<manifold.version>2025.1.27</manifold.version>
 
-		<maven.compiler.target>21</maven.compiler.target>
-		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<maven.compiler.source>17</maven.compiler.source>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<modules>

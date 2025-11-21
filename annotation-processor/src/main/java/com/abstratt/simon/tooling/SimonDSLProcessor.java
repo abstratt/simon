@@ -15,7 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @SupportedAnnotationTypes("com.abstratt.simon.metamodel.dsl.Meta.*")
-@SupportedSourceVersion(SourceVersion.RELEASE_21)
+@SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
 public class SimonDSLProcessor extends AbstractProcessor {
 
