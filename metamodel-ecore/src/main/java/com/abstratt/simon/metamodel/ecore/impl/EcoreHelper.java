@@ -17,9 +17,32 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.EcoreFactory;
+import org.eclipse.emf.ecore.EModelElement;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 
 public class EcoreHelper {
+
+    /**
+     * Returns the model comment/documentation associated with the given model element, if any.
+     * The comment is retrieved using Ecore's standard documentation mechanism
+     * (EcoreUtil.getDocumentation), and blank results are treated as absent.
+     *
+     * Note: At present, most runtime EObject instances will only return documentation
+     * once comments are explicitly attached to them (e.g. via EAnnotations) by the
+     * compiler. This helper centralizes that lookup and returns an Optional.
+     */
+    public static Optional<String> getModelComment(EObject eObject) {
+        if (eObject == null)
+            return Optional.empty();
+        if (eObject instanceof EModelElement) {
+            String doc = EcoreUtil.getDocumentation((EModelElement) eObject);
+            if (doc == null)
+                return Optional.empty();
+            String trimmed = doc.trim();
+            return trimmed.isEmpty() ? Optional.empty() : Optional.of(trimmed);
+        }
+        return Optional.empty();
+    }
 
     private static final EObject NONE = EcoreFactory.eINSTANCE.createEObject();
 
