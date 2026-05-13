@@ -395,7 +395,24 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private void applyModifier(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info, ModifierContext modifier) {
-        String identifier = modifier.simpleIdentifier().getText();
+        QualifiedIdentifierContext qualifiedId = modifier.qualifiedIdentifier();
+        String head = qualifiedId.simpleIdentifier().getText();
+        String qualifier;
+        String localId;
+        if (qualifiedId.identifierTail() != null) {
+            QualifiedIdentifierContext tail = qualifiedId.identifierTail().qualifiedIdentifier();
+            if (tail.identifierTail() != null) {
+                reportError(Severity.Error, Category.TypeError, sourceName, modifier,
+                        "Modifier '" + qualifiedId.getText()
+                                + "' must be a simple identifier or <EnumType>.<literal>");
+                return;
+            }
+            qualifier = head;
+            localId = tail.simpleIdentifier().getText();
+        } else {
+            qualifier = null;
+            localId = head;
+        }
         Slotted owner = info.getType();
         List<Slot> matchingSlots = new ArrayList<>();
         List<Object> matchingValues = new ArrayList<>();
@@ -404,18 +421,22 @@ class SimonBuilder<T> extends SimonBaseListener {
                 continue;
             }
             BasicType slotType = slot.type();
-            if (slotType instanceof Primitive && ((Primitive) slotType).kind() == PrimitiveKind.Boolean
-                    && slot.name().equals(identifier)) {
-                matchingSlots.add(slot);
-                matchingValues.add(Boolean.TRUE);
+            if (slotType instanceof Primitive && ((Primitive) slotType).kind() == PrimitiveKind.Boolean) {
+                if (qualifier == null && slot.name().equals(localId)) {
+                    matchingSlots.add(slot);
+                    matchingValues.add(Boolean.TRUE);
+                }
                 continue;
             }
             if (slotType instanceof Enumerated) {
+                if (qualifier != null && !slotType.name().equals(qualifier)) {
+                    continue;
+                }
                 Enumerated asEnumerated = (Enumerated) slotType;
-                Object literal = asEnumerated.valueForName(identifier);
-                if (literal == null && !identifier.isEmpty()) {
+                Object literal = asEnumerated.valueForName(localId);
+                if (literal == null && !localId.isEmpty()) {
                     literal = asEnumerated.valueForName(
-                            Character.toUpperCase(identifier.charAt(0)) + identifier.substring(1));
+                            Character.toUpperCase(localId.charAt(0)) + localId.substring(1));
                 }
                 if (literal != null) {
                     matchingSlots.add(slot);
@@ -430,13 +451,13 @@ class SimonBuilder<T> extends SimonBaseListener {
         if (matchingSlots.size() > 1) {
             List<String> conflicting = matchingSlots.stream().map(Slot::name).collect(Collectors.toList());
             reportError(Severity.Error, Category.TypeError, sourceName, modifier,
-                    "Ambiguous modifier '" + identifier + "' on type " + owner.name()
+                    "Ambiguous modifier '" + qualifiedId.getText() + "' on type " + owner.name()
                             + " - matches modifier-eligible slots: " + conflicting);
             return;
         }
         List<String> available = owner.slots().stream().filter(Slot::isModifier).map(Slot::name)
                 .collect(Collectors.toList());
-        throw new CompilerException("Unknown modifier '" + identifier + "' on type " + owner.name()
+        throw new CompilerException("Unknown modifier '" + qualifiedId.getText() + "' on type " + owner.name()
                 + " - modifier-eligible slots: " + available);
     }
 

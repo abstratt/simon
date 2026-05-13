@@ -22,7 +22,7 @@ components?;
 
 objectHeader: modifier* objectClass objectName?;
 
-modifier: '[' simpleIdentifier ']';
+modifier: '[' qualifiedIdentifier ']';
 
 objectClass: qualifiedIdentifier;
 

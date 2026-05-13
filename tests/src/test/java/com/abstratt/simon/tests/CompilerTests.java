@@ -529,6 +529,21 @@ public class CompilerTests {
     }
 
     @Test
+    void qualifiedEnumModifier_disambiguatesCollidingLiterals() {
+        EPackage badPackage = buildCollidingModifierPackage();
+        var results = ensureSuccess(compileProject(Arrays.asList(badPackage), """
+                @language Bad
+                [Visibility.default] [Lifecycle.default] doc"""));
+        EObject doc = results.get(0).getRootObject();
+        org.eclipse.emf.ecore.EEnumLiteral visibility = getValue(doc, "visibility");
+        org.eclipse.emf.ecore.EEnumLiteral lifecycle = getValue(doc, "lifecycle");
+        assertNotNull(visibility);
+        assertEquals("default", visibility.getName());
+        assertNotNull(lifecycle);
+        assertEquals("default", lifecycle.getName());
+    }
+
+    @Test
     void ambiguousEnumModifier_reportsProblem() {
         EPackage badPackage = buildCollidingModifierPackage();
         var results = compileProject(Arrays.asList(badPackage), """
