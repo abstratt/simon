@@ -21,9 +21,14 @@ public interface Metamodel {
 
     /**
      * Model elements that may be named, should implement Named.
+     * Named elements may also carry a documentation comment.
      */
     interface Named {
         String name();
+
+        default String documentation() {
+            return null;
+        }
 
         static boolean isNamed(Object o) {
             return o instanceof Named;
