@@ -49,22 +49,20 @@ public class EcoreHelper {
 
     /**
      * Attaches a documentation comment to the given object. A blank comment
-     * clears any existing one. Has no effect on a model instance whose
+     * clears any existing one. Fails if the target is a model instance whose
      * metamodel does not declare a {@code @Meta.Documentation} attribute.
      *
      * @see #getDocumentation
      */
     public static void setDocumentation(EObject undocumented, String newComment) {
-        if (undocumented == null) {
-            return;
-        }
         if (undocumented instanceof EModelElement) {
             EcoreUtil.setDocumentation((EModelElement) undocumented, StringUtils.trimToNull(newComment));
             return;
         }
         var feature = MetaEcoreHelper.getDocumentationAttribute(undocumented.eClass());
         if (feature == null) {
-            return;
+            throw new IllegalArgumentException(
+                    "No @Meta.Documentation attribute in '" + undocumented.eClass().getName() + "'");
         }
         undocumented.eSet(feature, wrappedPrimitiveValue((EClass) feature.getEType(), newComment));
     }
