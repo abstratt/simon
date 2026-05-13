@@ -2,23 +2,13 @@ package com.abstratt.simon.compiler.backend.ecore.impl;
 
 import java.util.List;
 
+import com.abstratt.simon.compiler.backend.*;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 
-import com.abstratt.simon.compiler.backend.Backend;
-import com.abstratt.simon.compiler.backend.Declaration;
-import com.abstratt.simon.compiler.backend.Instantiation;
-import com.abstratt.simon.compiler.backend.Linking;
-import com.abstratt.simon.compiler.backend.MetamodelException;
-import com.abstratt.simon.compiler.backend.NameQuerying;
-import com.abstratt.simon.compiler.backend.NameResolution;
-import com.abstratt.simon.compiler.backend.NameSetting;
-import com.abstratt.simon.compiler.backend.Operation;
-import com.abstratt.simon.compiler.backend.Parenting;
-import com.abstratt.simon.compiler.backend.ValueSetting;
 import com.abstratt.simon.compiler.backend.ecore.EObjectTraversalProvider;
 import com.abstratt.simon.genutils.Traversal;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreObjectType;
@@ -69,6 +59,11 @@ public class EcoreModelBuilder implements Backend<EcoreObjectType, EcoreSlotted<
     }
 
     @Override
+    public Documenting<EObject> documenting() {
+        return this::setDocumentation;
+    }
+
+    @Override
     public NameQuerying<EObject> nameQuerying() {
         return this::getName;
     }
@@ -113,6 +108,12 @@ public class EcoreModelBuilder implements Backend<EcoreObjectType, EcoreSlotted<
 
     private void setName(EObject unnamed, String newName) {
         EcoreHelper.setName(unnamed, newName);
+    }
+
+    private void setDocumentation(EObject undocumented, String newDocumentation) {
+        //TODO-RC this does not work, we need to set a purposed property on eobjects if
+        // their type allows (`Named` should change to support documentation)
+        EcoreHelper.setDocumentation(undocumented, newDocumentation);
     }
 
     private String getName(EObject named) {

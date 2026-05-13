@@ -426,10 +426,10 @@ public class CompilerTests {
                 (* after namespace *)
         """;
         var namespace = compileUsingIM(toParse);
-        assertEquals("model comment before namespace", EcoreHelper.getModelComment(namespace).orElse(null));
+        assertEquals("model comment before namespace", EcoreHelper.getDocumentation(namespace).orElse(null));
         List<EObject> entities = getValue(namespace, "entities");
         assertEquals(1, entities.size());
-        assertEquals("before entity", EcoreHelper.getModelComment(entities.get(0)).orElse(null));
+        assertEquals("before entity", EcoreHelper.getDocumentation(entities.get(0)).orElse(null));
     }
 
     @Test

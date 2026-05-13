@@ -5,6 +5,8 @@ import com.abstratt.simon.metamodel.Metamodel;
 public interface Backend<O extends Metamodel.ObjectType, S extends Metamodel.Slotted, M> {
     NameSetting<M> nameSetting();
 
+    Documenting<M> documenting();
+
     NameQuerying<M> nameQuerying();
 
     NameResolution<M> nameResolution();

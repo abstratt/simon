@@ -3,7 +3,6 @@ package com.abstratt.simon.compiler.antlr.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,6 +12,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import com.abstratt.simon.parser.antlr.SimonParser.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.StringUtils;
@@ -41,20 +41,6 @@ import com.abstratt.simon.metamodel.Metamodel.Slotted;
 import com.abstratt.simon.metamodel.Metamodel.Type;
 import com.abstratt.simon.parser.antlr.SimonBaseListener;
 import com.abstratt.simon.parser.antlr.SimonParser;
-import com.abstratt.simon.parser.antlr.SimonParser.ChildObjectContext;
-import com.abstratt.simon.parser.antlr.SimonParser.ComponentContext;
-import com.abstratt.simon.parser.antlr.SimonParser.FeatureNameContext;
-import com.abstratt.simon.parser.antlr.SimonParser.LanguageDeclarationContext;
-import com.abstratt.simon.parser.antlr.SimonParser.LinkContext;
-import com.abstratt.simon.parser.antlr.SimonParser.ModifierContext;
-import com.abstratt.simon.parser.antlr.SimonParser.ObjectClassContext;
-import com.abstratt.simon.parser.antlr.SimonParser.ObjectHeaderContext;
-import com.abstratt.simon.parser.antlr.SimonParser.PropertiesContext;
-import com.abstratt.simon.parser.antlr.SimonParser.RecordLiteralContext;
-import com.abstratt.simon.parser.antlr.SimonParser.RootObjectContext;
-import com.abstratt.simon.parser.antlr.SimonParser.SimpleIdentifierContext;
-import com.abstratt.simon.parser.antlr.SimonParser.SlotContext;
-import com.abstratt.simon.parser.antlr.SimonParser.SlotValueContext;
 
 class SimonBuilder<T> extends SimonBaseListener {
 
@@ -65,11 +51,13 @@ class SimonBuilder<T> extends SimonBaseListener {
         /** The type of the object. */
         private final Slotted type;
         private List<ModifierContext> modifiers;
+        private final List<ModelCommentContext> modelComments;
 
-        public ElementInfo(String sourceName, T object, Slotted type, List<ModifierContext> modifiers) {
+        public ElementInfo(String sourceName, T object, Slotted type, List<ModifierContext> modifiers, List<ModelCommentContext> modelComments) {
             this.object = object;
             this.type = type;
             this.modifiers = modifiers;
+            this.modelComments = modelComments;
         }
 
         public Slotted getType() {
@@ -95,6 +83,9 @@ class SimonBuilder<T> extends SimonBaseListener {
         public List<ModifierContext> getModifiers() {
 			return modifiers;
 		}
+        public List<ModelCommentContext> getModelComments() {
+            return modelComments;
+        }
     }
 
     private final Problem.Handler problemHandler;
@@ -108,6 +99,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     private final List<ResolutionRequest> resolutionRequests = new LinkedList<>();
     private final List<String> imports = new ArrayList<>();
     private final List<ModifierContext> availableModifiers = new ArrayList<>();
+    private final List<ModelCommentContext> availableDocumentations = new ArrayList<>();
     private Set<String> languages;
     private String sourceName;
 
@@ -365,16 +357,36 @@ class SimonBuilder<T> extends SimonBaseListener {
     	return snapshot; 
     }
 
-    @Override
-    public void exitEveryRule(ParserRuleContext ctx) {
-    	currentScope().ifPresent(info -> applyModifiers(ctx, info));
+    private List<ModelCommentContext> consumeModelComments() {
+        var snapshot = new ArrayList<>(this.availableDocumentations);
+        availableDocumentations.clear();
+        return snapshot;
     }
 
-	private void applyModifiers(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info) {
-		T target = info.getObject();
-		var modifiers = info.getModifiers();
-		modifiers.forEach(it -> applyModifier(ctx, info, it));
+    @Override
+    public void exitEveryRule(ParserRuleContext ctx) {
+    	currentScope().ifPresent(info -> {
+            applyModelComments(ctx, info);
+            applyModifiers(ctx, info);
+        });
+    }
+
+	private void applyModelComments(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info) {
+		var modelComments = info.getModelComments();
+        modelComments.forEach(it -> applyModelComment(info, it));
 	}
+
+    private void applyModelComment(ElementInfo info, ModelCommentContext it) {
+        T object = info.getObject();
+        String textWithDelimiters = it.getText();
+        String text = textWithDelimiters.substring(3, textWithDelimiters.length() - 3);
+        modelHandling.documenting().document(object, text);
+    }
+
+    private void applyModifiers(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info) {
+        var modifiers = info.getModifiers();
+        modifiers.forEach(it -> applyModifier(ctx, info, it));
+    }
 	
 	private void applyModifier(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info, ModifierContext modifier) {
 		FeatureNameProvider<ModifierContext, SimpleIdentifierContext> featureNameProvider = ModifierContext::simpleIdentifier;
@@ -416,6 +428,11 @@ class SimonBuilder<T> extends SimonBaseListener {
     @Override
     public void exitModifier(ModifierContext ctx) {
     	availableModifiers.add(ctx);
+    }
+
+    @Override
+    public void exitModelComment(ModelCommentContext ctx) {
+        availableDocumentations.add(ctx);
     }
 
     @Override
@@ -522,7 +539,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private void newScope(Slotted type, T created) {
-        ElementInfo newInfo = new ElementInfo(sourceName, created, type, consumeModifiers());
+        ElementInfo newInfo = new ElementInfo(sourceName, created, type, consumeModifiers(), consumeModelComments());
         String name = modelHandling.nameQuerying().getName(newInfo.getObject());
         currentScope.push(debug("Pushing (" + currentScope.size() + ")" + name, newInfo));
     }
