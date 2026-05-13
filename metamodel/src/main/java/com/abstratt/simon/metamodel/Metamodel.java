@@ -157,7 +157,13 @@ public interface Metamodel {
      * A slot is a feature that can hold a basic value.
      */
     interface Slot extends Feature<BasicType> {
-
+        /**
+         * Whether this slot is settable via the {@code [identifier]} modifier
+         * syntax in an object header.
+         */
+        default boolean isModifier() {
+            return false;
+        }
     }
 
     /**

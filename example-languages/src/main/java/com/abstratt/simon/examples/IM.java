@@ -61,9 +61,11 @@ public interface IM {
         Collection<Parameter> parameters();
 
         @Meta.Attribute
+        @Meta.Modifier
         public Operation.OperationKind kind();
 
         @Meta.Attribute
+        @Meta.Modifier
         public boolean public_();
     }
 
@@ -102,6 +104,7 @@ public interface IM {
         Namespace namespace();
         
         @Meta.Attribute
+        @Meta.Modifier
         boolean abstract_();
     }
 

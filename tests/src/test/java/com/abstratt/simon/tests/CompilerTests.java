@@ -457,7 +457,7 @@ public class CompilerTests {
     }
 
     @Test
-    void annotations() {
+    void booleanModifier() {
         var toParse = """
                 @language IM
                 @import 'im'
@@ -474,9 +474,53 @@ public class CompilerTests {
         assertEquals("Product", getPrimitiveValue(productEntity, "name"));
         var abstract_ = getValue(productEntity, "abstract");
         assertNotNull(abstract_);
-        assertTrue((boolean) getPrimitiveValue(productEntity, "abstract")); 
+        assertTrue((boolean) getPrimitiveValue(productEntity, "abstract"));
     }
 
+    @Test
+    void enumModifier() {
+        var namespace = compileUsingIM("""
+                @language IM
+                @import 'im'
+                namespace {
+                    entities {
+                        entity Order {
+                            operations {
+                                [action] operation send
+                            }
+                        }
+                    }
+                }""");
+        List<EObject> entities = getValue(namespace, "entities");
+        List<EObject> operations = getValue(entities.get(0), "operations");
+        EObject operation = operations.get(0);
+        org.eclipse.emf.ecore.EEnumLiteral kind = getValue(operation, "kind");
+        assertNotNull(kind);
+        assertEquals("Action", kind.getName());
+    }
+
+    @Test
+    void mixedModifiers() {
+        var namespace = compileUsingIM("""
+                @language IM
+                @import 'im'
+                namespace {
+                    entities {
+                        entity Order {
+                            operations {
+                                [action] [public] operation send
+                            }
+                        }
+                    }
+                }""");
+        List<EObject> entities = getValue(namespace, "entities");
+        List<EObject> operations = getValue(entities.get(0), "operations");
+        EObject operation = operations.get(0);
+        org.eclipse.emf.ecore.EEnumLiteral kind = getValue(operation, "kind");
+        assertNotNull(kind);
+        assertEquals("Action", kind.getName());
+        assertTrue((boolean) getPrimitiveValue(operation, "public"));
+    }
 
     @Test
     void recordSlot() {

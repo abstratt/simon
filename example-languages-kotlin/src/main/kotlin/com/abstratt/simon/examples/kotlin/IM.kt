@@ -53,9 +53,11 @@ interface IM {
         fun parameters(): Collection<Parameter>
 
         @Meta.Attribute
+        @Meta.Modifier
         fun kind(): OperationKind
 
         @Meta.Attribute
+        @Meta.Modifier
         fun public_(): Boolean
     }
 
@@ -93,6 +95,7 @@ interface IM {
         fun namespace(): Namespace
 
         @Meta.Attribute
+        @Meta.Modifier
         fun abstract_(): Boolean
     }
 

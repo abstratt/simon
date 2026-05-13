@@ -66,6 +66,7 @@ public interface MetaEcoreHelper {
     String PRIMITIVE_VALUE_FEATURE = "__value__";
     String NAME_FEATURE = "name";
     String DOCUMENTATION_FEATURE = "documentation";
+    String MODIFIER_FEATURE = "modifier";
 
     static void makeRootComposite(EClass eClass) {
         EcoreUtil.setAnnotation(eClass, MetaEcoreHelper.SIMON_ANNOTATION, MetaEcoreHelper.ROOT_COMPOSITE_VALUE,
@@ -245,6 +246,14 @@ public interface MetaEcoreHelper {
 
     static void markAsDocumentation(EAttribute attribute) {
         EcoreUtil.setAnnotation(attribute, SIMON_ANNOTATION, DOCUMENTATION_FEATURE, Boolean.toString(true));
+    }
+
+    static void markAsModifier(EAttribute attribute) {
+        EcoreUtil.setAnnotation(attribute, SIMON_ANNOTATION, MODIFIER_FEATURE, Boolean.toString(true));
+    }
+
+    static boolean isModifier(EAttribute attribute) {
+        return Boolean.TRUE.toString().equals(getAnnotation(attribute, MODIFIER_FEATURE));
     }
 
     static EAttribute getDocumentationAttribute(EClass eClass) {

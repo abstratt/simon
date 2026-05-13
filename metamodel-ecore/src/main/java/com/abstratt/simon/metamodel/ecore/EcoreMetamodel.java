@@ -144,6 +144,11 @@ public interface EcoreMetamodel extends Metamodel {
         public EcoreSlot(EAttribute wrapped) {
             super(wrapped);
         }
+
+        @Override
+        public boolean isModifier() {
+            return MetaEcoreHelper.isModifier(wrapped());
+        }
     }
 
     class EcoreObjectType extends EcoreSlotted<EClass> implements Metamodel.ObjectType {

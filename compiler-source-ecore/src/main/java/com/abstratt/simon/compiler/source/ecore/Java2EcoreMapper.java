@@ -433,6 +433,9 @@ public class Java2EcoreMapper {
         if (accessor.isAnnotationPresent(Meta.Documentation.class)) {
             MetaEcoreHelper.markAsDocumentation(eAttribute);
         }
+        if (accessor.isAnnotationPresent(Meta.Modifier.class)) {
+            MetaEcoreHelper.markAsModifier(eAttribute);
+        }
         buildIfNeeded(MetaEcoreHelper.getType(accessor), mappingSession, debug(
                 "Setting type of attribute " + eAttribute.getName(), setAttributeType(mappingSession, eAttribute)));
         return eAttribute;

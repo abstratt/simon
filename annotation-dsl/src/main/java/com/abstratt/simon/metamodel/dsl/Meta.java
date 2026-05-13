@@ -59,6 +59,19 @@ public @interface Meta {
     @interface Attribute {
     }
 
+    /**
+     * Marks an {@link Attribute} as available as a modifier — settable via the
+     * {@code [identifier]} syntax in an object header. Eligible attribute
+     * types are {@code boolean} (the identifier matches the feature name and
+     * sets it to {@code true}) and Java {@code enum} (the identifier matches
+     * one of the enum's literal names and sets the feature to that literal).
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    @Inherited
+    @interface Modifier {
+    }
+
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     @Inherited

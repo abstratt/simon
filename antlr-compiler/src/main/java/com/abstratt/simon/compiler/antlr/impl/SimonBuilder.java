@@ -393,12 +393,38 @@ class SimonBuilder<T> extends SimonBaseListener {
         var modifiers = info.getModifiers();
         modifiers.forEach(it -> applyModifier(ctx, info, it));
     }
-	
-	private void applyModifier(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info, ModifierContext modifier) {
-		FeatureNameProvider<ModifierContext, SimpleIdentifierContext> featureNameProvider = ModifierContext::simpleIdentifier;
-		SlotValueBuilder<ModifierContext> valueBuilder = this::buildModifierValue;
-    	parseSlotValue(modifier, info.getType(), featureNameProvider, valueBuilder, (Slot slot, Object value) -> modelHandling.valueSetting().setValue(slot, info.getObject(), value));
-	}
+
+    private void applyModifier(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info, ModifierContext modifier) {
+        String identifier = modifier.simpleIdentifier().getText();
+        Slotted owner = info.getType();
+        for (Slot slot : owner.slots()) {
+            if (!slot.isModifier()) {
+                continue;
+            }
+            BasicType slotType = slot.type();
+            if (slotType instanceof Primitive && ((Primitive) slotType).kind() == PrimitiveKind.Boolean
+                    && slot.name().equals(identifier)) {
+                modelHandling.valueSetting().setValue(slot, info.getObject(), Boolean.TRUE);
+                return;
+            }
+            if (slotType instanceof Enumerated) {
+                Enumerated asEnumerated = (Enumerated) slotType;
+                Object literal = asEnumerated.valueForName(identifier);
+                if (literal == null && !identifier.isEmpty()) {
+                    literal = asEnumerated.valueForName(
+                            Character.toUpperCase(identifier.charAt(0)) + identifier.substring(1));
+                }
+                if (literal != null) {
+                    modelHandling.valueSetting().setValue(slot, info.getObject(), literal);
+                    return;
+                }
+            }
+        }
+        List<String> available = owner.slots().stream().filter(Slot::isModifier).map(Slot::name)
+                .collect(Collectors.toList());
+        throw new CompilerException("Unknown modifier '" + identifier + "' on type " + owner.name()
+                + " - modifier-eligible slots: " + available);
+    }
 
 
 	@Override
@@ -520,18 +546,6 @@ class SimonBuilder<T> extends SimonBaseListener {
             slotValue = parseRecordLiteral(slotTypeAsRecordType, slotValueContext.literal().recordLiteral());
         } else {
             throw new IllegalStateException("Unsupported basic type: " + slotType.name());
-        }
-        return slotValue;
-	}
-	
-	private Object buildModifierValue(ModifierContext ctx, BasicType slotType) {
-		Object slotValue;
-		if (slotType instanceof Primitive && ((Primitive) slotType).kind() == PrimitiveKind.Boolean) {
-			slotValue = true;
-        } else if (slotType instanceof Enumerated) {
-            slotValue = parseEnumeratedLiteral((Enumerated) slotType, ctx.simpleIdentifier().getText());
-        } else {
-        	throw new IllegalStateException("Unsupported basic type for a modifier: " + slotType.name() + " (only booleans/enums allowed)");
         }
         return slotValue;
 	}
