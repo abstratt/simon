@@ -8,7 +8,7 @@ public class Problem {
 
     public enum Category {
         Unspecified, Internal, MissingElement, SyntaxError, UnresolvedName, UnknownElement, AbstractElement,
-        MissingFeature, ElementAdmitsNoFeatures, TypeError
+        MissingFeature, ElementAdmitsNoFeatures, TypeError, MisplacedModelComment
     }
 
     private final Category category;

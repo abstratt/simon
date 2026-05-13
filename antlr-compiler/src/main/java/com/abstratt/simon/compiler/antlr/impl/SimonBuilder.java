@@ -99,7 +99,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     private final List<ResolutionRequest> resolutionRequests = new LinkedList<>();
     private final List<String> imports = new ArrayList<>();
     private final List<ModifierContext> availableModifiers = new ArrayList<>();
-    private final List<ModelCommentContext> availableDocumentations = new ArrayList<>();
+    private final Deque<List<ModelCommentContext>> pendingDocumentations = new LinkedList<>();
     private Set<String> languages;
     private String sourceName;
 
@@ -168,10 +168,12 @@ class SimonBuilder<T> extends SimonBaseListener {
         this.currentScope.clear();
         this.sourceName = sourceName;
         this.languages = new LinkedHashSet<>();
+        this.pendingDocumentations.push(new ArrayList<>());
     }
 
     public void endSource(String sourceName) {
         assert sourceName.equals(this.sourceName);
+        reportMisplacedComments(pendingDocumentations.pop());
         this.sourceName = null;
         this.languages = null;
     }
@@ -358,8 +360,12 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private List<ModelCommentContext> consumeModelComments() {
-        var snapshot = new ArrayList<>(this.availableDocumentations);
-        availableDocumentations.clear();
+        var top = pendingDocumentations.peek();
+        if (top == null) {
+            return Collections.emptyList();
+        }
+        var snapshot = new ArrayList<>(top);
+        top.clear();
         return snapshot;
     }
 
@@ -432,7 +438,37 @@ class SimonBuilder<T> extends SimonBaseListener {
 
     @Override
     public void exitModelComment(ModelCommentContext ctx) {
-        availableDocumentations.add(ctx);
+        var top = pendingDocumentations.peek();
+        if (top != null) {
+            top.add(ctx);
+        }
+    }
+
+    @Override
+    public void enterComponents(ComponentsContext ctx) {
+        pendingDocumentations.push(new ArrayList<>());
+    }
+
+    @Override
+    public void exitComponents(ComponentsContext ctx) {
+        reportMisplacedComments(pendingDocumentations.pop());
+    }
+
+    @Override
+    public void enterChildObjects(ChildObjectsContext ctx) {
+        pendingDocumentations.push(new ArrayList<>());
+    }
+
+    @Override
+    public void exitChildObjects(ChildObjectsContext ctx) {
+        reportMisplacedComments(pendingDocumentations.pop());
+    }
+
+    private void reportMisplacedComments(List<ModelCommentContext> leftover) {
+        for (ModelCommentContext orphan : leftover) {
+            reportError(Severity.Error, Category.MisplacedModelComment, sourceName, orphan,
+                    "Model comment is not attached to any object");
+        }
     }
 
     @Override

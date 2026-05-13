@@ -409,23 +409,19 @@ public class CompilerTests {
 
     @Test
     void documentation() {
-        // Documentation should support (* ... *).
+        // Documentation should support (* ... *) immediately before an object header.
         var toParse = """
                 @language IM
                 @import 'im'
                 (* model comment before namespace *)
-                namespace { (* inside namespace header should not be visible  *)
-                    (* before entities block should not be visible *)
+                namespace {
                     entities {
                         (* before entity *)
                         Entity Customer
                         (* before another entity *)
                         Entity Product
-                        (* after entity should not be visible *)
                     }
-                    (* after entities block should not be visible *)
                 }
-                (* after namespace should not be visible *)
         """;
         var namespace = compileUsingIM(toParse);
         assertEquals("model comment before namespace", EcoreHelper.getDocumentation(namespace).orElse(null));
@@ -433,6 +429,31 @@ public class CompilerTests {
         assertEquals(2, entities.size());
         assertEquals("before entity", EcoreHelper.getDocumentation(entities.get(0)).orElse(null));
         assertEquals("before another entity", EcoreHelper.getDocumentation(entities.get(1)).orElse(null));
+    }
+
+    @Test
+    void misplacedModelComments() {
+        // Each (* ... *) that does not immediately precede an object header should be flagged.
+        var toParse = """
+                @language IM
+                @import 'im'
+                namespace { (* inside namespace header *)
+                    (* between entities components *)
+                    entities {
+                        Entity Customer
+                        (* trailing in childObjects *)
+                    }
+                    (* after entities block *)
+                }
+                (* trailing root *)
+        """;
+        var results = compileProject(IM_PACKAGE, toParse);
+        var problems = results.get(0).getProblems();
+        assertEquals(5, problems.size(), problems::toString);
+        for (var problem : problems) {
+            assertEquals(Problem.Severity.Error, problem.severity(), problem::toString);
+            assertEquals(Problem.Category.MisplacedModelComment, problem.category(), problem::toString);
+        }
     }
 
     @Test
