@@ -25,8 +25,6 @@ public interface Metamodel {
      */
     interface Named {
         String name();
-
-        String documentation();
     }
 
     /**

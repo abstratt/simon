@@ -1,6 +1,7 @@
 package com.abstratt.simon.compiler.backend.ecore.impl;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.abstratt.simon.compiler.backend.*;
 import org.eclipse.emf.ecore.EAttribute;
@@ -100,10 +101,16 @@ public class EcoreModelBuilder implements Backend<EcoreObjectType, EcoreSlotted<
     }
 
     private EObject resolve(EObject scope, String... path) {
-        EAttribute nameAttribute = EcoreHelper.findNameAttributeInHierarchy(scope);
+        EAttribute nameAttribute = findNameAttributeInHierarchy(scope);
         Traversal<EObject> search = EObjectTraversalProvider.INSTANCE.search(nameAttribute, path);
         var resolved = search.hop(scope);
         return resolved;
+    }
+
+    private static EAttribute findNameAttributeInHierarchy(EObject scope) {
+        return EcoreHelper.hierarchy(scope).map(e -> MetaEcoreHelper.getNameAttribute(e.eClass()))
+                .filter(Objects::nonNull).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No name attribute found in composition structure"));
     }
 
     private void setName(EObject unnamed, String newName) {
@@ -115,16 +122,7 @@ public class EcoreModelBuilder implements Backend<EcoreObjectType, EcoreSlotted<
     }
 
     private String getName(EObject named) {
-        var nameProperty = MetaEcoreHelper.getNameAttribute(named);
-        if (nameProperty == null) {
-            return null;
-        }
-        var nameValue = named.eGet(nameProperty);
-        if (!(nameValue instanceof EObject))
-            return (String) nameValue;
-        var nameAsValue = (EObject) nameValue;
-        var valueFeature = MetaEcoreHelper.getValueFeature(nameAsValue.eClass());
-        return (String) nameAsValue.eGet(valueFeature);
+        return EcoreHelper.getName(named);
     }
 
     private void link(EcoreRelationship reference, EObject referrer, EObject referred) {

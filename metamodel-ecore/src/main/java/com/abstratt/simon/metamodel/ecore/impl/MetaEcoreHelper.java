@@ -24,6 +24,39 @@ import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
 import com.abstratt.simon.metamodel.dsl.Meta;
 import com.abstratt.simon.metamodel.dsl.Meta.Type;
 
+/**
+ * Simon's conventions layered on top of Ecore: the mapping between the
+ * {@link Meta @Meta.*} annotation DSL, marker
+ * {@link org.eclipse.emf.ecore.EAnnotation}s, and the roles features and
+ * classifiers can play.
+ *
+ * <p>Owns the {@value #SIMON_ANNOTATION} annotation source and the tag
+ * vocabulary stored under it ({@value #ROOT_COMPOSITE_VALUE}, {@link #NAME_FEATURE},
+ * {@link #DOCUMENTATION_FEATURE}, etc.), as well as the {@value #PRIMITIVE_VALUE_FEATURE}
+ * convention used to back wrapped primitive values.
+ *
+ * <p>Members fall into four groups:
+ * <ul>
+ *   <li><b>Predicates</b> over Java classes and Ecore classifiers —
+ *       {@link #isPackage}, {@link #isObjectType}, {@link #isPrimitive},
+ *       {@link #isRecord}, {@link #isRootComposite}, {@link #isNamed}.</li>
+ *   <li><b>Marker writers</b> used during metamodel construction —
+ *       {@link #makeRootComposite}, {@link #makeRecordType},
+ *       {@link #makePrimitiveType}, {@link #markAsName},
+ *       {@link #markAsDocumentation}.</li>
+ *   <li><b>Role lookups</b> that find the structural feature playing a
+ *       given role on an {@link EClass} —
+ *       {@link #getNameAttribute}, {@link #getDocumentationAttribute},
+ *       {@link #getValueFeature}.</li>
+ *   <li><b>Java-to-Ecore primitive bridging</b> —
+ *       {@link #getPrimitiveKind}, {@link #getPrimitiveEType},
+ *       {@link #getPrimitiveETypeOrNull}.</li>
+ * </ul>
+ *
+ * <p>Inputs are typically metamodel-layer entities: an {@link EClass},
+ * an {@link EAttribute}, or a Java {@code Class<?>} authored with the
+ * {@code @Meta} DSL. Per-instance state of model objects is out of scope.
+ */
 public interface MetaEcoreHelper {
     String ROOT_COMPOSITE_VALUE = "rootComposite";
     String PRIMITIVE_TYPE_KIND = "kind";

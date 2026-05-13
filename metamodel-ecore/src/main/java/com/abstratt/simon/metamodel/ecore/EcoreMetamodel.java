@@ -66,11 +66,6 @@ public interface EcoreMetamodel extends Metamodel {
         public N wrapped() {
             return wrapped;
         }
-
-        @Override
-        public String documentation() {
-            return EcoreHelper.getDocumentation(wrapped).orElse(null);
-        }
     }
 
     abstract class EcoreType<EC extends EClassifier> extends EcoreNamed<EC> implements Metamodel.Type {

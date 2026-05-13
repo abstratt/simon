@@ -14,15 +14,32 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
-import org.eclipse.emf.ecore.EModelElement;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 
-public class EcoreHelper {
-    private static final EObject NONE = EcoreFactory.eINSTANCE.createEObject();
+/**
+ * Read, write, and navigation operations on Ecore objects, expressed in
+ * terms of Simon's conventions.
+ *
+ * <p>Operates mostly on {@link EObject} model instances: extracting and
+ * setting per-instance state ({@link #getName}, {@link #setName},
+ * {@link #getDocumentation}, {@link #setDocumentation}, {@link #getValue},
+ * {@link #getValueAsStream}, {@link #getUnwrappedValue}), and walking
+ * model trees via containment and attribute-based lookup
+ * ({@link #tree}, {@link #hierarchy}, {@link #findChildByAttributeValue},
+ * {@link #findByFeature}). A few helpers also navigate metamodel-layer
+ * structure: {@link #findStructuralFeature}, {@link #findClassifierByName},
+ * {@link #findFeatureInHierarchy}.
+ *
+ * <p>Simon stores primitive values as wrapped {@link EObject}s, so reads
+ * and writes that cross the wrapping boundary go through
+ * {@link #wrappedPrimitiveValue} and {@link #unwrappedPrimitiveValue}.
+ */
+public interface EcoreHelper {
+    EObject NONE = EcoreFactory.eINSTANCE.createEObject();
 
     /**
      * Returns the documentation comment associated with the given object, if any.
@@ -33,10 +50,6 @@ public class EcoreHelper {
     public static Optional<String> getDocumentation(EObject eObject) {
         if (eObject == null) {
             return Optional.empty();
-        }
-        if (eObject instanceof EModelElement) {
-            // Metamodel-level documentation lives in an EAnnotation on the element.
-            return Optional.ofNullable(StringUtils.trimToNull(EcoreUtil.getDocumentation((EModelElement) eObject)));
         }
         var feature = MetaEcoreHelper.getDocumentationAttribute(eObject.eClass());
         if (feature == null) {
@@ -55,10 +68,6 @@ public class EcoreHelper {
      * @see #getDocumentation
      */
     public static void setDocumentation(EObject undocumented, String newComment) {
-        if (undocumented instanceof EModelElement) {
-            EcoreUtil.setDocumentation((EModelElement) undocumented, StringUtils.trimToNull(newComment));
-            return;
-        }
         var feature = MetaEcoreHelper.getDocumentationAttribute(undocumented.eClass());
         if (feature == null) {
             throw new IllegalArgumentException(
@@ -90,15 +99,22 @@ public class EcoreHelper {
     }
 
     public static void setName(EObject named, String name) {
-        // System.out.println("Setting name of a " + named.eClass().getName() + " to " +
-        // name);
-        // TODO-RC what to do about objects that do not support naming? Is it supported
-        // across the board?
         var nameProperty = MetaEcoreHelper.getNameAttribute(named);
         if (nameProperty == null) {
-            throw new IllegalArgumentException("No 'name' feature in '" + named.eClass().getName());
+            throw new IllegalArgumentException(
+                    "No @Meta.Name attribute in '" + named.eClass().getName() + "'");
         }
         named.eSet(nameProperty, wrappedPrimitiveValue((EClass) nameProperty.getEType(), name));
+    }
+
+    public static String getName(EObject named) {
+        var nameProperty = MetaEcoreHelper.getNameAttribute(named);
+        if (nameProperty == null) {
+            return null;
+        }
+        var raw = named.eGet(nameProperty);
+        var unwrapped = raw instanceof EObject ? unwrappedPrimitiveValue((EObject) raw) : raw;
+        return (String) unwrapped;
     }
 
     public static EObject wrappedPrimitiveValue(EClass eClass, Object value) {
@@ -184,12 +200,6 @@ public class EcoreHelper {
         return (F) EcoreHelper.hierarchy(scope).map(e -> EcoreHelper.findStructuralFeature(e, featureName))
                 .filter(Objects::nonNull).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No '" + featureName + "' feature found in composition structure"));
-    }
-
-    public static EAttribute findNameAttributeInHierarchy(EObject scope) {
-        return EcoreHelper.hierarchy(scope).map(e -> MetaEcoreHelper.getNameAttribute(e.eClass()))
-                .filter(Objects::nonNull).findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No name attribute found in composition structure"));
     }
 
     public static Stream<EObject> tree(EObject start) {
