@@ -408,28 +408,31 @@ public class CompilerTests {
     }
 
     @Test
-    void modelComments() {
-        // Model comments should support (* ... *). Keep this test focused only on model comments.
+    void documentation() {
+        // Documentation should support (* ... *).
         var toParse = """
                 @language IM
                 @import 'im'
                 (* model comment before namespace *)
-                namespace { (* inside namespace header *)
-                    (* before entities block *)
+                namespace { (* inside namespace header should not be visible  *)
+                    (* before entities block should not be visible *)
                     entities {
                         (* before entity *)
                         Entity Customer
-                        (* after entity *)
+                        (* before another entity *)
+                        Entity Product
+                        (* after entity should not be visible *)
                     }
-                    (* after entities block *)
+                    (* after entities block should not be visible *)
                 }
-                (* after namespace *)
+                (* after namespace should not be visible *)
         """;
         var namespace = compileUsingIM(toParse);
         assertEquals("model comment before namespace", EcoreHelper.getDocumentation(namespace).orElse(null));
         List<EObject> entities = getValue(namespace, "entities");
-        assertEquals(1, entities.size());
+        assertEquals(2, entities.size());
         assertEquals("before entity", EcoreHelper.getDocumentation(entities.get(0)).orElse(null));
+        assertEquals("before another entity", EcoreHelper.getDocumentation(entities.get(1)).orElse(null));
     }
 
     @Test
