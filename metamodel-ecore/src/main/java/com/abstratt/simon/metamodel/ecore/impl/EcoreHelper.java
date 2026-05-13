@@ -26,18 +26,16 @@ public class EcoreHelper {
 
     /**
      * Returns the documentation comment associated with the given object, if any.
-     * For metamodel elements ({@link EModelElement}, e.g. {@code EClass}) the
-     * documentation is read via {@link EcoreUtil#getDocumentation}. For model
-     * instances it is read from the attribute marked as the documentation feature
-     * via {@link MetaEcoreHelper#getDocumentationAttribute} (when the metamodel
-     * declares one with {@code @Meta.Documentation}). Blank results are treated
-     * as absent.
+     * Documentation may be attached to metamodel elements directly, or to model
+     * instances whose metamodel opts in by declaring an attribute annotated with
+     * {@code @Meta.Documentation}. Blank results are treated as absent.
      */
     public static Optional<String> getDocumentation(EObject eObject) {
         if (eObject == null) {
             return Optional.empty();
         }
         if (eObject instanceof EModelElement) {
+            // Metamodel-level documentation lives in an EAnnotation on the element.
             return Optional.ofNullable(StringUtils.trimToNull(EcoreUtil.getDocumentation((EModelElement) eObject)));
         }
         var feature = MetaEcoreHelper.getDocumentationAttribute(eObject.eClass());
@@ -49,6 +47,13 @@ public class EcoreHelper {
         return Optional.ofNullable(StringUtils.trimToNull((String) unwrapped));
     }
 
+    /**
+     * Attaches a documentation comment to the given object. A blank comment
+     * clears any existing one. Has no effect on a model instance whose
+     * metamodel does not declare a {@code @Meta.Documentation} attribute.
+     *
+     * @see #getDocumentation
+     */
     public static void setDocumentation(EObject undocumented, String newComment) {
         if (undocumented == null) {
             return;
