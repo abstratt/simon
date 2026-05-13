@@ -3,6 +3,7 @@ package com.abstratt.simon.metamodel.ecore;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
@@ -66,6 +67,10 @@ public interface EcoreMetamodel extends Metamodel {
             return wrapped;
         }
 
+        @Override
+        public String documentation() {
+            return EcoreHelper.getDocumentation(wrapped).orElse(null);
+        }
     }
 
     abstract class EcoreType<EC extends EClassifier> extends EcoreNamed<EC> implements Metamodel.Type {

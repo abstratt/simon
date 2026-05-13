@@ -13,6 +13,10 @@ public interface UI {
         @Meta.Name
         @Meta.Attribute
         String name();
+
+        @Meta.Required(false)
+        @Meta.Attribute
+        String documentation();
     }
 
     interface Labeled {
@@ -22,10 +26,16 @@ public interface UI {
 
     abstract class BaseNamed implements Named {
         private String name;
+        private String documentation;
 
         @Override
         public String name() {
             return name;
+        }
+
+        @Override
+        public String documentation() {
+            return documentation;
         }
     }
 

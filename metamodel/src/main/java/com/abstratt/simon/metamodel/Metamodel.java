@@ -26,13 +26,7 @@ public interface Metamodel {
     interface Named {
         String name();
 
-        default String documentation() {
-            return null;
-        }
-
-        static boolean isNamed(Object o) {
-            return o instanceof Named;
-        }
+        String documentation();
     }
 
     /**

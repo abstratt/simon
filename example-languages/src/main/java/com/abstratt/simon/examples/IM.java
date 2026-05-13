@@ -21,6 +21,9 @@ public interface IM {
         @Meta.Name
         @Meta.Attribute
         String name();
+
+        @Meta.Attribute
+        String documentation();
     }
 
     @Meta.Composite(root = true)
