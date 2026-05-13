@@ -427,6 +427,9 @@ public class Java2EcoreMapper {
         var eAttribute = EcoreFactory.eINSTANCE.createEAttribute();
         eAttribute.setName(toEcoreFeatureName(accessor));
         markOptional(accessor, eAttribute);
+        if (accessor.isAnnotationPresent(Meta.Documentation.class)) {
+            MetaEcoreHelper.markAsDocumentation(eAttribute);
+        }
         buildIfNeeded(MetaEcoreHelper.getType(accessor), mappingSession, debug(
                 "Setting type of attribute " + eAttribute.getName(), setAttributeType(mappingSession, eAttribute)));
         return eAttribute;

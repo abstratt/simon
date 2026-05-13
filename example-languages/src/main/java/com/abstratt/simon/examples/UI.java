@@ -15,6 +15,7 @@ public interface UI {
         String name();
 
         @Meta.Required(false)
+        @Meta.Documentation
         @Meta.Attribute
         String documentation();
     }

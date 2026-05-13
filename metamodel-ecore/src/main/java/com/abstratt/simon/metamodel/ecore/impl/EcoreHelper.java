@@ -27,10 +27,11 @@ public class EcoreHelper {
     /**
      * Returns the documentation comment associated with the given object, if any.
      * For metamodel elements ({@link EModelElement}, e.g. {@code EClass}) the
-     * documentation is read via {@link EcoreUtil#getDocumentation}. For runtime
-     * model instances it is read from a {@code "documentation"} structural feature
-     * on the instance's {@code EClass} (when present), mirroring how {@code name}
-     * is handled. Blank results are treated as absent.
+     * documentation is read via {@link EcoreUtil#getDocumentation}. For model
+     * instances it is read from the attribute marked as the documentation feature
+     * via {@link MetaEcoreHelper#getDocumentationAttribute} (when the metamodel
+     * declares one with {@code @Meta.Documentation}). Blank results are treated
+     * as absent.
      */
     public static Optional<String> getDocumentation(EObject eObject) {
         if (eObject == null) {
@@ -39,7 +40,7 @@ public class EcoreHelper {
         if (eObject instanceof EModelElement) {
             return Optional.ofNullable(StringUtils.trimToNull(EcoreUtil.getDocumentation((EModelElement) eObject)));
         }
-        var feature = eObject.eClass().getEStructuralFeature("documentation");
+        var feature = MetaEcoreHelper.getDocumentationAttribute(eObject.eClass());
         if (feature == null) {
             return Optional.empty();
         }
@@ -56,7 +57,7 @@ public class EcoreHelper {
             EcoreUtil.setDocumentation((EModelElement) undocumented, StringUtils.trimToNull(newComment));
             return;
         }
-        var feature = undocumented.eClass().getEStructuralFeature("documentation");
+        var feature = MetaEcoreHelper.getDocumentationAttribute(undocumented.eClass());
         if (feature == null) {
             return;
         }

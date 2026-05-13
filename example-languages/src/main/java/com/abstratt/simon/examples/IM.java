@@ -22,6 +22,7 @@ public interface IM {
         @Meta.Attribute
         String name();
 
+        @Meta.Documentation
         @Meta.Attribute
         String documentation();
     }

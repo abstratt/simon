@@ -80,6 +80,16 @@ public @interface Meta {
     @interface Name {
     }
 
+    /**
+     * Marks an attribute accessor as the one that holds documentation for
+     * instances of the enclosing type. Identifies the documentation feature
+     * regardless of the attribute's name.
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    @interface Documentation {
+    }
+
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     @interface Required {
