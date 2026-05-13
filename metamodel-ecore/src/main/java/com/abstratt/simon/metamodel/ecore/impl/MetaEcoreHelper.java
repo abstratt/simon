@@ -31,6 +31,7 @@ public interface MetaEcoreHelper {
     String RECORD_TYPE = Meta.RecordType.class.getSimpleName();
     String SIMON_ANNOTATION = "simon.annotations";
     String PRIMITIVE_VALUE_FEATURE = "__value__";
+    String NAME_FEATURE = "name";
     String DOCUMENTATION_FEATURE = "documentation";
 
     static void makeRootComposite(EClass eClass) {
@@ -202,7 +203,11 @@ public interface MetaEcoreHelper {
     }
 
     static EAttribute getNameAttribute(EClass eClass) {
-        return (EAttribute) eClass.getEStructuralFeature("name");
+        return findMarkedAttribute(eClass, NAME_FEATURE);
+    }
+
+    static void markAsName(EAttribute attribute) {
+        EcoreUtil.setAnnotation(attribute, SIMON_ANNOTATION, NAME_FEATURE, Boolean.toString(true));
     }
 
     static void markAsDocumentation(EAttribute attribute) {
@@ -210,8 +215,12 @@ public interface MetaEcoreHelper {
     }
 
     static EAttribute getDocumentationAttribute(EClass eClass) {
+        return findMarkedAttribute(eClass, DOCUMENTATION_FEATURE);
+    }
+
+    private static EAttribute findMarkedAttribute(EClass eClass, String tag) {
         return eClass.getEAllAttributes().stream()
-                .filter(a -> Boolean.TRUE.toString().equals(getAnnotation(a, DOCUMENTATION_FEATURE)))
+                .filter(a -> Boolean.TRUE.toString().equals(getAnnotation(a, tag)))
                 .findFirst().orElse(null);
     }
 

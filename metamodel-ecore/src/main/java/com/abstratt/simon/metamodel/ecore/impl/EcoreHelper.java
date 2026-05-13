@@ -185,7 +185,13 @@ public class EcoreHelper {
     public static <F extends EStructuralFeature> F findFeatureInHierarchy(EObject scope, String featureName) {
         return (F) EcoreHelper.hierarchy(scope).map(e -> EcoreHelper.findStructuralFeature(e, featureName))
                 .filter(Objects::nonNull).findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No 'name' feature found in composition structure"));
+                .orElseThrow(() -> new IllegalArgumentException("No '" + featureName + "' feature found in composition structure"));
+    }
+
+    public static EAttribute findNameAttributeInHierarchy(EObject scope) {
+        return EcoreHelper.hierarchy(scope).map(e -> MetaEcoreHelper.getNameAttribute(e.eClass()))
+                .filter(Objects::nonNull).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No name attribute found in composition structure"));
     }
 
     public static Stream<EObject> tree(EObject start) {

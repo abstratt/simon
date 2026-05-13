@@ -100,7 +100,7 @@ public class EcoreModelBuilder implements Backend<EcoreObjectType, EcoreSlotted<
     }
 
     private EObject resolve(EObject scope, String... path) {
-        EAttribute nameAttribute = EcoreHelper.findFeatureInHierarchy(scope, "name");
+        EAttribute nameAttribute = EcoreHelper.findNameAttributeInHierarchy(scope);
         Traversal<EObject> search = EObjectTraversalProvider.INSTANCE.search(nameAttribute, path);
         var resolved = search.hop(scope);
         return resolved;
