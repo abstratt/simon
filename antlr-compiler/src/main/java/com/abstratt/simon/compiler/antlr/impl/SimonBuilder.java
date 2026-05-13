@@ -397,6 +397,8 @@ class SimonBuilder<T> extends SimonBaseListener {
     private void applyModifier(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info, ModifierContext modifier) {
         String identifier = modifier.simpleIdentifier().getText();
         Slotted owner = info.getType();
+        List<Slot> matchingSlots = new ArrayList<>();
+        List<Object> matchingValues = new ArrayList<>();
         for (Slot slot : owner.slots()) {
             if (!slot.isModifier()) {
                 continue;
@@ -404,8 +406,9 @@ class SimonBuilder<T> extends SimonBaseListener {
             BasicType slotType = slot.type();
             if (slotType instanceof Primitive && ((Primitive) slotType).kind() == PrimitiveKind.Boolean
                     && slot.name().equals(identifier)) {
-                modelHandling.valueSetting().setValue(slot, info.getObject(), Boolean.TRUE);
-                return;
+                matchingSlots.add(slot);
+                matchingValues.add(Boolean.TRUE);
+                continue;
             }
             if (slotType instanceof Enumerated) {
                 Enumerated asEnumerated = (Enumerated) slotType;
@@ -415,10 +418,21 @@ class SimonBuilder<T> extends SimonBaseListener {
                             Character.toUpperCase(identifier.charAt(0)) + identifier.substring(1));
                 }
                 if (literal != null) {
-                    modelHandling.valueSetting().setValue(slot, info.getObject(), literal);
-                    return;
+                    matchingSlots.add(slot);
+                    matchingValues.add(literal);
                 }
             }
+        }
+        if (matchingSlots.size() == 1) {
+            modelHandling.valueSetting().setValue(matchingSlots.get(0), info.getObject(), matchingValues.get(0));
+            return;
+        }
+        if (matchingSlots.size() > 1) {
+            List<String> conflicting = matchingSlots.stream().map(Slot::name).collect(Collectors.toList());
+            reportError(Severity.Error, Category.TypeError, sourceName, modifier,
+                    "Ambiguous modifier '" + identifier + "' on type " + owner.name()
+                            + " - matches modifier-eligible slots: " + conflicting);
+            return;
         }
         List<String> available = owner.slots().stream().filter(Slot::isModifier).map(Slot::name)
                 .collect(Collectors.toList());

@@ -17,6 +17,7 @@ import static com.abstratt.simon.tests.fixtures.TestHelper.getPrimitiveValue;
 import static com.abstratt.simon.tests.fixtures.TestHelper.root;
 import static com.abstratt.simon.tests.fixtures.TestHelper.uiClassFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -27,11 +28,16 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
+import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 import com.abstratt.simon.tests.fixtures.TestHelper;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EEnum;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EcoreFactory;
 import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.Problem;
@@ -520,6 +526,64 @@ public class CompilerTests {
         assertNotNull(kind);
         assertEquals("Action", kind.getName());
         assertTrue((boolean) getPrimitiveValue(operation, "public"));
+    }
+
+    @Test
+    void ambiguousEnumModifier_reportsProblem() {
+        EPackage badPackage = buildCollidingModifierPackage();
+        var results = compileProject(Arrays.asList(badPackage), """
+                @language Bad
+                [default] doc""");
+        var problems = results.get(0).getProblems();
+        var errors = problems.stream().filter(p -> p.severity() == Problem.Severity.Error)
+                .collect(Collectors.toList());
+        assertFalse(errors.isEmpty(), problems::toString);
+        var combined = errors.stream().map(Problem::toString).collect(Collectors.joining("\n"));
+        assertTrue(combined.contains("default"), combined);
+    }
+
+    private EPackage buildCollidingModifierPackage() {
+        var pkg = EcoreFactory.eINSTANCE.createEPackage();
+        pkg.setName("Bad");
+        pkg.setNsPrefix("bad");
+        pkg.setNsURI("http://example.com/simon/tests/bad");
+
+        EEnum visibility = createEnum("Visibility", "default", "Private");
+        EEnum lifecycle = createEnum("Lifecycle", "default", "Internal");
+        pkg.getEClassifiers().add(visibility);
+        pkg.getEClassifiers().add(lifecycle);
+
+        var doc = EcoreFactory.eINSTANCE.createEClass();
+        doc.setName("Doc");
+        MetaEcoreHelper.makeRootComposite(doc);
+
+        var visibilityAttr = EcoreFactory.eINSTANCE.createEAttribute();
+        visibilityAttr.setName("visibility");
+        visibilityAttr.setEType(visibility);
+        MetaEcoreHelper.markAsModifier(visibilityAttr);
+        doc.getEStructuralFeatures().add(visibilityAttr);
+
+        var lifecycleAttr = EcoreFactory.eINSTANCE.createEAttribute();
+        lifecycleAttr.setName("lifecycle");
+        lifecycleAttr.setEType(lifecycle);
+        MetaEcoreHelper.markAsModifier(lifecycleAttr);
+        doc.getEStructuralFeatures().add(lifecycleAttr);
+
+        pkg.getEClassifiers().add(doc);
+        return pkg;
+    }
+
+    private EEnum createEnum(String name, String... literalNames) {
+        var eEnum = EcoreFactory.eINSTANCE.createEEnum();
+        eEnum.setName(name);
+        for (int i = 0; i < literalNames.length; i++) {
+            var literal = EcoreFactory.eINSTANCE.createEEnumLiteral();
+            literal.setName(literalNames[i]);
+            literal.setLiteral(literalNames[i]);
+            literal.setValue(i);
+            eEnum.getELiterals().add(literal);
+        }
+        return eEnum;
     }
 
     @Test
