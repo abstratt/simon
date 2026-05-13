@@ -111,8 +111,6 @@ public class EcoreModelBuilder implements Backend<EcoreObjectType, EcoreSlotted<
     }
 
     private void setDocumentation(EObject undocumented, String newDocumentation) {
-        //TODO-RC this does not work, we need to set a purposed property on eobjects if
-        // their type allows (`Named` should change to support documentation)
         EcoreHelper.setDocumentation(undocumented, newDocumentation);
     }
 

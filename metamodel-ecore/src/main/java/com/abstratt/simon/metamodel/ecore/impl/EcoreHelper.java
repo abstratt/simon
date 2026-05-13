@@ -10,9 +10,11 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
+import org.eclipse.emf.ecore.EModelElement;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -23,16 +25,42 @@ public class EcoreHelper {
     private static final EObject NONE = EcoreFactory.eINSTANCE.createEObject();
 
     /**
-     * Returns the model comment/documentation associated with the given model element, if any.
-     * Blank results are treated as absent.
+     * Returns the documentation comment associated with the given object, if any.
+     * For metamodel elements ({@link EModelElement}, e.g. {@code EClass}) the
+     * documentation is read via {@link EcoreUtil#getDocumentation}. For runtime
+     * model instances it is read from a {@code "documentation"} structural feature
+     * on the instance's {@code EClass} (when present), mirroring how {@code name}
+     * is handled. Blank results are treated as absent.
      */
     public static Optional<String> getDocumentation(EObject eObject) {
-        //TODO-RC implement by relying on a purposed EAttribute (Documented instances will have it)
-        return Optional.empty();
+        if (eObject == null) {
+            return Optional.empty();
+        }
+        if (eObject instanceof EModelElement) {
+            return Optional.ofNullable(StringUtils.trimToNull(EcoreUtil.getDocumentation((EModelElement) eObject)));
+        }
+        var feature = eObject.eClass().getEStructuralFeature("documentation");
+        if (feature == null) {
+            return Optional.empty();
+        }
+        var raw = eObject.eGet(feature);
+        var unwrapped = raw instanceof EObject ? unwrappedPrimitiveValue((EObject) raw) : raw;
+        return Optional.ofNullable(StringUtils.trimToNull((String) unwrapped));
     }
 
     public static void setDocumentation(EObject undocumented, String newComment) {
-        //TODO-RC no-op, see getDocumentation
+        if (undocumented == null) {
+            return;
+        }
+        if (undocumented instanceof EModelElement) {
+            EcoreUtil.setDocumentation((EModelElement) undocumented, StringUtils.trimToNull(newComment));
+            return;
+        }
+        var feature = undocumented.eClass().getEStructuralFeature("documentation");
+        if (feature == null) {
+            return;
+        }
+        undocumented.eSet(feature, wrappedPrimitiveValue((EClass) feature.getEType(), newComment));
     }
 
 
