@@ -4,18 +4,12 @@ import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findByFeature;
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findChildByAttributeValue;
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.findStructuralFeature;
 import static com.abstratt.simon.metamodel.ecore.impl.EcoreHelper.getValue;
-import static com.abstratt.simon.tests.fixtures.TestHelper.IM_PACKAGE;
-import static com.abstratt.simon.tests.fixtures.TestHelper.UI2_PACKAGE;
-import static com.abstratt.simon.tests.fixtures.TestHelper.UI_PACKAGE;
 import static com.abstratt.simon.tests.fixtures.TestHelper.buildMetamodelSourceFactory;
 import static com.abstratt.simon.tests.fixtures.TestHelper.buildSourceProvider;
 import static com.abstratt.simon.tests.fixtures.TestHelper.compileProject;
-import static com.abstratt.simon.tests.fixtures.TestHelper.compileUsingIM;
-import static com.abstratt.simon.tests.fixtures.TestHelper.compileUsingUI;
 import static com.abstratt.simon.tests.fixtures.TestHelper.ensureSuccess;
 import static com.abstratt.simon.tests.fixtures.TestHelper.getPrimitiveValue;
 import static com.abstratt.simon.tests.fixtures.TestHelper.root;
-import static com.abstratt.simon.tests.fixtures.TestHelper.uiClassFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -32,7 +26,6 @@ import java.util.stream.Collectors;
 
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
-import com.abstratt.simon.tests.fixtures.TestHelper;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EEnum;
 import org.eclipse.emf.ecore.EObject;
@@ -45,13 +38,43 @@ import com.abstratt.simon.compiler.Result;
 import com.abstratt.simon.examples.IM;
 import com.abstratt.simon.examples.UI;
 
-public class CompilerTests {
-    private static final EClass namespaceClass = TestHelper.imClassFor(IM.Namespace.class);
-    private static final EClass applicationClass = uiClassFor(UI.Application.class);
-    private static final EClass buttonClass = uiClassFor(UI.Button.class);
-    private static final EClass namedClass = uiClassFor(UI.Named.class);
-    private static final EClass containerClass = uiClassFor(UI.Container.class);
-    private static final EClass screenClass = uiClassFor(UI.Screen.class);
+/**
+ * Compiler-level tests over the example metamodels. Subclasses bind the
+ * variant-specific {@link EPackage}s — see {@code JavaCompilerTests}
+ * (Java-defined metamodels) and {@code SimonCompilerTests} (the same
+ * metamodels re-expressed in {@code @language Simon}).
+ */
+public abstract class CompilerTests {
+
+    // --- variant bindings ---
+
+    protected abstract EPackage uiPackage();
+
+    protected abstract EPackage ui2Package();
+
+    protected abstract EPackage imPackage();
+
+    // --- derived helpers ---
+
+    protected final EClass uiClassFor(Class<?> clazz) {
+        return (EClass) uiPackage().getEClassifier(clazz.getSimpleName());
+    }
+
+    protected final EClass imClassFor(Class<?> clazz) {
+        return (EClass) imPackage().getEClassifier(clazz.getSimpleName());
+    }
+
+    protected final EObject compileUsingUI(String toParse) {
+        String[] sources = { "@language UI " + toParse };
+        return root(ensureSuccess(compileProject(Arrays.asList(uiPackage()), sources)));
+    }
+
+    protected final EObject compileUsingIM(String toParse) {
+        String[] sources = { "@language IM " + toParse };
+        return root(ensureSuccess(compileProject(Arrays.asList(imPackage()), sources)));
+    }
+
+    // --- tests ---
 
     @Test
     void emptyApplication() {
@@ -64,7 +87,7 @@ public class CompilerTests {
     void emptyApplications() {
         String[] toParse = { "@language UI Application myApplication1 {}",
                 "@language UI Application myApplication2 {}" };
-        List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(UI_PACKAGE), toParse));
+        List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(uiPackage()), toParse));
         assertEquals(2, results.size());
         assertEquals(1, results.get(0).getRootObjects().size());
         assertEquals(1, results.get(1).getRootObjects().size());
@@ -83,7 +106,7 @@ public class CompilerTests {
                   Application myApplication1 {}
                   Application myApplication2 {}
                 """ };
-        List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(UI_PACKAGE), toParse));
+        List<Result<EObject>> results = ensureSuccess(compileProject(Arrays.asList(uiPackage()), toParse));
         assertEquals(1, results.size());
         assertEquals(2, results.get(0).getRootObjects().size());
         EObject application1 = results.get(0).getRootObjects().get(0);
@@ -110,7 +133,7 @@ public class CompilerTests {
                 }
                 """;
         String[] toParse = { source };
-        EObject namespace = root(ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse)));
+        EObject namespace = root(ensureSuccess(compileProject(Arrays.asList(imPackage()), toParse)));
         List<EObject> entities = getValue(namespace, "entities");
         assertEquals("Customer", getPrimitiveValue(entities.get(0), "name"));
         assertEquals("Order", getPrimitiveValue(entities.get(1), "name"));
@@ -149,7 +172,7 @@ public class CompilerTests {
                 """;
         String[] sources = { customersSource, ordersSource };
         String[] toParse = { sources[order[0]], sources[order[1]] };
-        var results = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse));
+        var results = ensureSuccess(compileProject(Arrays.asList(imPackage()), toParse));
         var customersNamespace = results.get(order[0]).getRootObject();
         var ordersNamespace = results.get(order[1]).getRootObject();
         assertEquals("customers", getPrimitiveValue(customersNamespace, "name"));
@@ -163,7 +186,7 @@ public class CompilerTests {
 
     @Test
     void unresolvedReference() {
-        var results = compileProject(IM_PACKAGE, """
+        var results = compileProject(imPackage(), """
                     @language IM
                     namespace orders {
                         entities {
@@ -202,7 +225,7 @@ public class CompilerTests {
         allSources.put("customers", customers);
         allSources.put("orders", orders);
         var results = ensureSuccess(compileProject(Collections.singletonList("orders"),
-                buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)), buildSourceProvider(allSources)));
+                buildMetamodelSourceFactory(Arrays.asList(imPackage())), buildSourceProvider(allSources)));
         assertEquals(2, results.size());
         var ordersNamespace = results.get(0).getRootObject();
         var customersNamespace = results.get(1).getRootObject();
@@ -220,7 +243,7 @@ public class CompilerTests {
                 """;
 
         var results = ensureSuccess(compileProject(Collections.singletonList("orders"),
-                buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)),
+                buildMetamodelSourceFactory(Arrays.asList(imPackage())),
                 buildSourceProvider(Collections.singletonMap("orders", orders))));
         assertEquals(2, results.size());
         var namespace = results.get(0).getRootObject();
@@ -257,7 +280,7 @@ public class CompilerTests {
         allSources.put("customers", customers);
         allSources.put("orders", orders);
         var results = ensureSuccess(compileProject(Arrays.asList("orders"),
-                buildMetamodelSourceFactory(Arrays.asList(IM_PACKAGE)), buildSourceProvider(allSources)));
+                buildMetamodelSourceFactory(Arrays.asList(imPackage())), buildSourceProvider(allSources)));
         assertEquals(2, results.size());
         var ordersNamespace = results.get(0).getRootObject();
         assertEquals("orders", getPrimitiveValue(ordersNamespace, "name"));
@@ -280,7 +303,7 @@ public class CompilerTests {
                       }
                     }
                 """;
-        var results = compileProject(UI_PACKAGE, source);
+        var results = compileProject(uiPackage(), source);
         assertEquals(1, results.size());
         assertEquals(1, results.get(0).getProblems().size());
         var problem = results.get(0).getProblems().get(0);
@@ -318,7 +341,7 @@ public class CompilerTests {
                         }
                 }
                 """ };
-        var namespace1 = root(ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE), toParse)));
+        var namespace1 = root(ensureSuccess(compileProject(Arrays.asList(imPackage()), toParse)));
         List<EObject> entities = getValue(namespace1, "entities");
         assertEquals("Customer", getPrimitiveValue(entities.get(0), "name"));
         assertEquals("Order", getPrimitiveValue(entities.get(1), "name"));
@@ -360,11 +383,11 @@ public class CompilerTests {
                 @language IM
                 @import 'im'
                 // comment
-                
+
                 // comment
                 namespace {
                 // comment
-                
+
                 // comment
                 // comment
                 entities { //comment
@@ -389,17 +412,17 @@ public class CompilerTests {
                 @language IM
                 @import 'im'
                 /* comment
-                
+
                 // comment */
                 namespace { /*
                 // comment
-                
+
                 // comment
                 // comment
                 */entities { /*//comment*/
                     /*// comment
-                    */Entity Customer //comment 
-               /*     
+                    */Entity Customer //comment
+               /*
                     // comment
                     //comment Entity Foo
                 */} /*//
@@ -453,7 +476,7 @@ public class CompilerTests {
                 }
                 (* trailing root *)
         """;
-        var results = compileProject(IM_PACKAGE, toParse);
+        var results = compileProject(imPackage(), toParse);
         var problems = results.get(0).getProblems();
         assertEquals(5, problems.size(), problems::toString);
         for (var problem : problems) {
@@ -630,7 +653,7 @@ public class CompilerTests {
                 }
                             """);
         assertNotNull(myApplication);
-        assertSame(applicationClass, myApplication.eClass());
+        assertSame(uiClassFor(UI.Application.class), myApplication.eClass());
         List<EObject> screens = getValue(myApplication, "screens");
         assertEquals(3, screens.size());
         for (int i = 0; i < screens.size(); i++) {
@@ -672,20 +695,20 @@ public class CompilerTests {
                   application myApplication
                   namespace myNamespace
                 """ };
-        var results = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), toParse));
+        var results = ensureSuccess(compileProject(Arrays.asList(imPackage(), uiPackage()), toParse));
         assertEquals(1, results.size());
         var roots = results.get(0).getRootObjects();
         assertEquals(2, roots.size());
         assertEquals("myApplication", getPrimitiveValue(roots.get(0), "name"));
         assertEquals("myNamespace", getPrimitiveValue(roots.get(1), "name"));
-        assertSame(applicationClass, roots.get(0).eClass());
-        assertSame(namespaceClass, roots.get(1).eClass());
+        assertSame(uiClassFor(UI.Application.class), roots.get(0).eClass());
+        assertSame(imClassFor(IM.Namespace.class), roots.get(1).eClass());
     }
 
     @Test
     void multiplePackagesEmptySource() {
         String[] toParse = { "" };
-        var roots = ensureSuccess(compileProject(Arrays.asList(IM_PACKAGE, UI_PACKAGE), toParse));
+        var roots = ensureSuccess(compileProject(Arrays.asList(imPackage(), uiPackage()), toParse));
         assertEquals(1, roots.size());
         assertNull(roots.get(0).getRootObject());
         assertEquals(0, roots.get(0).getProblems().size());
@@ -713,7 +736,7 @@ public class CompilerTests {
                       }
                   }
                 """;
-        var application = ensureSuccess(compileProject(UI2_PACKAGE.eResource(), toParse)).get(0).getRootObject();
+        var application = ensureSuccess(compileProject(ui2Package().eResource(), toParse)).get(0).getRootObject();
         List<EObject> screens = getValue(application, "screens");
         assertEquals(2, screens.size());
         EObject mainScreen = screens.get(0);
