@@ -2,7 +2,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>simon-compiler-source-simon</artifactId>
+	<artifactId>simon-compiler-source-annotated-java</artifactId>
 
 	<parent>
 		<groupId>com.abstratt.simon</groupId>
@@ -18,18 +18,12 @@
 		</dependency>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
-			<artifactId>simon-compiler-source-annotated-java</artifactId>
+			<artifactId>simon-metamodel-ecore</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>com.abstratt.simon</groupId>
-			<artifactId>simon-compiler-antlr</artifactId>
-			<version>0.0.4-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.abstratt.simon</groupId>
-			<artifactId>simon-compiler-backend-ecore</artifactId>
-			<version>0.0.4-SNAPSHOT</version>
+			<groupId>io.github.classgraph</groupId>
+			<artifactId>classgraph</artifactId>
 		</dependency>
 	</dependencies>
 </project>

@@ -29,7 +29,7 @@ import org.eclipse.emf.ecore.util.EcoreValidator;
 import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.source.ClasspathSourceProvider;
-import com.abstratt.simon.compiler.source.ecore.Java2EcoreMapper;
+import com.abstratt.simon.compiler.source.java.Java2EcoreMapper;
 import com.abstratt.simon.compiler.source.simon.SimonFileMetamodelSource;
 import com.abstratt.simon.examples.DAUI;
 import com.abstratt.simon.examples.IM;

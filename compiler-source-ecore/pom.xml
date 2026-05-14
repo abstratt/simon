@@ -21,9 +21,5 @@
 			<artifactId>simon-metamodel-ecore</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>io.github.classgraph</groupId>
-			<artifactId>classgraph</artifactId>
-		</dependency>
 	</dependencies>
 </project>

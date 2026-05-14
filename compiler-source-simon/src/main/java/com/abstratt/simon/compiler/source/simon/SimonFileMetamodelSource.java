@@ -21,7 +21,7 @@ import com.abstratt.simon.compiler.backend.ecore.EMFModelBackendFactory;
 import com.abstratt.simon.compiler.source.MetamodelSource;
 import com.abstratt.simon.compiler.source.SimpleSourceProvider;
 import com.abstratt.simon.compiler.source.SourceProvider;
-import com.abstratt.simon.compiler.source.ecore.EcoreDynamicMetamodelSource;
+import com.abstratt.simon.compiler.source.java.EcoreDynamicMetamodelSource;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 

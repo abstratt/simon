@@ -42,6 +42,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.abstratt.simon</groupId>
+			<artifactId>simon-compiler-source-annotated-java</artifactId>
+			<version>0.0.4-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.abstratt.simon</groupId>
 			<artifactId>simon-compiler-backend-ecore</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
 		</dependency>

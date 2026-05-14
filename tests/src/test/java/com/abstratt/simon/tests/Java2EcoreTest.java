@@ -13,7 +13,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
-import com.abstratt.simon.compiler.source.ecore.Java2EcoreMapper;
+import com.abstratt.simon.compiler.source.java.Java2EcoreMapper;
 import org.eclipse.emf.common.util.BasicDiagnostic;
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.TreeIterator;

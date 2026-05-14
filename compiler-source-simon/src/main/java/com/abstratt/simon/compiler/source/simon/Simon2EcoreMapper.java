@@ -22,7 +22,6 @@ import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 
-import com.abstratt.simon.compiler.source.ecore.Java2EcoreMapper;
 import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
@@ -32,7 +31,7 @@ import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
  * produced by compiling {@code .simon} files against the bootstrap
  * {@code com.abstratt.simon.examples.Simon} metamodel.
  *
- * Structural sibling of {@link Java2EcoreMapper}: same wire-format output
+ * Structural sibling of Java2EcoreMapper: same wire-format output
  * ({@link EPackage} with Simon convention annotations), driven from
  * declarative source instead of Java reflection.
  */

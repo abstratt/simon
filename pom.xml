@@ -48,6 +48,7 @@
 		<module>antlr-compiler</module>
 		<module>metamodel-ecore</module>
 		<module>compiler-source-ecore</module>
+		<module>compiler-source-annotated-java</module>
 		<module>compiler-backend-ecore</module>
 		<module>compiler-source-simon</module>
 		<module>example-languages</module>

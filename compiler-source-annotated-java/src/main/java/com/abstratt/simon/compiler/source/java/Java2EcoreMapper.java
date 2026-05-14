@@ -1,4 +1,4 @@
-package com.abstratt.simon.compiler.source.ecore;
+package com.abstratt.simon.compiler.source.java;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
