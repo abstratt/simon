@@ -8,7 +8,7 @@ import com.abstratt.simon.tests.fixtures.TestHelper;
  * Runs {@link CompilerTests} against the Java-defined example metamodels
  * (UI, IM, UI2) built via {@code AnnotatedJava2EcoreMapper}.
  */
-public class JavaCompilerTests extends CompilerTests {
+public class AnnotatedJavaBasedCompilerTests extends CompilerTests {
 
     @Override
     protected EPackage uiPackage() {

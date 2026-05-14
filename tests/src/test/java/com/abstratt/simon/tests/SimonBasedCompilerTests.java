@@ -25,7 +25,7 @@ import com.abstratt.simon.tests.fixtures.TestHelper;
  * prelude content. Without that copy, IM tests using primitive types
  * (e.g. {@code im.StringValue}) would fail to resolve.
  */
-public class SimonCompilerTests extends CompilerTests {
+public class SimonBasedCompilerTests extends CompilerTests {
 
     private static final Map<String, EPackage> PACKAGES = loadPackages();
 
