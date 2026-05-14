@@ -44,7 +44,7 @@ import com.abstratt.simon.examples.UI;
  * (Java-defined metamodels) and {@code SimonCompilerTests} (the same
  * metamodels re-expressed in {@code @language Simon}).
  */
-public abstract class CompilerTests {
+public abstract class AbstractCompilerTests {
 
     // --- variant bindings ---
 

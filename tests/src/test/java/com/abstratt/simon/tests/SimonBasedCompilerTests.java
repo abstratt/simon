@@ -5,10 +5,10 @@ import org.eclipse.emf.ecore.EPackage;
 import com.abstratt.simon.tests.fixtures.TestHelper;
 
 /**
- * Runs {@link CompilerTests} against the example metamodels re-expressed in
+ * Runs {@link AbstractCompilerTests} against the example metamodels re-expressed in
  * {@code @language Simon} (loaded once into {@code TestHelper.SIMON_PACKAGES}).
  */
-public class SimonBasedCompilerTests extends CompilerTests {
+public class SimonBasedCompilerTests extends AbstractCompilerTests {
 
     @Override
     protected EPackage uiPackage() {

@@ -19,7 +19,7 @@ import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
  * {@link Source2EcoreMapperTest}; adds the two Java-reflection-only
  * checks that have no Simon-source analog.
  */
-public class Java2EcoreTest extends Source2EcoreMapperTest {
+public class AnnotatedJava2EcoreMapperTest extends Source2EcoreMapperTest {
 
     @Override
     protected <E extends ENamedElement> E build(Class<?> clazz) {

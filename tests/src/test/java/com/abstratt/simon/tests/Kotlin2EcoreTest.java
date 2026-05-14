@@ -3,7 +3,7 @@ package com.abstratt.simon.tests;
 import com.abstratt.simon.examples.kotlin.KotlinExampleLanguages;
 import org.jetbrains.annotations.NotNull;
 
-public class Kotlin2EcoreTest extends Java2EcoreTest {
+public class Kotlin2EcoreTest extends AnnotatedJava2EcoreMapperTest {
     @NotNull
     @Override
     protected ClassConstants getClassConstants() {

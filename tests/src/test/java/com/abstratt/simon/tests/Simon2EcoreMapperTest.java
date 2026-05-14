@@ -9,7 +9,7 @@ import com.abstratt.simon.tests.fixtures.TestHelper;
 
 /**
  * Tests {@link Simon2EcoreMapper} indirectly: drives the same mapper-shape
- * assertions as {@link Java2EcoreTest}, but against the example metamodels
+ * assertions as {@link AnnotatedJava2EcoreMapperTest}, but against the example metamodels
  * re-expressed in {@code @language Simon} and loaded once into
  * {@code TestHelper.SIMON_PACKAGES}.
  *
