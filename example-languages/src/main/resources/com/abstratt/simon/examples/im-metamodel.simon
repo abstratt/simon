@@ -1,0 +1,96 @@
+@language Simon
+@import 'primitives'
+
+Package IM {
+    objectTypes {
+        ObjectType Named {
+            attributes {
+                [Name] Attribute name { type: primitives.String }
+                [Documentation] Attribute documentation { type: primitives.String }
+            }
+        }
+        ObjectType Type {
+            superTypes: Named
+        }
+        ObjectType BasicType {
+            superTypes: Type
+        }
+        ObjectType Primitive {
+            superTypes: BasicType
+        }
+        ObjectType TupleType {
+            superTypes: Type
+            containments {
+                [multivalued] Containment componentTypes { type: BasicType }
+            }
+        }
+        [root] ObjectType Namespace {
+            superTypes: Named
+            containments {
+                [multivalued] Containment entities { type: Entity }
+                [multivalued] Containment primitives { type: Primitive }
+            }
+        }
+        ObjectType Entity {
+            superTypes: Type
+            attributes {
+                [Modifier] Attribute abstract_ { type: primitives.boolean }
+            }
+            containments {
+                [multivalued] Containment operations { type: Operation }
+                [multivalued] Containment properties { type: Property }
+                [multivalued] Containment relationships { type: Relationship }
+            }
+            references {
+                Reference namespace (opposite: 'entities') { type: Namespace }
+                [multivalued] Reference subTypes { type: Entity }
+                [multivalued] Reference superTypes (opposite: 'subTypes') { type: Entity }
+            }
+        }
+        ObjectType TypedElement {
+            superTypes: Named
+            references {
+                Reference type { type: Type }
+            }
+        }
+        ObjectType Feature {
+            superTypes: TypedElement
+            attributes {
+                Attribute multiple { type: primitives.boolean }
+            }
+        }
+        ObjectType Property {
+            superTypes: Feature
+        }
+        ObjectType Relationship {
+            superTypes: Feature
+            references {
+                Reference opposite { type: Relationship }
+            }
+        }
+        ObjectType Parameter {
+            superTypes: TypedElement
+        }
+        ObjectType Operation {
+            superTypes: Named
+            attributes {
+                [Modifier] Attribute kind { type: OperationKind }
+                [Modifier] Attribute public_ { type: primitives.boolean }
+            }
+            containments {
+                [multivalued] Containment parameters { type: Parameter }
+            }
+        }
+    }
+    enumTypes {
+        EnumType OperationKind {
+            literals {
+                EnumLiteral Action
+                EnumLiteral Constructor
+                EnumLiteral Event
+                EnumLiteral Finder
+                EnumLiteral Retriever
+            }
+        }
+    }
+}

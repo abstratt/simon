@@ -1,0 +1,21 @@
+@language Simon
+@import 'ui'
+@import 'im-metamodel'
+
+Package DAUI {
+    objectTypes {
+        ObjectType IEntityComponent {
+            superTypes: UI.IComponent
+            references {
+                Reference entity { type: IM.Entity }
+            }
+        }
+        ObjectType EntityScreen {
+            superTypes: UI.Screen
+            superTypes: IEntityComponent
+            references {
+                Reference entity { type: IM.Entity }
+            }
+        }
+    }
+}

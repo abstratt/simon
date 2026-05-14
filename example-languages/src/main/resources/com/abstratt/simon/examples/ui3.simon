@@ -1,0 +1,12 @@
+@language Simon
+@import 'ui'
+
+Package UI3 {
+    objectTypes {
+        ObjectType IPrototype {
+            references {
+                [multivalued] Reference applications { type: UI.Application }
+            }
+        }
+    }
+}

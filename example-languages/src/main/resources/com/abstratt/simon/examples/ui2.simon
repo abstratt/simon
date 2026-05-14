@@ -1,0 +1,13 @@
+@language Simon
+@import 'ui'
+
+Package UI2 {
+    objectTypes {
+        ObjectType Form {
+            superTypes: UI.Container
+            containments {
+                Containment helpLink { type: UI.Link }
+            }
+        }
+    }
+}

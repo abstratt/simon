@@ -1,0 +1,92 @@
+@language Simon
+@import 'primitives'
+
+Package UI {
+    objectTypes {
+        [abstract] ObjectType Named {
+            attributes {
+                [Name] [optional] Attribute name { type: primitives.String }
+                [Documentation] [optional] Attribute documentation { type: primitives.String }
+            }
+        }
+        ObjectType Labeled {
+            attributes {
+                Attribute label { type: primitives.String }
+            }
+        }
+        [abstract] ObjectType BaseNamed {
+            superTypes: Named
+        }
+        ObjectType IComponent {
+            superTypes: Named
+            attributes {
+                Attribute index { type: primitives.int }
+            }
+            references {
+                [optional] Reference parent (opposite: 'children') { type: Container }
+            }
+        }
+        [abstract] ObjectType Component {
+            superTypes: BaseNamed
+            superTypes: IComponent
+        }
+        [abstract] ObjectType Container {
+            superTypes: Component
+            attributes {
+                Attribute layout { type: PanelLayout }
+            }
+            containments {
+                [multivalued] Containment children { type: IComponent }
+            }
+        }
+        [abstract] ObjectType LabeledComponent {
+            superTypes: Component
+            superTypes: Labeled
+        }
+        ObjectType Link {
+            superTypes: LabeledComponent
+            references {
+                Reference targetScreen { type: Screen }
+            }
+        }
+        ObjectType Screen {
+            superTypes: Container
+            attributes {
+                Attribute screenName { type: primitives.String }
+            }
+            references {
+                Reference application (opposite: 'screens') { type: Application }
+            }
+        }
+        [root] ObjectType Application {
+            superTypes: BaseNamed
+            containments {
+                [multivalued] Containment screens { type: Screen }
+            }
+        }
+        ObjectType Button {
+            superTypes: LabeledComponent
+            attributes {
+                Attribute backgroundColor { type: Color }
+                Attribute foregroundColor { type: Color }
+            }
+        }
+    }
+    recordTypes {
+        RecordType Color {
+            attributes {
+                Attribute red { type: primitives.int }
+                Attribute green { type: primitives.int }
+                Attribute blue { type: primitives.int }
+            }
+        }
+    }
+    enumTypes {
+        EnumType PanelLayout {
+            literals {
+                EnumLiteral Vertical
+                EnumLiteral Horizontal
+            }
+        }
+    }
+}
