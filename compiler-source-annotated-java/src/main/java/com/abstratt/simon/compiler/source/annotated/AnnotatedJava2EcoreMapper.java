@@ -1,4 +1,4 @@
-package com.abstratt.simon.compiler.source.java;
+package com.abstratt.simon.compiler.source.annotated;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -44,7 +44,7 @@ import static com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper.*;
  * Builds an EMF-based metamodel from Java classes that have been marked with
  * Simon DSL annotations as defined in {@link Meta}.
  */
-public class Java2EcoreMapper {
+public class AnnotatedJava2EcoreMapper {
     /**
      * Maps the given Java class that utilizes Simon's annotation-based DSL to an
      * EMF-based metamodel.

@@ -9,7 +9,7 @@ import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
-import com.abstratt.simon.compiler.source.java.AnnotatedJavaMetamodelSource;
+import com.abstratt.simon.compiler.source.annotated.AnnotatedJavaMetamodelSource;
 import com.abstratt.simon.examples.UI;
 
 public class MetamodelSourceTests {

@@ -8,8 +8,8 @@ import com.abstratt.simon.compiler.source.*;
 import com.abstratt.simon.compiler.source.MetamodelSource.Factory;
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.ResourceMetamodelSource;
-import com.abstratt.simon.compiler.source.java.AnnotatedJavaMetamodelSource;
-import com.abstratt.simon.compiler.source.java.Java2EcoreMapper;
+import com.abstratt.simon.compiler.source.annotated.AnnotatedJavaMetamodelSource;
+import com.abstratt.simon.compiler.source.annotated.AnnotatedJava2EcoreMapper;
 import com.abstratt.simon.examples.IM;
 import com.abstratt.simon.examples.UI;
 import com.abstratt.simon.examples.UI2;
@@ -32,9 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TestHelper {
 
-    public static final EPackage IM_PACKAGE = new Java2EcoreMapper().map(IM.class);
-    public static final EPackage UI_PACKAGE = new Java2EcoreMapper().map(UI.class);
-    public static final EPackage UI2_PACKAGE = new Java2EcoreMapper().map(UI2.class);
+    public static final EPackage IM_PACKAGE = new AnnotatedJava2EcoreMapper().map(IM.class);
+    public static final EPackage UI_PACKAGE = new AnnotatedJava2EcoreMapper().map(UI.class);
+    public static final EPackage UI2_PACKAGE = new AnnotatedJava2EcoreMapper().map(UI2.class);
     private static SimonCompilerAntlrFactory compilerFactory = new SimonCompilerAntlrFactory();
     private static EMFModelBackendFactory backendFactory = new EMFModelBackendFactory();
 

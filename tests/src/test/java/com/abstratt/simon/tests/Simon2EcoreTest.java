@@ -29,7 +29,7 @@ import org.eclipse.emf.ecore.util.EcoreValidator;
 import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.source.ClasspathSourceProvider;
-import com.abstratt.simon.compiler.source.java.Java2EcoreMapper;
+import com.abstratt.simon.compiler.source.annotated.AnnotatedJava2EcoreMapper;
 import com.abstratt.simon.compiler.source.simon.SimonFileMetamodelSource;
 import com.abstratt.simon.examples.DAUI;
 import com.abstratt.simon.examples.IM;
@@ -213,31 +213,31 @@ public class Simon2EcoreTest {
 
     @Test
     void uiParity() {
-        EPackage javaUI = new Java2EcoreMapper().map(UI.class);
+        EPackage javaUI = new AnnotatedJava2EcoreMapper().map(UI.class);
         assertPackagesEquivalent(javaUI, uiPackage());
     }
 
     @Test
     void imParity() {
-        EPackage javaIM = new Java2EcoreMapper().map(IM.class);
+        EPackage javaIM = new AnnotatedJava2EcoreMapper().map(IM.class);
         assertPackagesEquivalent(javaIM, imPackage());
     }
 
     @Test
     void ui2Parity() {
-        EPackage javaUI2 = new Java2EcoreMapper().map(UI2.class);
+        EPackage javaUI2 = new AnnotatedJava2EcoreMapper().map(UI2.class);
         assertPackagesEquivalent(javaUI2, ui2Package());
     }
 
     @Test
     void ui3Parity() {
-        EPackage javaUI3 = new Java2EcoreMapper().map(UI3.class);
+        EPackage javaUI3 = new AnnotatedJava2EcoreMapper().map(UI3.class);
         assertPackagesEquivalent(javaUI3, ui3Package());
     }
 
     @Test
     void dauiParity() {
-        EPackage javaDAUI = new Java2EcoreMapper().map(DAUI.class);
+        EPackage javaDAUI = new AnnotatedJava2EcoreMapper().map(DAUI.class);
         assertPackagesEquivalent(javaDAUI, dauiPackage());
     }
 

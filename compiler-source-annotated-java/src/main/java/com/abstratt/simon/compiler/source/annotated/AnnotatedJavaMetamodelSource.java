@@ -1,4 +1,4 @@
-package com.abstratt.simon.compiler.source.java;
+package com.abstratt.simon.compiler.source.annotated;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,7 +31,7 @@ public class AnnotatedJavaMetamodelSource implements MetamodelSource<EcoreType<E
         scanResult = new ClassGraph().enableAnnotationInfo().acceptPackages(javaPackage).scan();
         // System.out.println("URL: " + scanResult.getClasspathURLs());
         var packageImplementations = scanResult.getClassesWithAnnotation(Meta.Package.class);
-        var mapper = new Java2EcoreMapper();
+        var mapper = new AnnotatedJava2EcoreMapper();
         this.packages = packageImplementations.loadClasses().stream()
                 .collect(Collectors.toMap(Class::getName, mapper::map));
         // System.out.println("*** Packages:\n" + packages);
