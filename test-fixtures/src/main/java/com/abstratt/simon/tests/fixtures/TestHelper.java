@@ -10,17 +10,21 @@ import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.ResourceMetamodelSource;
 import com.abstratt.simon.compiler.source.annotated.AnnotatedJavaMetamodelSource;
 import com.abstratt.simon.compiler.source.annotated.AnnotatedJava2EcoreMapper;
+import com.abstratt.simon.compiler.source.simon.SimonFileMetamodelSource;
 import com.abstratt.simon.examples.IM;
+import com.abstratt.simon.examples.Simon;
 import com.abstratt.simon.examples.UI;
 import com.abstratt.simon.examples.UI2;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 import org.apache.commons.io.FilenameUtils;
+import org.eclipse.emf.ecore.EAnnotation;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.resource.Resource;
 
 import java.net.URISyntaxException;
@@ -35,8 +39,41 @@ public class TestHelper {
     public static final EPackage IM_PACKAGE = new AnnotatedJava2EcoreMapper().map(IM.class);
     public static final EPackage UI_PACKAGE = new AnnotatedJava2EcoreMapper().map(UI.class);
     public static final EPackage UI2_PACKAGE = new AnnotatedJava2EcoreMapper().map(UI2.class);
+    /**
+     * The five example metamodels re-expressed in {@code @language Simon} and
+     * loaded once for the whole test run, keyed by package name
+     * ({@code UI}, {@code UI2}, {@code UI3}, {@code IM}, {@code DAUI}).
+     * The Simon-defined IM package inherits the {@code simon/builtIns}
+     * annotation from its Java-defined twin so {@code @import 'im'} resolves
+     * to the same prelude content in both variants.
+     */
+    public static final Map<String, EPackage> SIMON_PACKAGES = loadSimonPackages();
     private static SimonCompilerAntlrFactory compilerFactory = new SimonCompilerAntlrFactory();
     private static EMFModelBackendFactory backendFactory = new EMFModelBackendFactory();
+
+    private static Map<String, EPackage> loadSimonPackages() {
+        var sources = new ClasspathSourceProvider(UI.class.getClassLoader(),
+                "com/abstratt/simon/examples", "simon");
+        var factory = SimonFileMetamodelSource.Factory.withBootstrapClass(
+                Simon.class,
+                Arrays.asList("ui", "ui2", "ui3", "im-metamodel", "daui"),
+                sources);
+        try (var source = factory.build()) {
+            var packages = new LinkedHashMap<>(((SimonFileMetamodelSource) source).getPackages());
+            copyBuiltInsAnnotation(IM_PACKAGE, packages.get("IM"));
+            return packages;
+        }
+    }
+
+    private static void copyBuiltInsAnnotation(EPackage from, EPackage to) {
+        if (from == null || to == null) return;
+        EAnnotation original = from.getEAnnotation("simon/builtIns");
+        if (original == null) return;
+        EAnnotation copy = EcoreFactory.eINSTANCE.createEAnnotation();
+        copy.setSource(original.getSource());
+        copy.getDetails().putAll(original.getDetails().map());
+        to.getEAnnotations().add(copy);
+    }
 
     public static List<Result<EObject>> compileProject(EPackage package_, String toParse) {
         return compileProject(toParse, buildMetamodelSourceFactory(Arrays.asList(package_)));
