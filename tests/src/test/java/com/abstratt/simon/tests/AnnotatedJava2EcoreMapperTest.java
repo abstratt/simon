@@ -16,10 +16,10 @@ import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
 /**
  * Tests {@link AnnotatedJava2EcoreMapper} — the {@code @Meta}-annotated
  * Java reflection path. Inherits the shared mapper-shape tests from
- * {@link Source2EcoreMapperTest}; adds the two Java-reflection-only
+ * {@link AbstractSource2EcoreMapperTest}; adds the two Java-reflection-only
  * checks that have no Simon-source analog.
  */
-public class AnnotatedJava2EcoreMapperTest extends Source2EcoreMapperTest {
+public class AnnotatedJava2EcoreMapperTest extends AbstractSource2EcoreMapperTest {
 
     @Override
     protected <E extends ENamedElement> E build(Class<?> clazz) {

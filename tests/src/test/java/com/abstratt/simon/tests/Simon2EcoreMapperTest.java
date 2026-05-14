@@ -18,7 +18,7 @@ import com.abstratt.simon.tests.fixtures.TestHelper;
  * (which names the Simon package, e.g. {@code UI}, {@code IM}, {@code UI2})
  * and looking the classifier up by simple name.
  */
-public class Simon2EcoreMapperTest extends Source2EcoreMapperTest {
+public class Simon2EcoreMapperTest extends AbstractSource2EcoreMapperTest {
 
     @Override
     @SuppressWarnings("unchecked")

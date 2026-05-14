@@ -36,7 +36,7 @@ import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
  * metamodel definition (Java-annotated for {@code Java2EcoreTest}, Simon
  * source for {@code Simon2EcoreMapperTest}).
  */
-public abstract class Source2EcoreMapperTest {
+public abstract class AbstractSource2EcoreMapperTest {
 
     protected ClassConstants classConstants = getClassConstants();
 
