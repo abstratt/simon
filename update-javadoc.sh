@@ -2,7 +2,7 @@
 set -x 
 mvn clean
 mvn javadoc:javadoc javadoc:aggregate
-mvn com.github.ferstl:depgraph-maven-plugin:aggregate  "-Dincludes=com.abstratt.simon:*"
+mvn com.github.ferstl:depgraph-maven-plugin:aggregate  "-Dincludes=com.abstratt.simon:*" "-Dexcludes=com.abstratt.simon:simon-test*"
 dot -Tpng target/dependency-graph.dot -o target/reports/apidocs/dependencies.png
 cd target/reports/apidocs/
 git init
