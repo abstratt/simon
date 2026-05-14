@@ -27,13 +27,9 @@
 	</distributionManagement>
 
 	<properties>
-
 		<junit.jupiter.version>6.0.3</junit.jupiter.version>
-		<funcj.parser.version>0.6.15</funcj.parser.version>
-
 		<auto-service.version>1.1.1</auto-service.version>
 		<kotlin.version>2.3.21</kotlin.version>
-		<manifold.version>2025.1.27</manifold.version>
 
 		<maven.compiler.target>17</maven.compiler.target>
 		<maven.compiler.source>17</maven.compiler.source>
@@ -55,7 +51,6 @@
 		<module>compiler-backend-ecore</module>
 		<module>example-languages</module>
 		<module>example-languages-kotlin</module>
-		<!--<module>manifold-support</module>-->
 		<!--<module>lsp-server</module>-->
 		<module>test-fixtures</module>
 		<module>tests</module>
@@ -71,7 +66,7 @@
 				<configuration>
 					<!-- Default configuration for all reports -->
 					<noqualifier>all</noqualifier>
-					<destDir>javadoc</destDir>
+                    <javadocDirectory>javadoc</javadocDirectory>
 					<failOnError>false</failOnError>
 				</configuration>
 				<executions>
@@ -82,8 +77,7 @@
 						</goals>
 						<configuration>
 							<!-- Specific configuration for the aggregate report -->
-							<reportOutputDirectory>${user.dir}/documents</reportOutputDirectory>
-							<destDir>javadoc</destDir>
+							<outputDirectory>${user.dir}/documents</outputDirectory>
 							<failOnError>false</failOnError>
 							<header>Simon - Reference Implementation</header>
 							<footer>Simon - Reference Implementation</footer>
@@ -183,11 +177,6 @@
 				<groupId>org.jetbrains.kotlin</groupId>
 				<artifactId>kotlin-reflect</artifactId>
 				<version>${kotlin.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>systems.manifold</groupId>
-				<artifactId>manifold</artifactId>
-				<version>${manifold.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
