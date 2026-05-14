@@ -9,7 +9,7 @@ import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
-import com.abstratt.simon.compiler.source.java.EcoreDynamicMetamodelSource;
+import com.abstratt.simon.compiler.source.java.AnnotatedJavaMetamodelSource;
 import com.abstratt.simon.examples.UI;
 
 public class MetamodelSourceTests {
@@ -23,7 +23,7 @@ public class MetamodelSourceTests {
 
     @Test
     void dynamicMetamodelSourceResolveType() {
-        var typeSourceFactory = new EcoreDynamicMetamodelSource.Factory(UI.class.getPackageName());
+        var typeSourceFactory = new AnnotatedJavaMetamodelSource.Factory(UI.class.getPackageName());
         try (var typeSource = typeSourceFactory.build()) {
             var resolved = typeSource.resolveType("Application", null);
             assertNotNull(resolved);
@@ -32,7 +32,7 @@ public class MetamodelSourceTests {
 
     @Test
     void dynamicMetamodelResolveTypeConstrained() {
-        var typeSourceFactory = new EcoreDynamicMetamodelSource.Factory(UI.class.getPackageName());
+        var typeSourceFactory = new AnnotatedJavaMetamodelSource.Factory(UI.class.getPackageName());
         try (var typeSource = typeSourceFactory.build()) {
             var resolved = typeSource.resolveType("Application", Collections.emptySet());
             assertNull(resolved);

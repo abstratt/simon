@@ -8,7 +8,7 @@ import com.abstratt.simon.compiler.source.*;
 import com.abstratt.simon.compiler.source.MetamodelSource.Factory;
 import com.abstratt.simon.compiler.source.ecore.EPackageMetamodelSource;
 import com.abstratt.simon.compiler.source.ecore.ResourceMetamodelSource;
-import com.abstratt.simon.compiler.source.java.EcoreDynamicMetamodelSource;
+import com.abstratt.simon.compiler.source.java.AnnotatedJavaMetamodelSource;
 import com.abstratt.simon.compiler.source.java.Java2EcoreMapper;
 import com.abstratt.simon.examples.IM;
 import com.abstratt.simon.examples.UI;
@@ -73,7 +73,7 @@ public class TestHelper {
         var sourceName = FilenameUtils.removeExtension(baseURL.relativize(resourceUri).getPath());
         var entryPoints = Arrays.asList(sourceName);
         var sourceProvider = new URISourceProvider(baseURL, "simon");
-        var typeSourceFactory = new EcoreDynamicMetamodelSource.Factory(packageClass.getPackageName());
+        var typeSourceFactory = new AnnotatedJavaMetamodelSource.Factory(packageClass.getPackageName());
         return compileProject(entryPoints, typeSourceFactory, sourceProvider);
     }
 

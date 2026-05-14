@@ -22,12 +22,12 @@ import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 
-public class EcoreDynamicMetamodelSource implements MetamodelSource<EcoreType<EClassifier>> {
+public class AnnotatedJavaMetamodelSource implements MetamodelSource<EcoreType<EClassifier>> {
 
     private final Map<String, EPackage> packages;
     private final ScanResult scanResult;
 
-    private EcoreDynamicMetamodelSource(String javaPackage) {
+    private AnnotatedJavaMetamodelSource(String javaPackage) {
         scanResult = new ClassGraph().enableAnnotationInfo().acceptPackages(javaPackage).scan();
         // System.out.println("URL: " + scanResult.getClasspathURLs());
         var packageImplementations = scanResult.getClassesWithAnnotation(Meta.Package.class);
@@ -81,7 +81,7 @@ public class EcoreDynamicMetamodelSource implements MetamodelSource<EcoreType<EC
 
         @Override
         public MetamodelSource<EcoreType<EClassifier>> build() {
-            return new EcoreDynamicMetamodelSource(packageName);
+            return new AnnotatedJavaMetamodelSource(packageName);
         }
 
     }

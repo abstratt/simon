@@ -21,7 +21,7 @@ import com.abstratt.simon.compiler.backend.ecore.EMFModelBackendFactory;
 import com.abstratt.simon.compiler.source.MetamodelSource;
 import com.abstratt.simon.compiler.source.SimpleSourceProvider;
 import com.abstratt.simon.compiler.source.SourceProvider;
-import com.abstratt.simon.compiler.source.java.EcoreDynamicMetamodelSource;
+import com.abstratt.simon.compiler.source.java.AnnotatedJavaMetamodelSource;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 
@@ -130,7 +130,7 @@ public class SimonFileMetamodelSource implements MetamodelSource<EcoreType<EClas
         public static Factory withBootstrapClass(Class<?> bootstrapClass,
                 List<String> entryPoints, SourceProvider sources) {
             return new Factory(
-                    new EcoreDynamicMetamodelSource.Factory(bootstrapClass.getPackageName()),
+                    new AnnotatedJavaMetamodelSource.Factory(bootstrapClass.getPackageName()),
                     entryPoints, sources);
         }
 
