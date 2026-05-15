@@ -69,10 +69,13 @@ public class TestHelper {
         if (from == null || to == null) return;
         EAnnotation original = from.getEAnnotation("simon/builtIns");
         if (original == null) return;
-        EAnnotation copy = EcoreFactory.eINSTANCE.createEAnnotation();
-        copy.setSource(original.getSource());
-        copy.getDetails().putAll(original.getDetails().map());
-        to.getEAnnotations().add(copy);
+        EAnnotation target = to.getEAnnotation("simon/builtIns");
+        if (target == null) {
+            target = EcoreFactory.eINSTANCE.createEAnnotation();
+            target.setSource(original.getSource());
+            to.getEAnnotations().add(target);
+        }
+        target.getDetails().putAll(original.getDetails().map());
     }
 
     public static List<Result<EObject>> compileProject(EPackage package_, String toParse) {

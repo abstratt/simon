@@ -238,7 +238,7 @@ public abstract class AbstractCompilerTests {
     void importBuiltIn() {
         var orders = """
                 @language IM
-                @import 'im'
+                @import 'im-primitives'
                 namespace orders
                 """;
 
@@ -352,7 +352,7 @@ public abstract class AbstractCompilerTests {
     void propertiesAndPrimitiveTypes() {
         var toParse = """
                 @language IM
-                @import 'im'
+                @import 'im-primitives'
                 namespace {
                     entities {
                         Entity Product {
@@ -381,7 +381,7 @@ public abstract class AbstractCompilerTests {
     void singleLineComments() {
         var toParse = """
                 @language IM
-                @import 'im'
+                @import 'im-primitives'
                 // comment
 
                 // comment
@@ -410,7 +410,7 @@ public abstract class AbstractCompilerTests {
     void multiLineComments() {
         var toParse = """
                 @language IM
-                @import 'im'
+                @import 'im-primitives'
                 /* comment
 
                 // comment */
@@ -441,7 +441,7 @@ public abstract class AbstractCompilerTests {
         // Documentation should support (* ... *) immediately before an object header.
         var toParse = """
                 @language IM
-                @import 'im'
+                @import 'im-primitives'
                 (* model comment before namespace *)
                 namespace {
                     entities {
@@ -465,7 +465,7 @@ public abstract class AbstractCompilerTests {
         // Each (* ... *) that does not immediately precede an object header should be flagged.
         var toParse = """
                 @language IM
-                @import 'im'
+                @import 'im-primitives'
                 namespace { (* inside namespace header *)
                     (* between entities components *)
                     entities {
@@ -489,7 +489,7 @@ public abstract class AbstractCompilerTests {
     void booleanModifier() {
         var toParse = """
                 @language IM
-                @import 'im'
+                @import 'im-primitives'
                 namespace {
                     entities {
                         [abstract] entity Product
@@ -510,7 +510,7 @@ public abstract class AbstractCompilerTests {
     void enumModifier() {
         var namespace = compileUsingIM("""
                 @language IM
-                @import 'im'
+                @import 'im-primitives'
                 namespace {
                     entities {
                         entity Order {
@@ -532,7 +532,7 @@ public abstract class AbstractCompilerTests {
     void mixedModifiers() {
         var namespace = compileUsingIM("""
                 @language IM
-                @import 'im'
+                @import 'im-primitives'
                 namespace {
                     entities {
                         entity Order {

@@ -110,6 +110,10 @@ public class Simon2EcoreMapper {
         ePackage.setNsURI(name);
         ePackage.setNsPrefix(name);
 
+        var builtInsEAnnotation = EcoreFactory.eINSTANCE.createEAnnotation();
+        builtInsEAnnotation.setSource("simon/builtIns");
+        ePackage.getEAnnotations().add(builtInsEAnnotation);
+
         for (EObject objectType : children(packageInstance, "objectTypes")) {
             EClass eClass = EcoreFactory.eINSTANCE.createEClass();
             eClass.setName(stringValueOf(objectType, "name"));

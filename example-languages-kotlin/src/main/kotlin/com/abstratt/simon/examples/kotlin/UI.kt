@@ -1,15 +1,22 @@
 package com.abstratt.simon.examples.kotlin
 
 import com.abstratt.simon.metamodel.dsl.Meta
+import com.abstratt.simon.metamodel.dsl.Meta.Contained
+import com.abstratt.simon.metamodel.dsl.Meta.Required
 
 @Meta.Package(builtIns = [])
 interface UI {
     @Meta.ObjectType(instantiable = false)
     interface Named {
-        @Meta.Required(false)
+        @Required(false)
         @Meta.Name
         @Meta.Attribute
         fun name(): String?
+
+        @Required(false)
+        @Meta.Documentation
+        @Meta.Attribute
+        fun documentation(): String?
     }
 
     interface Labeled {
@@ -19,14 +26,20 @@ interface UI {
 
     abstract class BaseNamed : Named {
         private val name: String? = null
-        override fun name(): String {
-            return name!!
+        private val documentation: String? = null
+
+        override fun name(): String? {
+            return name
+        }
+
+        override fun documentation(): String? {
+            return documentation
         }
     }
 
     interface IComponent : Named {
         @Meta.Reference(opposite = "children")
-        @Meta.Required(false)
+        @Required(false)
         fun parent(): Container?
 
         @Meta.Attribute
@@ -36,8 +49,9 @@ interface UI {
     abstract class Component : BaseNamed(), IComponent {
         private val parent: Container? = null
         private val index = 0
-        override fun parent(): Container {
-            return parent!!
+
+        override fun parent(): Container? {
+            return parent
         }
 
         override fun index(): Int {
@@ -47,26 +61,29 @@ interface UI {
 
     @Meta.Composite
     abstract class Container : Component() {
-        private val children: List<IComponent>? = null
+        private val children: MutableList<IComponent?>? = null
 
         @get:Meta.Attribute
         val layout: PanelLayout? = null
-        @Meta.Contained
+
+        @Contained
         @Meta.Typed(IComponent::class)
-        fun children(): List<IComponent>? {
+        fun children(): MutableList<IComponent?>? {
             return children
         }
     }
 
     abstract class LabeledComponent : Component(), Labeled {
         private val label: String? = null
-        override fun label(): String {
-            return label!!
+
+        override fun label(): String? {
+            return label
         }
     }
 
     class Link : LabeledComponent() {
         private val targetScreen: Screen? = null
+
         @Meta.Reference
         fun targetScreen(): Screen? {
             return targetScreen
@@ -76,6 +93,7 @@ interface UI {
     open class Screen : Container() {
         private val screenName: String? = null
         private val application: Application? = null
+
         @Meta.Attribute
         fun screenName(): String? {
             return screenName
@@ -88,16 +106,17 @@ interface UI {
     }
 
     @Meta.Composite(root = true)
-    class Application : BaseNamed() {
-        private val screens: List<Screen>? = null
-        @Meta.Contained
+    open class Application : BaseNamed() {
+        private val screens: MutableList<Screen?>? = null
+
+        @Contained
         @Meta.Typed(Screen::class)
-        fun screens(): List<Screen>? {
+        fun screens(): MutableList<Screen?>? {
             return screens
         }
     }
 
-    class Button : LabeledComponent() {
+    open class Button : LabeledComponent() {
         @get:Meta.Attribute
         val backgroundColor: Color? = null
 
@@ -106,8 +125,7 @@ interface UI {
     }
 
     enum class PanelLayout {
-        Vertical,
-        Horizontal
+        Vertical, Horizontal
     }
 
     @Meta.RecordType

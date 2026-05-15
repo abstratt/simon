@@ -13,9 +13,6 @@ Package DAUI {
         ObjectType EntityScreen {
             superTypes: UI.Screen
             superTypes: IEntityComponent
-            references {
-                Reference entity { type: IM.Entity }
-            }
         }
     }
 }

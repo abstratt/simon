@@ -7,7 +7,7 @@ import org.apache.commons.text.WordUtils;
 
 import com.abstratt.simon.metamodel.dsl.Meta;
 
-@Meta.Package(builtIns = { "im" })
+@Meta.Package(builtIns = { "im-primitives" })
 public interface IM {
 
     interface Primitive extends BasicType {

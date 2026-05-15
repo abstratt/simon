@@ -1,6 +1,6 @@
 @language Simon
-
-Package primitives {
+/* Primitives for metamodels */
+Package primitives2 {
     primitiveTypes {
         PrimitiveType String (kind: String)
         PrimitiveType Integer (kind: Integer)

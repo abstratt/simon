@@ -1,13 +1,15 @@
 package com.abstratt.simon.examples.kotlin
 
 import com.abstratt.simon.metamodel.dsl.Meta
+import com.abstratt.simon.metamodel.dsl.Meta.Contained
+import com.abstratt.simon.metamodel.dsl.Meta.Required
 import org.apache.commons.text.WordUtils
 
-@Meta.Package(builtIns = ["com.abstratt.simon.examples.im"])
+@Meta.Package(builtIns = ["com.abstratt.simon.examples.im-primitives"])
 interface IM {
     interface Primitive : BasicType {
         override fun name(): String {
-            return WordUtils.uncapitalize(javaClass.simpleName)
+            return WordUtils.uncapitalize(javaClass.getSimpleName())
         }
     }
 
@@ -15,84 +17,84 @@ interface IM {
         @Meta.Name
         @Meta.Attribute
         fun name(): String?
+
+        @Meta.Documentation
+        @Meta.Attribute
+        fun documentation(): String?
     }
 
     @Meta.Composite(root = true)
     interface Namespace : Named {
-        @Meta.Contained
+        @Contained
         @Meta.Typed(Entity::class)
-        fun entities(): Collection<Entity>
+        fun entities(): MutableCollection<Entity?>?
 
-        @Meta.Contained
+        @Contained
         @Meta.Typed(Primitive::class)
-        fun primitives(): Collection<Primitive>
+        fun primitives(): MutableCollection<Primitive?>?
     }
 
-    interface Feature<T : Type> : TypedElement<T> {
+    interface Feature<T : Type?> : TypedElement<T?> {
         @Meta.Attribute
         fun multiple(): Boolean
     }
 
-    interface Property : Feature<Type>
-    interface Relationship : Feature<Entity> {
+    interface Property : Feature<Type?>
+
+    interface Relationship : Feature<Entity?> {
         @Meta.Reference
         fun opposite(): Relationship?
     }
 
     interface Operation : Named {
         enum class OperationKind {
-            Action,
-            Constructor,
-            Event,
-            Finder,
-            Retriever
+            Action, Constructor, Event, Finder, Retriever
         }
 
-        @Meta.Contained
+        @Contained
         @Meta.Typed(Parameter::class)
-        fun parameters(): Collection<Parameter>
+        fun parameters(): MutableCollection<Parameter?>?
 
         @Meta.Attribute
         @Meta.Modifier
-        fun kind(): OperationKind
+        fun kind(): OperationKind?
 
         @Meta.Attribute
         @Meta.Modifier
         fun public_(): Boolean
     }
 
-    interface Parameter : TypedElement<Type>
-    interface TypedElement<T : Type> : Named {
+    interface Parameter : TypedElement<Type?>
+
+    interface TypedElement<T : Type?> : Named {
         @Meta.Reference
-        @Meta.Required
-        fun type(): T
+        @Required
+        fun type(): T?
     }
 
     interface Entity : Type {
-        @Meta.Contained
+        @Contained
         @Meta.Typed(Property::class)
-        fun properties(): Collection<Property>
+        fun properties(): MutableCollection<Property?>?
 
         @Meta.Reference(opposite = "subTypes")
-        @Meta.Typed(
-            Entity::class
-        )
-        fun superTypes(): Collection<Entity>
+        @Meta.Typed(Entity::class)
+        fun superTypes(): MutableCollection<Entity?>?
 
         @Meta.Reference
         @Meta.Typed(Entity::class)
-        fun subTypes(): Collection<Entity>
+        fun subTypes(): MutableCollection<Entity?>?
 
-        @Meta.Contained
+        @Contained
         @Meta.Typed(Operation::class)
-        fun operations(): Collection<Operation>
+        fun operations(): MutableCollection<Operation?>?
 
-        @Meta.Contained
+        @Contained
         @Meta.Typed(Relationship::class)
-        fun relationships(): Collection<Relationship>
+        fun relationships(): MutableCollection<Relationship?>?
 
         @Meta.Reference(opposite = "entities")
-        fun namespace(): Namespace
+        fun namespace(): Namespace?
 
         @Meta.Attribute
         @Meta.Modifier
@@ -100,10 +102,12 @@ interface IM {
     }
 
     interface Type : Named
+
     interface BasicType : Type
+
     interface TupleType : Type {
-        @Meta.Contained
+        @Contained
         @Meta.Typed(BasicType::class)
-        fun componentTypes(): List<BasicType>
+        fun componentTypes(): MutableList<BasicType?>?
     }
 }

@@ -1,5 +1,5 @@
 @language IM
-@import 'im'
+@import 'im-primitives'
 /*
     This example is used as a playground and to track regression tests.
  */
