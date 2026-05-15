@@ -3,7 +3,7 @@ package com.abstratt.simon.examples.kotlin
 import com.abstratt.simon.metamodel.dsl.Meta
 import org.apache.commons.text.WordUtils
 
-@Meta.Package(builtIns = ["im"])
+@Meta.Package(builtIns = ["com.abstratt.simon.examples.im"])
 interface IM {
     interface Primitive : BasicType {
         override fun name(): String {

@@ -150,12 +150,17 @@ public class AnnotatedJava2EcoreMapper {
         builtInsEAnnotation.setEModelElement(ePackage);
         var builtInsEAnnDetails = builtInsEAnnotation.getDetails();
         for (String builtIn : builtIns) {
-            URL resource = packageClass.getResource(builtIn + ".simon");
+            int lastDot = builtIn.lastIndexOf('.');
+            String simpleName = lastDot < 0 ? builtIn : builtIn.substring(lastDot + 1);
+            String resourcePath = lastDot < 0
+                    ? builtIn + ".simon"
+                    : "/" + builtIn.replace('.', '/') + ".simon";
+            URL resource = packageClass.getResource(resourcePath);
             if (resource == null) {
                 throw new RuntimeException("Could not find built-in '" + builtIn + "' for " + packageClass);
             }
             try {
-                builtInsEAnnDetails.put(builtIn, IOUtils.toString(resource, StandardCharsets.UTF_8));
+                builtInsEAnnDetails.put(simpleName, IOUtils.toString(resource, StandardCharsets.UTF_8));
             } catch (IOException e) {
                 throw new RuntimeException("Could not read built-in '" + builtIn + "' for " + packageClass, e);
             }

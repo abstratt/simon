@@ -27,6 +27,9 @@ public @interface Meta {
     @Target(ElementType.TYPE)
     @Inherited
     @interface Package {
+        /**
+         * May be qualified or not.
+         * If unqualified, it will be resolved relative to the package class. */
         String[] builtIns();
     }
 
