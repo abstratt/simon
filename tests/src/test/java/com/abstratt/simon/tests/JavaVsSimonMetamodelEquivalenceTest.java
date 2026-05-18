@@ -11,7 +11,7 @@ class JavaVsSimonMetamodelEquivalenceTest extends AbstractMetamodelEquivalenceTe
 
     @Override
     protected Stream<String> packageNames() {
-        return Stream.of("UI", "UI2", "UI3", "IM", "DAUI", "Simon");
+        return Stream.concat(super.packageNames(), Stream.of("Simon"));
     }
 
     @Override
