@@ -1,8 +1,10 @@
 package com.abstratt.simon.tests;
 
 import org.eclipse.emf.ecore.*;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import java.util.stream.Stream;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,13 +16,18 @@ import static org.junit.jupiter.api.Assertions.*;
  * for the five example languages. Concrete subclasses pick which pair to
  * compare by overriding {@link #expected(String)} and {@link #actual(String)}.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractMetamodelEquivalenceTest {
 
     protected abstract EPackage expected(String packageName);
     protected abstract EPackage actual(String packageName);
 
+    protected Stream<String> packageNames() {
+        return Stream.of("UI", "UI2", "UI3", "IM", "DAUI");
+    }
+
     @ParameterizedTest(name = "{0}")
-    @ValueSource(strings = {"UI", "UI2", "UI3", "IM", "DAUI"})
+    @MethodSource("packageNames")
     void equivalent(String packageName) {
         MetamodelEquivalence.assertEquivalent(expected(packageName), actual(packageName));
     }

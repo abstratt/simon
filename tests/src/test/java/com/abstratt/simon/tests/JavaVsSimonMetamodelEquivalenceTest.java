@@ -5,7 +5,14 @@ import com.abstratt.simon.examples.JavaExampleLanguages;
 import com.abstratt.simon.tests.fixtures.TestHelper;
 import org.eclipse.emf.ecore.EPackage;
 
+import java.util.stream.Stream;
+
 class JavaVsSimonMetamodelEquivalenceTest extends AbstractMetamodelEquivalenceTest {
+
+    @Override
+    protected Stream<String> packageNames() {
+        return Stream.of("UI", "UI2", "UI3", "IM", "DAUI", "Simon");
+    }
 
     @Override
     protected EPackage expected(String packageName) {

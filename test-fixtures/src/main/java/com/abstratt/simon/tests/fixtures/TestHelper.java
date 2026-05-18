@@ -39,6 +39,7 @@ public class TestHelper {
     public static final EPackage IM_PACKAGE = new AnnotatedJava2EcoreMapper().map(IM.class);
     public static final EPackage UI_PACKAGE = new AnnotatedJava2EcoreMapper().map(UI.class);
     public static final EPackage UI2_PACKAGE = new AnnotatedJava2EcoreMapper().map(UI2.class);
+    public static final EPackage JAVA_SIMON_PACKAGE = new AnnotatedJava2EcoreMapper().map(Simon.class);
     /**
      * The five example metamodels re-expressed in {@code @language Simon} and
      * loaded once for the whole test run, keyed by package name
@@ -56,11 +57,12 @@ public class TestHelper {
                 "com/abstratt/simon/examples", "simon");
         var factory = SimonFileMetamodelSource.Factory.withBootstrapClass(
                 Simon.class,
-                Arrays.asList("ui", "ui2", "ui3", "im-metamodel", "daui"),
+                Arrays.asList("ui", "ui2", "ui3", "im-metamodel", "daui", "simon"),
                 sources);
         try (var source = factory.build()) {
             var packages = new LinkedHashMap<>(((SimonFileMetamodelSource) source).getPackages());
             copyBuiltInsAnnotation(IM_PACKAGE, packages.get("IM"));
+            copyBuiltInsAnnotation(JAVA_SIMON_PACKAGE, packages.get("Simon"));
             return packages;
         }
     }

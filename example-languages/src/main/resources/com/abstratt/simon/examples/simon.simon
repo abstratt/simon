@@ -1,0 +1,108 @@
+@language Simon
+@import 'primitives'
+
+Package Simon {
+    objectTypes {
+        [abstract] ObjectType Named {
+            attributes {
+                [Name] Attribute name { type: primitives.String }
+                [Documentation] [optional] Attribute documentation { type: primitives.String }
+            }
+        }
+        [root] ObjectType Package {
+            superTypes: Named
+            containments {
+                [multivalued] Containment objectTypes    { type: ObjectType }
+                [multivalued] Containment recordTypes    { type: RecordType }
+                [multivalued] Containment enumTypes      { type: EnumType }
+                [multivalued] Containment primitiveTypes { type: PrimitiveType }
+            }
+        }
+        [abstract] ObjectType Classifier { superTypes: Named }
+        ObjectType ObjectType {
+            superTypes: Classifier
+            attributes {
+                [Modifier] Attribute abstract_ { type: primitives.boolean }
+                [Modifier] Attribute root      { type: primitives.boolean }
+            }
+            references {
+                [multivalued] Reference superTypes { type: ObjectType }
+            }
+            containments {
+                [multivalued] Containment attributes   { type: Attribute }
+                [multivalued] Containment containments { type: Containment }
+                [multivalued] Containment references   { type: Reference }
+            }
+        }
+        ObjectType RecordType {
+            superTypes: Classifier
+            containments {
+                [multivalued] Containment attributes { type: Attribute }
+            }
+        }
+        ObjectType EnumType {
+            superTypes: Classifier
+            containments {
+                [multivalued] Containment literals { type: EnumLiteral }
+            }
+        }
+        ObjectType EnumLiteral { superTypes: Named }
+        ObjectType PrimitiveType {
+            superTypes: Classifier
+            attributes {
+                Attribute kind { type: PrimitiveKind }
+            }
+        }
+        [abstract] ObjectType Feature {
+            superTypes: Named
+            attributes {
+                [Modifier] Attribute required    { type: primitives.boolean }
+                [Modifier] Attribute optional    { type: primitives.boolean }
+                [Modifier] Attribute multivalued { type: primitives.boolean }
+            }
+        }
+        ObjectType Attribute {
+            superTypes: Feature
+            references {
+                Reference type { type: Classifier }
+            }
+            attributes {
+                [Modifier] Attribute role { type: AttributeRole }
+            }
+        }
+        ObjectType Containment {
+            superTypes: Feature
+            references {
+                Reference type { type: ObjectType }
+            }
+        }
+        ObjectType Reference {
+            superTypes: Feature
+            references {
+                Reference type { type: ObjectType }
+            }
+            attributes {
+                [optional] Attribute opposite { type: primitives.String }
+            }
+        }
+    }
+    enumTypes {
+        EnumType PrimitiveKind {
+            literals {
+                EnumLiteral Integer
+                EnumLiteral Decimal
+                EnumLiteral Boolean
+                EnumLiteral String
+                EnumLiteral Other
+            }
+        }
+        EnumType AttributeRole {
+            literals {
+                EnumLiteral Plain
+                EnumLiteral Name
+                EnumLiteral Documentation
+                EnumLiteral Modifier
+            }
+        }
+    }
+}
