@@ -29,12 +29,10 @@ public class AnnotatedJavaMetamodelSource implements MetamodelSource<EcoreType<E
 
     private AnnotatedJavaMetamodelSource(String javaPackage) {
         scanResult = new ClassGraph().enableAnnotationInfo().acceptPackages(javaPackage).scan();
-        // System.out.println("URL: " + scanResult.getClasspathURLs());
         var packageImplementations = scanResult.getClassesWithAnnotation(Meta.Package.class);
         var mapper = new AnnotatedJava2EcoreMapper();
         this.packages = packageImplementations.loadClasses().stream()
                 .collect(Collectors.toMap(Class::getName, mapper::map));
-        // System.out.println("*** Packages:\n" + packages);
     }
 
     @Override

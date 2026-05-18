@@ -30,9 +30,7 @@ public class ClassConstants {
         try {
             String packageName = getLanguagePackage();
             String javaClassName = packageName + "." + name.replace(".", "$");
-            Class<?> aClass = Class.forName(javaClassName);
-            System.out.println("Class for " + name + ": " + aClass);
-            return aClass;
+            return Class.forName(javaClassName);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

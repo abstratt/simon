@@ -158,9 +158,6 @@ public class EcoreModelBuilder implements Backend<EcoreObjectType, EcoreSlotted<
     }
 
     private void setOrAddReference(EObject source, EObject target, EcoreRelationship relationship) {
-        // System.out.println("Setting reference from a " + source.eClass().getName() +
-        // "." + relationship.name() + " to "
-        // + target.eClass().getName());
         var eReference = relationship.wrapped();
         if (eReference.isMany())
             ((List<EObject>) source.eGet(eReference)).add(target);

@@ -9,6 +9,9 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public interface Traversal<T> {
     /**
      * Hops from the given object to another one.
@@ -23,12 +26,10 @@ public interface Traversal<T> {
     }
 
     static <T> T debug(String message, T result) {
-        // System.out.println(message + " -> " + result);
         return result;
     }
 
     static <T, EL extends Collection<T>> EL debug(String message, EL result) {
-        // System.out.println(message);
         return result;
     }
 
@@ -207,6 +208,7 @@ public interface Traversal<T> {
     }
 
     class DebuggedTraversal<T> implements Traversal<T> {
+        private static final Logger log = LoggerFactory.getLogger(DebuggedTraversal.class);
         private final Traversal<T> base;
         private final String description;
 
@@ -217,9 +219,9 @@ public interface Traversal<T> {
 
         @Override
         public T hop(T context) {
-            System.out.println(description + " - hopping from " + context);
+            log.debug("{} - hopping from {}", description, context);
             T result = base.hop(context);
-            System.out.println(description + " - hopping from " + context + "\n\tresult: " + result);
+            log.debug("{} - hopping from {} result: {}", description, context, result);
             return result;
         }
 

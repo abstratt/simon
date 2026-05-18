@@ -41,8 +41,12 @@ import com.abstratt.simon.metamodel.Metamodel.Slotted;
 import com.abstratt.simon.metamodel.Metamodel.Type;
 import com.abstratt.simon.parser.antlr.SimonBaseListener;
 import com.abstratt.simon.parser.antlr.SimonParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class SimonBuilder<T> extends SimonBaseListener {
+
+    private static final Logger log = LoggerFactory.getLogger(SimonBuilder.class);
 
     class ElementInfo {
         private String sourceName;
@@ -355,7 +359,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     private List<ModifierContext> consumeModifiers() {
     	var snapshot = new ArrayList<>(this.availableModifiers);
     	availableModifiers.clear();
-    	System.out.println("Modifiers: " + snapshot);
+    	log.debug("Modifiers: {}", snapshot);
     	return snapshot; 
     }
 
@@ -615,7 +619,7 @@ class SimonBuilder<T> extends SimonBaseListener {
     }
 
     private <Z> Z debug(String tag, Z toDebug) {
-        System.out.println("\n" + tag + ": " + toDebug);
+        log.debug("{}: {}", tag, toDebug);
         return toDebug;
     }
 

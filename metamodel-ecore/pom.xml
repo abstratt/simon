@@ -28,7 +28,11 @@
 			<artifactId>simon-annotation-dsl</artifactId>
 			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	

@@ -37,6 +37,8 @@ import com.abstratt.simon.metamodel.dsl.Meta;
 import com.abstratt.simon.metamodel.dsl.Meta.Required;
 import com.abstratt.simon.metamodel.ecore.impl.MappingSession;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper.*;
 
@@ -45,21 +47,18 @@ import static com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper.*;
  * Simon DSL annotations as defined in {@link Meta}.
  */
 public class AnnotatedJava2EcoreMapper {
+
+    private static final Logger log = LoggerFactory.getLogger(AnnotatedJava2EcoreMapper.class);
+
     /**
      * Maps the given Java class that utilizes Simon's annotation-based DSL to an
      * EMF-based metamodel.
      */
     public <E extends EObject> E map(Class<?> clazz) {
-        // System.out.println("*** " + Arrays.stream(new
-        // Throwable().fillInStackTrace().getStackTrace()).skip(1)
-        // .findFirst().get().toString());
-
         var mappingSession = new MappingSession();
         Object[] result = { null };
         buildIfNeeded(clazz, mappingSession, debug("building if needed", r -> result[0] = r));
-        // System.out.println("**** Resolving pending requests");
         mappingSession.processPendingRequests();
-        // System.out.println("**** Done");
 
         return (E) result[0];
     }
@@ -74,7 +73,7 @@ public class AnnotatedJava2EcoreMapper {
      */
     private <E extends ENamedElement> void buildIfNeeded(Class<?> clazz, MappingSession mappingSession,
             Consumer<E> consumer) {
-        System.out.println("Building if needed: " + clazz.getName());
+        log.debug("Building if needed: {}", clazz.getName());
 
         if (MetaEcoreHelper.isPrimitive(clazz) || MetaEcoreHelper.isPrimitiveJavaClass(clazz)) {
             buildIfNeeded(mappingSession.currentPackage(), clazz, mappingSession, consumer);
@@ -92,7 +91,7 @@ public class AnnotatedJava2EcoreMapper {
 
         // may need to build the package first
         buildIfNeeded(packageClass, mappingSession, (EPackage resolvedEPackage) -> {
-            System.out.println("Discovered parent package: " + resolvedEPackage.getName());
+            log.debug("Discovered parent package: {}", resolvedEPackage.getName());
             buildIfNeeded(resolvedEPackage, clazz, mappingSession, consumer);
         });
 
@@ -100,7 +99,7 @@ public class AnnotatedJava2EcoreMapper {
 
     private <E extends ENamedElement> void buildIfNeeded(EPackage parentPackage, Class<?> clazz,
             MappingSession mappingSession, Consumer<E> consumer) {
-        System.out.println("Building if needed: " + clazz.getName() + " under " + parentPackage.getName());
+        log.debug("Building if needed: {} under {}", clazz.getName(), parentPackage.getName());
         assert parentPackage != null : clazz.getName();
         mappingSession.runWithPackage(parentPackage, "findOrBuild(" + clazz.getName() + ")", ctx -> {
             if (MetaEcoreHelper.isPrimitive(clazz) || MetaEcoreHelper.isPrimitiveJavaClass(clazz)) {
@@ -167,16 +166,6 @@ public class AnnotatedJava2EcoreMapper {
         }
         ePackage.getEAnnotations().add(builtInsEAnnotation);
     }
-
-//	private EDataType buildPrimitiveType(Context mappingSession, Class<?> clazz) {
-//		String className = clazz.getSimpleName();
-//		System.out.println("Building primitive type " + className);
-//		EDataType eDataType = EcoreFactory.eINSTANCE.createEDataType();
-//		eDataType.setName(className);
-//		eDataType.setInstanceTypeName(className);
-//		eDataType.setInstanceClass(clazz);
-//		return eDataType;
-//	}
 
     private EClass buildPrimitiveType(MappingSession mappingSession, Class<?> clazz) {
         // a primitive type is a class without any features
@@ -331,7 +320,6 @@ public class AnnotatedJava2EcoreMapper {
             MappingSession mappingSession, BiFunction<MappingSession, J, E> builder) {
         return (javaElement) -> {
             E built = builder.apply(mappingSession, javaElement);
-            // System.out.println(toString(javaElement, built));
             return built;
         };
     }
@@ -381,7 +369,6 @@ public class AnnotatedJava2EcoreMapper {
     private void markAsOpposite(EReference thisSide, EReference opposite) {
         thisSide.setEOpposite(opposite);
         opposite.setEOpposite(thisSide);
-        // System.out.println("Marked as opposite: " + opposite + "\n\tof " + thisSide);
     }
 
     private EReference buildReference(MappingSession mappingSession, Method accessor) {
@@ -395,7 +382,6 @@ public class AnnotatedJava2EcoreMapper {
 
     private void markReferenceAsContainment(EReference reference) {
         reference.setContainment(true);
-        // System.out.println("Marked as containment: " + reference);
     }
 
     private EReference doBuildReference(MappingSession mappingSession, Method accessor,
@@ -464,7 +450,7 @@ public class AnnotatedJava2EcoreMapper {
 
     private <EC extends ENamedElement> Consumer<EC> debug(String tag, Consumer<EC> toDebug) {
         return (value) -> {
-            System.out.println(tag + " - " + value);
+            log.debug("{} - {}", tag, value);
             toDebug.accept(value);
         };
     }

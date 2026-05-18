@@ -2,6 +2,8 @@ package com.abstratt.simon.tooling;
 
 import com.google.auto.service.AutoService;
 import com.google.common.annotations.VisibleForTesting;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -19,6 +21,8 @@ import java.util.Set;
 @AutoService(Processor.class)
 public class SimonDSLProcessor extends AbstractProcessor {
 
+    private static final Logger log = LoggerFactory.getLogger(SimonDSLProcessor.class);
+
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
@@ -29,7 +33,7 @@ public class SimonDSLProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         printMessage(Diagnostic.Kind.NOTE, "Processing " + annotations, null);
-        roundEnv.getRootElements().forEach(e -> System.out.println("Root: " + e.getSimpleName() + " : " + e.getKind()));
+        roundEnv.getRootElements().forEach(e -> log.debug("Root: {} : {}", e.getSimpleName(), e.getKind()));
         annotations.forEach(a -> {
             printMessage(Diagnostic.Kind.NOTE, "Processing annotation " + a.getSimpleName(), null);
             roundEnv.getElementsAnnotatedWith(a).forEach(e ->
@@ -61,9 +65,9 @@ public class SimonDSLProcessor extends AbstractProcessor {
         var parent = Optional.ofNullable(e.getEnclosingElement());
         return parent
                 .filter(it -> !it.getSimpleName().isEmpty())
-                .map(it ->  {System.out.println("e: " + it); return it; })
+                .map(it ->  {log.debug("e: {}", it); return it; })
                 .map(this::getQualifiedName)
-                .map(it ->  {System.out.println("qn: " + it); return it; })
+                .map(it ->  {log.debug("qn: {}", it); return it; })
                 .map(it -> it + ".")
                 .map(it -> (CharSequence) (it + e.getSimpleName()))
                 .orElseGet(e::getSimpleName);

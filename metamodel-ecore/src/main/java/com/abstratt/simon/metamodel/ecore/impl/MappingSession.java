@@ -16,6 +16,8 @@ import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A resolution context.
@@ -24,6 +26,8 @@ import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
  * an ECore element.
  */
 public class MappingSession {
+
+    private static final Logger log = LoggerFactory.getLogger(MappingSession.class);
 
     @FunctionalInterface
     public interface ElementBuilder<EC extends ENamedElement> {
@@ -206,7 +210,6 @@ public class MappingSession {
     }
 
     private <EC extends ENamedElement> void map(BuildAction<EC> task) {
-        // System.out.println("Accepted request for " + task.requestTag);
         EC existing = (EC) built.get(task.classToResolve);
         if (existing != null) {
             // already resolved in this context, just serve it!
@@ -214,7 +217,6 @@ public class MappingSession {
             return;
         }
         // Map the type asynchronously
-        // System.out.println("Scheduling request " + task.requestTag);
         addPendingRequest(task.requestTag::toString, task);
     }
 
@@ -235,10 +237,7 @@ public class MappingSession {
      */
     private <EC extends ENamedElement> void serve(BuildAction<EC> toServe, EC resolved) {
         if (served.add(toServe)) {
-            // System.out.println("Serving request " + toServe);
             toServe.consumer.accept(resolved);
-        } else {
-            // System.out.println("Ignoring request " + toServe);
         }
     }
 
@@ -287,13 +286,13 @@ public class MappingSession {
     public void runWithPackage(EPackage parent, DescribedRunnable runnable) {
         assert parent != null;
         enterPackage(parent);
-        System.out.println("Running with package " + parent.getName() + ": " + runnable.description());
+        log.trace("Running with package {}: {}", parent.getName(), runnable.description());
         try {
             runnable.run();
         } finally {
             leavePackage();
         }
-        System.out.println("Completed running with package " + parent.getName() + ": " + runnable.description());
+        log.trace("Completed running with package {}: {}", parent.getName(), runnable.description());
     }
 
     public void runWithPackage(EPackage parent, String description, ContextConsumer action) {
@@ -412,33 +411,28 @@ public class MappingSession {
         }
 
         private void resolve(MappingSession context) {
-            // System.out.println("Async handling request " + requestTag);
             if (context.isServed(this)) {
                 // We accept multiple requests, but only honor the first time
-                // System.out.println("Already served: " + this);
                 return;
             }
             EC existingElement = (EC) context.built.get(classToResolve);
             if (existingElement != null) {
-                // System.out.println("Already solved: " + this);
                 context.serve(this, existingElement);
                 return;
             }
             boolean isNewRequest = context.building.add(classToResolve);
             if (!isNewRequest) {
                 // already building - just reschedule so we will serve it when done
-                // System.out.println("Re-scheduling request " + this);
                 context.addPendingRequest(context.currentPackage(), requestTag::toString, this);
                 return;
             }
             // TODO-RC we need to run the following under the proper EPackage
             // actually build the element
-            // System.out.println("Building for " + this);
             EC newElement = builder.build(context, classToResolve);
             if (isRoot)
                 resource.getContents().add(newElement);
             context.built.put(classToResolve, newElement);
-            System.out.println("Built for " + this);
+            log.trace("Built for {}", this);
             context.serve(this, newElement);
         }
 
@@ -447,8 +441,8 @@ public class MappingSession {
             assert context == MappingSession.this;
             if (!isRoot) {
                 var selectedPackage = builder.packageSelected(context, classToResolve);
-                System.out.println("selectedPackage for " + classToResolve.getName() + " -> "
-                        + Optional.ofNullable(selectedPackage).map(EPackage::getName));
+                log.debug("selectedPackage for {} -> {}", classToResolve.getName(),
+                        Optional.ofNullable(selectedPackage).map(EPackage::getName));
                 if (selectedPackage == null)
                     resolve(context);
                 else
