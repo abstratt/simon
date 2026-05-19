@@ -25,8 +25,9 @@ You can read more about Simon's metamodel by checking out the documentation gene
 ### The general syntax for Simon-based programs
 
 For the complete syntax and semantics reference, see
-[`docs/language.md`](docs/language.md) (also published at
-[abstratt.github.io/simon/docs/language.md](https://abstratt.github.io/simon/docs/language.md)).
+[`docs/language.md`](docs/language.md) (also published, rendered as
+HTML, at
+[abstratt.github.io/simon/docs/language.html](https://abstratt.github.io/simon/docs/language.html)).
 The overview below covers the most common constructs.
 
 #### Language declaration
