@@ -23,10 +23,10 @@ each construct. Examples are drawn from the example metamodels under
 
 (* a model comment *)
 
-Application myApp {
+application myApp {
     screens {
-        Screen login {}
-        Screen home  {}
+        screen login {}
+        screen home  {}
     }
 }
 ```
@@ -131,9 +131,9 @@ optional nested components.
 Example (using the UI metamodel):
 
 ```
-[root] Application myApp (documentation: 'demo') {
+[root] application myApp (documentation: 'demo') {
     screens {
-        Screen login {}
+        screen login {}
     }
 }
 ```
@@ -166,8 +166,8 @@ containment). Slots live inside the optional parens after the object
 name:
 
 ```
-Reference parent (opposite: 'children') { type: Container }
-Item myItem  (tags: ['red', 'green', 'blue'])
+reference parent (opposite: 'children') { type: Container }
+item myItem  (tags: ['red', 'green', 'blue'])
 ```
 
 The grammar is `featureName keyValueSep slotValue`, where the
@@ -181,8 +181,8 @@ For a non-multivalued attribute, the slot value is a single literal of
 the appropriate kind:
 
 ```
-Attribute name (documentation: 'the name of this thing')
-Color (red = 100 blue = 50)
+attribute name (documentation: 'the name of this thing')
+button submit (label = 'Sign in')
 ```
 
 A list literal supplied here is a `TypeError`.
@@ -193,7 +193,7 @@ For a `[multivalued]` primitive attribute, the slot value must be a
 list literal. Each element is parsed as the attribute's element type:
 
 ```
-Package Foo (builtIns: ['primitives', 'extras'])
+package Foo (builtIns: ['primitives', 'extras'])
 ```
 
 A single literal supplied to a multivalued slot is a `TypeError`.
@@ -205,7 +205,7 @@ Record types are composite attribute values without identity. They are
 written inline using the `#(…)` literal:
 
 ```
-Button (backgroundColor = #(red = 100 green = 0 blue = 50))
+button (backgroundColor = #(red = 100 green = 0 blue = 50))
 ```
 
 The `#(…)` body uses the same slot grammar as object headers; only
@@ -221,14 +221,14 @@ objects, owned elsewhere). Both are expressed inside a feature-named
 block:
 
 ```
-Application myApp {
+application myApp {
     screens {              // a containment block
-        Screen login {}
-        Screen home  {}
+        screen login {}
+        screen home  {}
     }
 }
 
-Reference parent (opposite: 'children') { type: Container }
+reference parent (opposite: 'children') { type: Container }
                                           //  ^ this brace block holds links
 ```
 
@@ -263,7 +263,7 @@ A reference may declare its opposite — the inverse navigable
 relationship — via the `opposite` slot:
 
 ```
-Reference application (opposite: 'screens') { type: Application }
+reference application (opposite: 'screens') { type: Application }
 ```
 
 When two references are paired by opposite name, setting one
@@ -350,7 +350,7 @@ The `package` declaration accepts these built-in slots:
   resources to be bundled with the package. When this package is in
   scope, each named resource is registered with the compiler's source
   provider, so an `@import 'name'` in a consumer file resolves to the
-  bundled content. Example: `Package Simon (builtIns: ['primitives'])`.
+  bundled content. Example: `package Simon (builtIns: ['primitives'])`.
 
 ### 7.2 Object types
 
@@ -593,30 +593,30 @@ A small UI model exercising every construct:
 @import 'colors'
 
 (* The customer-facing demo app. *)
-[root] Application myApp {
+[root] application myApp {
     screens {
-        Screen login {
+        screen login {
             children {
-                Button submit (label: 'Sign in' backgroundColor = #(red = 0 green = 120 blue = 215))
-                Link forgotPassword (label: 'Forgot password?') {
+                button submit (label: 'Sign in' backgroundColor = #(red = 0 green = 120 blue = 215))
+                link forgotPassword (label: 'Forgot password?') {
                     targetScreen: myApp.recovery
                 }
             }
         }
-        Screen recovery {}
+        screen recovery {}
     }
 }
 ```
 
 What that says, semantically:
 
-- `Application myApp` is a root composite (`[root]` on `Application`
+- `application myApp` is a root composite (`[root]` on `Application`
   in the UI metamodel), with `screens` as a multivalued containment.
-- Each `Screen` contains a list of UI components (multivalued
+- Each `screen` contains a list of UI components (multivalued
   `children` from the `Container` supertype).
-- `Button submit (…)` sets the `label` attribute (string) and
+- `button submit (…)` sets the `label` attribute (string) and
   `backgroundColor` attribute (a record literal of type `Color`).
-- `Link forgotPassword (…) { … }` carries one attribute slot and one
+- `link forgotPassword (…) { … }` carries one attribute slot and one
   reference link; `targetScreen: myApp.recovery` is resolved by
   name path within the model.
 
