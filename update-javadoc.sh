@@ -29,17 +29,23 @@ maybe_push() {
   done
 
   if [ "$PUSH" = true ]; then
-    # now push documentation to gh-pages branch
-    cd "$APIDOCS_DIR"
-    git init
-    git remote add javadoc git@github.com:abstratt/simon.git
-    git fetch --depth=1 javadoc gh-pages
-    git add --all
-    git commit -m sync
-    git merge --allow-unrelated-histories --no-edit -s ours remotes/javadoc/gh-pages
-    git push --set-upstream javadoc master:gh-pages --force
-    pwd
-    cd -
+    # Run publish in a subshell so cwd changes, the throwaway `.git`, the
+    # `javadoc` remote, and any upstream-tracking writes can't leak into
+    # this repo if anything here goes sideways.
+    (
+      cd "$APIDOCS_DIR"
+      # Defensive: if the cd silently landed us in the wrong place (e.g.
+      # the parent repo root), refuse to run git commands here. Without
+      # this, a `git init` + force-push would clobber the docs site.
+      test -f index.html || { echo "Aborting: $PWD does not look like the Javadoc output directory." >&2; exit 1; }
+      git init
+      git remote add javadoc git@github.com:abstratt/simon.git
+      git fetch --depth=1 javadoc gh-pages
+      git add --all
+      git commit -m sync
+      git merge --allow-unrelated-histories --no-edit -s ours remotes/javadoc/gh-pages
+      git push javadoc master:gh-pages --force
+    )
   fi
 }
 
