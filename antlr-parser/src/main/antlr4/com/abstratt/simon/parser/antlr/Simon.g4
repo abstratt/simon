@@ -71,7 +71,9 @@ keyValueSep: ':'|'=';
     
 featureName: IDENT;    
 
-slotValue: literal;
+slotValue: literal | listLiteral;
+
+listLiteral: '[' (literal (',' literal)*)? ']';
     
 query:
     expression EOF;

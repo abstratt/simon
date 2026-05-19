@@ -23,7 +23,7 @@ abstract class AbstractMetamodelEquivalenceTest {
     protected abstract EPackage actual(String packageName);
 
     protected Stream<String> packageNames() {
-        return Stream.of("UI", "UI2", "UI3", "IM", "DAUI");
+        return Stream.of("UI", "UI2", "UI3", "IM", "DAUI", "Tagged");
     }
 
     @ParameterizedTest(name = "{0}")

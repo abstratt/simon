@@ -13,6 +13,7 @@ import com.abstratt.simon.compiler.source.annotated.AnnotatedJava2EcoreMapper;
 import com.abstratt.simon.compiler.source.simon.SimonFileMetamodelSource;
 import com.abstratt.simon.examples.IM;
 import com.abstratt.simon.examples.Simon;
+import com.abstratt.simon.examples.Tagged;
 import com.abstratt.simon.examples.UI;
 import com.abstratt.simon.examples.UI2;
 import com.abstratt.simon.metamodel.ecore.EcoreMetamodel.EcoreType;
@@ -39,6 +40,7 @@ public class TestHelper {
     public static final EPackage IM_PACKAGE = new AnnotatedJava2EcoreMapper().map(IM.class);
     public static final EPackage UI_PACKAGE = new AnnotatedJava2EcoreMapper().map(UI.class);
     public static final EPackage UI2_PACKAGE = new AnnotatedJava2EcoreMapper().map(UI2.class);
+    public static final EPackage TAGGED_PACKAGE = new AnnotatedJava2EcoreMapper().map(Tagged.class);
     public static final EPackage JAVA_SIMON_PACKAGE = new AnnotatedJava2EcoreMapper().map(Simon.class);
     /**
      * The five example metamodels re-expressed in {@code @language Simon} and
@@ -57,7 +59,7 @@ public class TestHelper {
                 "com/abstratt/simon/examples", "simon");
         var factory = SimonFileMetamodelSource.Factory.withBootstrapClass(
                 Simon.class,
-                Arrays.asList("ui", "ui2", "ui3", "im-metamodel", "daui", "simon"),
+                Arrays.asList("ui", "ui2", "ui3", "im-metamodel", "daui", "simon", "tagged"),
                 sources);
         try (var source = factory.build()) {
             var packages = new LinkedHashMap<>(((SimonFileMetamodelSource) source).getPackages());

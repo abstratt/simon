@@ -54,6 +54,8 @@ public abstract class AbstractCompilerTests {
 
     protected abstract EPackage imPackage();
 
+    protected abstract EPackage taggedPackage();
+
     // --- derived helpers ---
 
     protected final EClass uiClassFor(Class<?> clazz) {
@@ -72,6 +74,18 @@ public abstract class AbstractCompilerTests {
     protected final EObject compileUsingIM(String toParse) {
         String[] sources = { "@language IM " + toParse };
         return root(ensureSuccess(compileProject(Arrays.asList(imPackage()), sources)));
+    }
+
+    protected final EObject compileUsingTagged(String toParse) {
+        String[] sources = { "@language Tagged " + toParse };
+        return root(ensureSuccess(compileProject(Arrays.asList(taggedPackage()), sources)));
+    }
+
+    protected final List<Problem> compileFailingUsingTagged(String toParse) {
+        String[] sources = { "@language Tagged " + toParse };
+        return compileProject(Arrays.asList(taggedPackage()), sources).stream()
+                .flatMap(r -> r.getProblems().stream())
+                .collect(Collectors.toList());
     }
 
     // --- tests ---
@@ -633,6 +647,49 @@ public abstract class AbstractCompilerTests {
         assertEquals(50, (int) getPrimitiveValue(backgroundColor, "blue"));
         assertEquals(0, (int) getPrimitiveValue(backgroundColor, "green"));
 
+    }
+
+    @Test
+    void multivaluedPrimitiveSlot_listLiteral() {
+        EObject item = compileUsingTagged("Item myItem (tags: ['red', 'green', 'blue'])");
+        assertEquals(List.of("red", "green", "blue"), readTags(item));
+    }
+
+    @Test
+    void multivaluedPrimitiveSlot_emptyList() {
+        EObject item = compileUsingTagged("Item myItem (tags: [])");
+        assertEquals(List.of(), readTags(item));
+    }
+
+    @Test
+    void multivaluedPrimitiveSlot_omittedDefaultsToEmpty() {
+        EObject item = compileUsingTagged("Item myItem");
+        assertEquals(List.of(), readTags(item));
+    }
+
+    @Test
+    void listLiteralOnSingleValuedSlot_isTypeError() {
+        var problems = compileFailingUsingTagged("Item myItem (name: ['a', 'b'])");
+        assertHasTypeError(problems, "name");
+    }
+
+    @Test
+    void singleLiteralOnMultivaluedSlot_isTypeError() {
+        var problems = compileFailingUsingTagged("Item myItem (tags: 'only-one')");
+        assertHasTypeError(problems, "tags");
+    }
+
+    private List<String> readTags(EObject item) {
+        return EcoreHelper.<EObject>getValueAsStream(item, "tags")
+                .map(EcoreHelper::<String>unwrappedPrimitiveValue)
+                .collect(Collectors.toList());
+    }
+
+    private void assertHasTypeError(List<Problem> problems, String slotName) {
+        assertTrue(
+                problems.stream().anyMatch(p -> p.category() == Problem.Category.TypeError
+                        && p.toString().contains(slotName)),
+                () -> "Expected TypeError mentioning '" + slotName + "', got: " + problems);
     }
 
     private EObject emptyApplication(String toParse) {

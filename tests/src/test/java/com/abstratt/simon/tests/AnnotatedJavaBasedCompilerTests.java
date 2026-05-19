@@ -24,4 +24,9 @@ public class AnnotatedJavaBasedCompilerTests extends AbstractCompilerTests {
     protected EPackage imPackage() {
         return TestHelper.IM_PACKAGE;
     }
+
+    @Override
+    protected EPackage taggedPackage() {
+        return TestHelper.TAGGED_PACKAGE;
+    }
 }

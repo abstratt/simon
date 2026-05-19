@@ -1,0 +1,13 @@
+@language Simon
+@import 'primitives'
+
+Package Tagged {
+    objectTypes {
+        [root] ObjectType Item {
+            attributes {
+                [Name] Attribute name { type: primitives.String }
+                [multivalued] Attribute tags { type: primitives.String }
+            }
+        }
+    }
+}

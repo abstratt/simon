@@ -149,12 +149,22 @@ public class EcoreModelBuilder implements Backend<EcoreObjectType, EcoreSlotted<
 
     private void setValue(EcoreSlot slot, EObject target, Object value) {
         var eAttribute = slot.wrapped();
-        EObject valueAsEObject;
+        if (eAttribute.isMany()) {
+            @SuppressWarnings("unchecked")
+            List<EObject> existing = (List<EObject>) target.eGet(eAttribute);
+            existing.clear();
+            for (Object element : (List<?>) value) {
+                existing.add(asValueObject(eAttribute, element));
+            }
+            return;
+        }
+        target.eSet(eAttribute, asValueObject(eAttribute, value));
+    }
+
+    private EObject asValueObject(EAttribute eAttribute, Object value) {
         if (MetaEcoreHelper.isPrimitive(eAttribute.getEType()))
-            valueAsEObject = EcoreHelper.wrappedPrimitiveValue((EClass) eAttribute.getEType(), value);
-        else
-            valueAsEObject = (EObject) value;
-        target.eSet(eAttribute, valueAsEObject);
+            return EcoreHelper.wrappedPrimitiveValue((EClass) eAttribute.getEType(), value);
+        return (EObject) value;
     }
 
     private void setOrAddReference(EObject source, EObject target, EcoreRelationship relationship) {

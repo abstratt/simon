@@ -545,12 +545,12 @@ class SimonBuilder<T> extends SimonBaseListener {
 
     private <CTX extends ParserRuleContext, FCTX extends ParserRuleContext> void parseSlotValue(CTX ctx, Slotted slotOwner, FeatureNameProvider<CTX, FCTX> featureName, SlotValueBuilder<CTX> valueBuilder, BiConsumer<Slot, Object> valueConsumer) {
 		var slot = getSlotByFeatureName(slotOwner, featureName.get(ctx));
-        Object slotValue = valueBuilder.build((CTX) ctx, slot.type());
+        Object slotValue = valueBuilder.build((CTX) ctx, slot);
         valueConsumer.accept(slot, slotValue);
     }
-    
+
     interface SlotValueBuilder<CTX extends ParserRuleContext> {
-    	Object build(CTX context, BasicType slotType);
+    	Object build(CTX context, Slot slot);
     }
     
     interface FeatureNameProvider<CTX extends ParserRuleContext, FCTX extends ParserRuleContext> {
@@ -573,21 +573,43 @@ class SimonBuilder<T> extends SimonBaseListener {
 		return slot;
 	}
 
-	private Object buildSlotValue(SlotContext ctx, BasicType slotType) {
-		Object slotValue;
+	private Object buildSlotValue(SlotContext ctx, Slot slot) {
         SlotValueContext slotValueContext = ctx.slotValue();
-		if (slotType instanceof Primitive) {
-            slotValue = parsePrimitiveLiteral((Primitive) slotType, slotValueContext.literal().getText());
-        } else if (slotType instanceof Enumerated) {
-            slotValue = parseEnumeratedLiteral((Enumerated) slotType, slotValueContext.literal().getText());
-        } else if (slotType instanceof RecordType) {
-            RecordType slotTypeAsRecordType = (RecordType) slotType;
-            slotValue = parseRecordLiteral(slotTypeAsRecordType, slotValueContext.literal().recordLiteral());
-        } else {
-            throw new IllegalStateException("Unsupported basic type: " + slotType.name());
+        BasicType slotType = slot.type();
+        boolean expectsList = slot.multivalued();
+        ListLiteralContext listCtx = slotValueContext.listLiteral();
+        boolean givenList = listCtx != null;
+        if (expectsList && !givenList) {
+            reportError(Severity.Fatal, Category.TypeError, sourceName, slotValueContext,
+                    "Slot '" + slot.name() + "' is multivalued; expected a list value like [a, b]");
         }
-        return slotValue;
+        if (!expectsList && givenList) {
+            reportError(Severity.Fatal, Category.TypeError, sourceName, slotValueContext,
+                    "Slot '" + slot.name() + "' is single-valued; a list value is not allowed");
+        }
+        if (givenList) {
+            List<LiteralContext> elements = listCtx.literal();
+            List<Object> values = new ArrayList<>(elements.size());
+            for (LiteralContext element : elements) {
+                values.add(buildLiteralValue(slotType, element));
+            }
+            return values;
+        }
+        return buildLiteralValue(slotType, slotValueContext.literal());
 	}
+
+    private Object buildLiteralValue(BasicType slotType, LiteralContext literal) {
+        if (slotType instanceof Primitive) {
+            return parsePrimitiveLiteral((Primitive) slotType, literal.getText());
+        }
+        if (slotType instanceof Enumerated) {
+            return parseEnumeratedLiteral((Enumerated) slotType, literal.getText());
+        }
+        if (slotType instanceof RecordType) {
+            return parseRecordLiteral((RecordType) slotType, literal.recordLiteral());
+        }
+        throw new IllegalStateException("Unsupported basic type: " + slotType.name());
+    }
 	
     private Object parseRecordLiteral(RecordType recordType, RecordLiteralContext recordLiteralContext) {
         T newRecord = modelHandling.instantiation().createObject(recordType.isRoot(), recordType);

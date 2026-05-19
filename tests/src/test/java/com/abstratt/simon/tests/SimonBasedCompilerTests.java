@@ -24,4 +24,9 @@ public class SimonBasedCompilerTests extends AbstractCompilerTests {
     protected EPackage imPackage() {
         return TestHelper.SIMON_PACKAGES.get("IM");
     }
+
+    @Override
+    protected EPackage taggedPackage() {
+        return TestHelper.SIMON_PACKAGES.get("Tagged");
+    }
 }
