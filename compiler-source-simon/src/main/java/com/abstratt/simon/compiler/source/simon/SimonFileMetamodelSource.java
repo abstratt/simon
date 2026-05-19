@@ -60,7 +60,7 @@ public class SimonFileMetamodelSource implements MetamodelSource<EcoreType<EClas
         // Each entry point yields its own root Simon.Package. Imports pull
         // additional packages into the same Resource — we want all of them.
         Collection<EObject> packageInstances = collectAllPackages(results);
-        return new Simon2EcoreMapper().map(packageInstances);
+        return new Simon2EcoreMapper(sources).map(packageInstances);
     }
 
     private static Collection<EObject> collectAllPackages(List<Result<EObject>> results) {

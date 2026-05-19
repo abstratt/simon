@@ -22,6 +22,13 @@ import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 
+import java.io.IOException;
+import java.io.Reader;
+
+import org.apache.commons.io.IOUtils;
+
+import com.abstratt.simon.compiler.source.ContentProvider;
+import com.abstratt.simon.compiler.source.SourceProvider;
 import com.abstratt.simon.metamodel.Metamodel.PrimitiveKind;
 import com.abstratt.simon.metamodel.ecore.impl.EcoreHelper;
 import com.abstratt.simon.metamodel.ecore.impl.MetaEcoreHelper;
@@ -51,6 +58,17 @@ public class Simon2EcoreMapper {
 
     /** One primitive wrapper EClass per (consuming EPackage, PrimitiveKind). */
     private final Map<EPackage, Map<PrimitiveKind, EClass>> primitiveWrappersByPackage = new HashMap<>();
+
+    /** Resolves named built-in resources to their content; may be null. */
+    private final SourceProvider builtInResolver;
+
+    public Simon2EcoreMapper() {
+        this(null);
+    }
+
+    public Simon2EcoreMapper(SourceProvider builtInResolver) {
+        this.builtInResolver = builtInResolver;
+    }
 
     /**
      * Translates the given parsed {@code Simon.Package} instances into Ecore
@@ -113,6 +131,14 @@ public class Simon2EcoreMapper {
         var builtInsEAnnotation = EcoreFactory.eINSTANCE.createEAnnotation();
         builtInsEAnnotation.setSource("simon/builtIns");
         ePackage.getEAnnotations().add(builtInsEAnnotation);
+        for (String builtIn : stringListValueOf(packageInstance, "builtIns")) {
+            String content = loadBuiltInContent(builtIn);
+            if (content == null) {
+                throw new IllegalStateException(
+                        "Could not resolve built-in '" + builtIn + "' for package " + name);
+            }
+            builtInsEAnnotation.getDetails().put(builtIn, content);
+        }
 
         for (EObject objectType : children(packageInstance, "objectTypes")) {
             EClass eClass = EcoreFactory.eINSTANCE.createEClass();
@@ -361,6 +387,42 @@ public class Simon2EcoreMapper {
             return name == null ? "" : stripTrailingUnderscore(name);
         }));
         return copy;
+    }
+
+    private static List<String> stringListValueOf(EObject target, String featureName) {
+        EStructuralFeature feature = target.eClass().getEStructuralFeature(featureName);
+        if (feature == null) {
+            return List.of();
+        }
+        Object raw = target.eGet(feature);
+        if (!(raw instanceof Collection<?>)) {
+            return List.of();
+        }
+        List<String> result = new ArrayList<>();
+        for (Object item : (Collection<?>) raw) {
+            Object unwrapped = item instanceof EObject
+                    ? EcoreHelper.unwrappedPrimitiveValue((EObject) item)
+                    : item;
+            if (unwrapped != null) {
+                result.add(unwrapped.toString());
+            }
+        }
+        return result;
+    }
+
+    private String loadBuiltInContent(String name) {
+        if (builtInResolver == null) {
+            return null;
+        }
+        ContentProvider contents = builtInResolver.access(name);
+        if (contents == null) {
+            return null;
+        }
+        try (Reader reader = contents.getContents()) {
+            return IOUtils.toString(reader);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read built-in '" + name + "'", e);
+        }
     }
 
     private static String stringValueOf(EObject target, String featureName) {

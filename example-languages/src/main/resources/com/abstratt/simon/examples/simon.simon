@@ -1,7 +1,7 @@
 @language Simon
 @import 'primitives'
 
-Package Simon {
+Package Simon (builtIns: ['primitives']) {
     objectTypes {
         [abstract] ObjectType Named {
             attributes {
@@ -11,6 +11,9 @@ Package Simon {
         }
         [root] ObjectType Package {
             superTypes: Named
+            attributes {
+                [multivalued] Attribute builtIns { type: primitives.String }
+            }
             containments {
                 [multivalued] Containment objectTypes    { type: ObjectType }
                 [multivalued] Containment recordTypes    { type: RecordType }

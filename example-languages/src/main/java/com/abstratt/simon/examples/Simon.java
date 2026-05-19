@@ -35,6 +35,11 @@ public interface Simon {
 
     @Meta.Composite(root = true)
     interface Package extends Named {
+        @Meta.Required(false)
+        @Meta.Typed(String.class)
+        @Meta.Attribute
+        Collection<String> builtIns();
+
         @Meta.Contained
         @Meta.Typed(ObjectType.class)
         Collection<ObjectType> objectTypes();

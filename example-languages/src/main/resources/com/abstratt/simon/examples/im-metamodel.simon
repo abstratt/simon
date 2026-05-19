@@ -1,7 +1,7 @@
 @language Simon
 @import 'primitives'
 
-Package IM {
+Package IM (builtIns: ['im-primitives']) {
     objectTypes {
         ObjectType Named {
             attributes {
