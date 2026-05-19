@@ -5,9 +5,9 @@ file is a self-contained note in front-matter-prefixed Markdown. Anything
 in this directory is meant to be read by humans too — these are project
 conventions and gotchas, not opaque machine state.
 
-The repository root [`CLAUDE.md`](../../CLAUDE.md) is what Claude Code
-auto-loads on session start; it summarizes the most important rules and
-points here for detail.
+The repository root [`AGENTS.md`](../../AGENTS.md) is the auto-discovery
+entry point that summarizes the most important rules and points here for
+detail.
 
 ## Conventions and rules
 

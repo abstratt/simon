@@ -1,9 +1,9 @@
 # Working on this repository
 
-This file is auto-loaded by Claude Code at session start, and is conventionally
-read by other agentic coding tools (Cursor, Aider, Continue, etc.) that look for
-`CLAUDE.md` or `AGENTS.md` at the repo root. Treat it as the single source of
-truth for project-specific conventions an AI assistant should follow.
+`AGENTS.md` at the repo root is the conventional discovery file for agentic
+coding tools (Claude Code, Cursor, Aider, Continue, etc.). Treat it as the
+single source of truth for project-specific conventions an AI assistant
+should follow on this repository.
 
 The detailed agent notes live in [`docs/agent-notes/`](docs/agent-notes/) —
 one file per rule or fact, with front matter and a `**Why:** / **How to
