@@ -1,11 +1,11 @@
 @language Simon
 @import 'ui'
 
-Package UI3 {
+package UI3 {
     objectTypes {
-        ObjectType IPrototype {
+        objectType IPrototype {
             references {
-                [multivalued] Reference applications { type: UI.Application }
+                [multivalued] reference applications { type: UI.Application }
             }
         }
     }

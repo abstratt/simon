@@ -1,12 +1,12 @@
 @language Simon
 /* Primitives for metamodels */
-Package primitives2 {
+package primitives2 {
     primitiveTypes {
-        PrimitiveType String (kind: String)
-        PrimitiveType Integer (kind: Integer)
-        PrimitiveType int (kind: Integer)
-        PrimitiveType Boolean (kind: Boolean)
-        PrimitiveType boolean (kind: Boolean)
-        PrimitiveType Decimal (kind: Decimal)
+        primitiveType String (kind: String)
+        primitiveType Integer (kind: Integer)
+        primitiveType int (kind: Integer)
+        primitiveType Boolean (kind: Boolean)
+        primitiveType boolean (kind: Boolean)
+        primitiveType Decimal (kind: Decimal)
     }
 }

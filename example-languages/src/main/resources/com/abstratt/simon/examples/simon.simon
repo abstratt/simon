@@ -1,110 +1,110 @@
 @language Simon
 @import 'primitives'
 
-Package Simon (builtIns: ['primitives']) {
+package Simon (builtIns: ['primitives']) {
     objectTypes {
-        [abstract] ObjectType Named {
+        [abstract] objectType Named {
             attributes {
-                [Name] Attribute name { type: primitives.String }
-                [Documentation] [optional] Attribute documentation { type: primitives.String }
+                [name] attribute name { type: primitives.String }
+                [documentation] [optional] attribute documentation { type: primitives.String }
             }
         }
-        [root] ObjectType Package {
+        [root] objectType Package {
             superTypes: Named
             attributes {
-                [multivalued] Attribute builtIns { type: primitives.String }
+                [multivalued] attribute builtIns { type: primitives.String }
             }
             containments {
-                [multivalued] Containment objectTypes    { type: ObjectType }
-                [multivalued] Containment recordTypes    { type: RecordType }
-                [multivalued] Containment enumTypes      { type: EnumType }
-                [multivalued] Containment primitiveTypes { type: PrimitiveType }
+                [multivalued] containment objectTypes    { type: ObjectType }
+                [multivalued] containment recordTypes    { type: RecordType }
+                [multivalued] containment enumTypes      { type: EnumType }
+                [multivalued] containment primitiveTypes { type: PrimitiveType }
             }
         }
-        [abstract] ObjectType Classifier { superTypes: Named }
-        ObjectType ObjectType {
+        [abstract] objectType Classifier { superTypes: Named }
+        objectType ObjectType {
             superTypes: Classifier
             attributes {
-                [Modifier] Attribute abstract_ { type: primitives.boolean }
-                [Modifier] Attribute root      { type: primitives.boolean }
+                [modifier] attribute abstract_ { type: primitives.boolean }
+                [modifier] attribute root      { type: primitives.boolean }
             }
             references {
-                [multivalued] Reference superTypes { type: ObjectType }
+                [multivalued] reference superTypes { type: ObjectType }
             }
             containments {
-                [multivalued] Containment attributes   { type: Attribute }
-                [multivalued] Containment containments { type: Containment }
-                [multivalued] Containment references   { type: Reference }
+                [multivalued] containment attributes   { type: Attribute }
+                [multivalued] containment containments { type: Containment }
+                [multivalued] containment references   { type: Reference }
             }
         }
-        ObjectType RecordType {
+        objectType RecordType {
             superTypes: Classifier
             containments {
-                [multivalued] Containment attributes { type: Attribute }
+                [multivalued] containment attributes { type: Attribute }
             }
         }
-        ObjectType EnumType {
+        objectType EnumType {
             superTypes: Classifier
             containments {
-                [multivalued] Containment literals { type: EnumLiteral }
+                [multivalued] containment literals { type: EnumLiteral }
             }
         }
-        ObjectType EnumLiteral { superTypes: Named }
-        ObjectType PrimitiveType {
+        objectType EnumLiteral { superTypes: Named }
+        objectType PrimitiveType {
             superTypes: Classifier
             attributes {
-                Attribute kind { type: PrimitiveKind }
+                attribute kind { type: PrimitiveKind }
             }
         }
-        [abstract] ObjectType Feature {
+        [abstract] objectType Feature {
             superTypes: Named
             attributes {
-                [Modifier] Attribute required    { type: primitives.boolean }
-                [Modifier] Attribute optional    { type: primitives.boolean }
-                [Modifier] Attribute multivalued { type: primitives.boolean }
+                [modifier] attribute required    { type: primitives.boolean }
+                [modifier] attribute optional    { type: primitives.boolean }
+                [modifier] attribute multivalued { type: primitives.boolean }
             }
         }
-        ObjectType Attribute {
+        objectType Attribute {
             superTypes: Feature
             references {
-                Reference type { type: Classifier }
+                reference type { type: Classifier }
             }
             attributes {
-                [Modifier] Attribute role { type: AttributeRole }
+                [modifier] attribute role { type: AttributeRole }
             }
         }
-        ObjectType Containment {
+        objectType Containment {
             superTypes: Feature
             references {
-                Reference type { type: ObjectType }
+                reference type { type: ObjectType }
             }
         }
-        ObjectType Reference {
+        objectType Reference {
             superTypes: Feature
             references {
-                Reference type { type: ObjectType }
+                reference type { type: ObjectType }
             }
             attributes {
-                [optional] Attribute opposite { type: primitives.String }
+                [optional] attribute opposite { type: primitives.String }
             }
         }
     }
     enumTypes {
-        EnumType PrimitiveKind {
+        enumType PrimitiveKind {
             literals {
-                EnumLiteral Integer
-                EnumLiteral Decimal
-                EnumLiteral Boolean
-                EnumLiteral String
-                EnumLiteral Other
+                enumLiteral Integer
+                enumLiteral Decimal
+                enumLiteral Boolean
+                enumLiteral String
+                enumLiteral Other
             }
         }
-        EnumType AttributeRole {
+        enumType AttributeRole {
             literals {
-                EnumLiteral Plain
-                EnumLiteral Name
-                EnumLiteral Documentation
-                EnumLiteral Modifier
+                enumLiteral Plain
+                enumLiteral Name
+                enumLiteral Documentation
+                enumLiteral Modifier
             }
         }
     }

@@ -2,15 +2,15 @@
 @import 'ui'
 @import 'im-metamodel'
 
-Package DAUI {
+package DAUI {
     objectTypes {
-        ObjectType IEntityComponent {
+        objectType IEntityComponent {
             superTypes: UI.IComponent
             references {
-                Reference entity { type: IM.Entity }
+                reference entity { type: IM.Entity }
             }
         }
-        ObjectType EntityScreen {
+        objectType EntityScreen {
             superTypes: UI.Screen
             superTypes: IEntityComponent
         }

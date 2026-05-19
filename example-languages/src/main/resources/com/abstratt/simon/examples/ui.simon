@@ -1,91 +1,91 @@
 @language Simon
 @import 'primitives'
 
-Package UI {
+package UI {
     objectTypes {
-        [abstract] ObjectType Named {
+        [abstract] objectType Named {
             attributes {
-                [Name] [optional] Attribute name { type: primitives.String }
-                [Documentation] [optional] Attribute documentation { type: primitives.String }
+                [name] [optional] attribute name { type: primitives.String }
+                [documentation] [optional] attribute documentation { type: primitives.String }
             }
         }
-        ObjectType Labeled {
+        objectType Labeled {
             attributes {
-                Attribute label { type: primitives.String }
+                attribute label { type: primitives.String }
             }
         }
-        [abstract] ObjectType BaseNamed {
+        [abstract] objectType BaseNamed {
             superTypes: Named
         }
-        ObjectType IComponent {
+        objectType IComponent {
             superTypes: Named
             attributes {
-                Attribute index { type: primitives.int }
+                attribute index { type: primitives.int }
             }
             references {
-                [optional] Reference parent (opposite: 'children') { type: Container }
+                [optional] reference parent (opposite: 'children') { type: Container }
             }
         }
-        [abstract] ObjectType Component {
+        [abstract] objectType Component {
             superTypes: BaseNamed
             superTypes: IComponent
         }
-        [abstract] ObjectType Container {
+        [abstract] objectType Container {
             superTypes: Component
             attributes {
-                Attribute layout { type: PanelLayout }
+                attribute layout { type: PanelLayout }
             }
             containments {
-                [multivalued] Containment children { type: IComponent }
+                [multivalued] containment children { type: IComponent }
             }
         }
-        [abstract] ObjectType LabeledComponent {
+        [abstract] objectType LabeledComponent {
             superTypes: Component
             superTypes: Labeled
         }
-        ObjectType Link {
+        objectType Link {
             superTypes: LabeledComponent
             references {
-                Reference targetScreen { type: Screen }
+                reference targetScreen { type: Screen }
             }
         }
-        ObjectType Screen {
+        objectType Screen {
             superTypes: Container
             attributes {
-                Attribute screenName { type: primitives.String }
+                attribute screenName { type: primitives.String }
             }
             references {
-                Reference application (opposite: 'screens') { type: Application }
+                reference application (opposite: 'screens') { type: Application }
             }
         }
-        [root] ObjectType Application {
+        [root] objectType Application {
             superTypes: BaseNamed
             containments {
-                [multivalued] Containment screens { type: Screen }
+                [multivalued] containment screens { type: Screen }
             }
         }
-        ObjectType Button {
+        objectType Button {
             superTypes: LabeledComponent
             attributes {
-                Attribute backgroundColor { type: Color }
-                Attribute foregroundColor { type: Color }
+                attribute backgroundColor { type: Color }
+                attribute foregroundColor { type: Color }
             }
         }
     }
     recordTypes {
-        RecordType Color {
+        recordType Color {
             attributes {
-                Attribute red { type: primitives.int }
-                Attribute green { type: primitives.int }
-                Attribute blue { type: primitives.int }
+                attribute red { type: primitives.int }
+                attribute green { type: primitives.int }
+                attribute blue { type: primitives.int }
             }
         }
     }
     enumTypes {
-        EnumType PanelLayout {
+        enumType PanelLayout {
             literals {
-                EnumLiteral Vertical
-                EnumLiteral Horizontal
+                enumLiteral Vertical
+                enumLiteral Horizontal
             }
         }
     }
