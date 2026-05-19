@@ -491,60 +491,96 @@ prelude of common primitive types when `@language Simon` is in scope.
 
 ---
 
-## 9. Names and case folding
+## 9. Naming convention and case folding
 
-Simon itself imposes **no** naming convention. The case of every
-identifier you write in a `.simon` file — type keyword, feature name,
-enum literal, etc. — is just the case the metamodel author chose when
-declaring that element. What you see in the example metamodels under
-`example-languages/` reflects how those metamodels were defined: the
-Java- and Kotlin-defined twins follow Java/Kotlin naming conventions,
-and the Simon-source twins mirror them line for line.
+Simon's lookup rules quietly encode a casing convention. The grammar
+itself accepts any case, but the case-folding applied at lookup time
+is asymmetric — it folds the first letter *upward* in two specific
+positions, and not the other way. That asymmetry only pays off if the
+metamodel side commits to a specific shape. That shape *is* the
+convention.
 
-That convention, as it filters into the source you read, looks like:
+### 9.1 Metamodel side (canonical names)
 
-- **Classifier names** are `TitleCase` (e.g. `Application`,
-  `IComponent`, `PrimitiveKind`) — the Java/Kotlin class-name
-  convention.
-- **Feature names** are `camelCase` (e.g. `objectTypes`, `attributes`,
-  `screenName`) — the Java method-name convention.
-- **Enum literal names** are `TitleCase` (e.g. `Vertical`, `Integer`,
-  `Name`) — the Java enum-constant convention used in the metamodels
-  (Kotlin's convention is more often `SCREAMING_SNAKE_CASE`, but the
-  examples follow the Java shape).
-- **Boolean modifier attributes** are `camelCase` (e.g. `abstract`,
-  `root`, `optional`, `multivalued`) — like any boolean field name.
+When you declare a metamodel — in Java, Kotlin, or Simon source — you
+are expected to spell its constituents like this:
 
-A different metamodel could choose other conventions and Simon source
-would faithfully use them. Identifiers are matched against the
-metamodel **case-sensitively**, with two ergonomic case-folding
-helpers:
+- **Classifier names** (object types, record types, enum types,
+  primitive types): `TitleCase` (`Application`, `IComponent`,
+  `PrimitiveKind`).
+- **Enum literal names**: `TitleCase` (`Vertical`, `Integer`, `Name`).
+- **Feature names** (slot keys, containment/reference feature names):
+  `camelCase` (`objectTypes`, `attributes`, `screenName`).
+- **Boolean modifier attribute names**: lowercase or `camelCase`
+  (`abstract`, `root`, `optional`, `multivalued`).
 
-1. **Type keyword position** — the first letter of the type
-   identifier in an object header is upper-cased before lookup
-   (`StringUtils.capitalize`). So if the metamodel declares
-   `ObjectType`, source files can refer to it as either `ObjectType`
-   or `objectType` and get the same classifier. The rest of the
-   identifier is matched literally (`OBJECTTYPE` would *not* resolve).
+A metamodel that ignores these — say, classifiers in all-lowercase or
+modifier attributes in `TitleCase` — will appear to parse, but the
+case-folding helpers below stop helping. `[abstract]` won't match an
+attribute named `Abstract`, and a classifier named `objecttype`
+won't be reachable from a source file written as `objectType X` (the
+fold would produce `ObjectType`, not `objecttype`).
+
+The example metamodels under `example-languages/` follow this
+convention because their Java- and Kotlin-defined twins do, and the
+Simon-source twins mirror them line for line.
+
+### 9.2 Source side (case-folding shorthand)
+
+At two specific positions in a `.simon` file, the lookup folds the
+first letter of the identifier upward before matching:
+
+1. **Type keyword position** — the first identifier in an object
+   header. The first letter is upper-cased before lookup
+   (`StringUtils.capitalize`). So `objectType Foo` and
+   `ObjectType Foo` both resolve to the metamodel's `ObjectType`
+   classifier; the rest of the identifier is matched literally, so
+   `OBJECTTYPE` or `objecttype` would *not* resolve.
 
 2. **Enum-modifier reference position** — the identifier inside
-   `[...]` is first matched literally against any boolean-attribute
-   name, then (if no boolean matched) the first letter is upper-cased
-   and looked up among the enum literals on the type's enum-typed
-   modifier attributes. So `[name]` and `[Name]` both resolve to the
-   `Name` enum literal.
+   `[...]`, when it doesn't match a boolean attribute name. The
+   first letter is upper-cased and looked up among the enum literals
+   on the type's enum-typed modifier attributes. So `[name]` and
+   `[Name]` both resolve to the `Name` enum literal.
 
-Both helpers exist so the meta-type-keyword position can read
-naturally (lowercase, like `class` or `interface` in Java) even
-though the underlying classifier is named with a `TitleCase`
-identifier inherited from Java/Kotlin. That stylistic lowercase you
-see in `.simon` files (`objectType Foo`, `[modifier] attribute bar`)
-is not a separate naming rule — it's the case-folding shorthand for
-the same classifier names the metamodel declares.
+The stylistic effect is that meta-type keywords (`objectType`,
+`recordType`, `attribute`, `containment`, `reference`) and role
+modifiers (`[name]`, `[documentation]`, `[modifier]`) read like
+lowercase reserved words, the way `class` or `interface` look in
+Java, even though the underlying classifiers and literals are
+`TitleCase` in the metamodel. The convention in the `.simon` files
+of this repo is to use this lowercase-first-letter form in the
+keyword position consistently:
 
-Type *references* (`type: X`, `superTypes: Y`) are matched literally
-with no case folding, so they must spell the classifier as the
-metamodel declared it (`type: ObjectType`, not `type: objectType`).
+```
+[root] objectType Package {
+    superTypes: Named
+    attributes {
+        [multivalued] attribute builtIns { type: primitives.String }
+    }
+    containments {
+        [multivalued] containment objectTypes { type: ObjectType }
+    }
+}
+```
+
+### 9.3 Positions that keep `TitleCase`
+
+Three positions in any `.simon` file keep the `TitleCase` form
+literally, because the lookup at those positions does *not* fold:
+
+- **Instance names** (`Package`, `Named` above) — the names of the
+  declared elements themselves. The case is preserved.
+- **Type references** (`type: ObjectType`, `superTypes: Named`,
+  `type: primitives.String`) — these are matched **literally** with
+  no case folding, so they must spell the classifier as the
+  metamodel declared it. `type: objectType` would *not* resolve.
+- **Enum literal definitions and value references**
+  (`enumLiteral Integer`, `kind: Integer`) — matched literally.
+
+Boolean modifier identifiers (`[abstract]`, `[root]`, `[optional]`,
+`[multivalued]`) are also matched literally — they must spell the
+boolean attribute name exactly. `[Abstract]` would *not* resolve.
 
 ---
 
