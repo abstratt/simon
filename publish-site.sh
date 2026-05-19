@@ -9,6 +9,10 @@ generate_docs() {
   mvn javadoc:javadoc javadoc:aggregate
   mvn com.github.ferstl:depgraph-maven-plugin:aggregate  "-Dincludes=com.abstratt.simon:*" "-Dexcludes=com.abstratt.simon:simon-test*"
   dot -Tpng target/dependency-graph.dot -o "$APIDOCS_DIR/dependencies.png"
+  # Bundle the prose docs alongside Javadoc so they render at
+  # https://abstratt.github.io/simon/docs/<file>. GitHub Pages' default
+  # Jekyll renders markdown automatically.
+  cp -R docs "$APIDOCS_DIR/docs"
 }
 
 verify_artifacts() {
@@ -18,6 +22,7 @@ verify_artifacts() {
   test -d "$APIDOCS_DIR" || { echo "Aborting: $APIDOCS_DIR missing — javadoc:aggregate did not produce output." >&2; exit 1; }
   test -f "$APIDOCS_DIR/index.html" || { echo "Aborting: $APIDOCS_DIR/index.html missing — Javadoc generation incomplete." >&2; exit 1; }
   test -f "$APIDOCS_DIR/dependencies.png" || { echo "Aborting: $APIDOCS_DIR/dependencies.png missing — is graphviz 'dot' installed?" >&2; exit 1; }
+  test -f "$APIDOCS_DIR/docs/language.md" || { echo "Aborting: $APIDOCS_DIR/docs/language.md missing — docs/ did not copy." >&2; exit 1; }
 }
 
 maybe_push() {
