@@ -296,7 +296,10 @@ public abstract class AbstractCompilerTests {
                 buildMetamodelSourceFactory(Arrays.asList(imPackage())), buildSourceProvider(allSources)));
         assertEquals(2, results.size());
         var ordersNamespace = results.get(0).getRootObject();
+        var customersNamespace = results.get(1).getRootObject();
         assertEquals("orders", getPrimitiveValue(ordersNamespace, "name"));
+        assertNotNull(ordersNamespace.eResource());
+        assertSame(ordersNamespace.eResource(), customersNamespace.eResource());
     }
 
     @Test
@@ -490,7 +493,6 @@ public abstract class AbstractCompilerTests {
         var results = compileProject(imPackage(), toParse);
         var problems = results.get(0).getProblems();
         assertEquals(5, problems.size(), problems::toString);
-        // Each misplaced comment is reported at the exact source line where it appears.
         for (int line : new int[] { 3, 4, 7, 9, 11 }) {
             var problem = expectProblem(results, Problem.Category.MisplacedModelComment, line);
             assertEquals(Problem.Severity.Error, problem.severity(), problem::toString);
@@ -584,7 +586,6 @@ public abstract class AbstractCompilerTests {
         var results = compileProject(Arrays.asList(badPackage), """
                 @language Bad
                 [default] doc""");
-        // [default] sits on line 2 of the source.
         var problem = expectProblem(results, Problem.Category.TypeError, 2);
         assertEquals(Problem.Severity.Error, problem.severity(), problem::toString);
         assertTrue(problem.message().contains("default"), problem::toString);
@@ -602,16 +603,12 @@ public abstract class AbstractCompilerTests {
         assertTrue(message.contains("Unknown modifier"), message);
         assertTrue(message.contains("bogus"), message);
         assertTrue(message.contains("Application"), message);
-        // Confirm nothing else (e.g. a stray UnresolvedName or TypeError) sneaked in.
         assertEquals(1, results.get(0).getProblems().size(),
                 results.get(0).getProblems()::toString);
     }
 
     @Test
     void malformedQualifiedModifier_reportsTypeError() {
-        // applyModifier rejects qualified identifiers with more than two
-        // segments: `[X.Y.Z]` triggers "must be a simple identifier or
-        // <EnumType>.<literal>".
         var results = compileProject(Arrays.asList(uiPackage()), """
                 @language UI
                 [Foo.Bar.Baz] application myApp""");
@@ -623,9 +620,6 @@ public abstract class AbstractCompilerTests {
 
     @Test
     void syntaxError() {
-        // unclosed brace — ANTLR's BaseErrorListener reports SyntaxError.
-        // The error is reported at the line where the parser hits EOF
-        // while expecting more tokens (the open brace is on line 2).
         var results = compileProject(Arrays.asList(uiPackage()), """
                 @language UI
                 application myApp {""");
@@ -635,7 +629,6 @@ public abstract class AbstractCompilerTests {
 
     @Test
     void noLanguageDeclared_reportsMissingElement() {
-        // root object declared without an @language directive
         var results = compileProject(Arrays.asList(uiPackage()), "application myApp {}");
         var problem = expectProblem(results, Problem.Category.MissingElement, 1);
         assertTrue(problem.message().contains("No languages defined"), problem::toString);
@@ -643,7 +636,6 @@ public abstract class AbstractCompilerTests {
 
     @Test
     void unknownLanguageElement_reportsUnknownElement() {
-        // type name that doesn't resolve in any language in scope
         var results = compileProject(Arrays.asList(uiPackage()), """
                 @language UI
                 Bogus myThing""");
@@ -653,7 +645,6 @@ public abstract class AbstractCompilerTests {
 
     @Test
     void abstractType_reportsAbstractElement() {
-        // UI.Named is declared @Meta.ObjectType(instantiable = false)
         var results = compileProject(Arrays.asList(uiPackage()), """
                 @language UI
                 Named myThing""");
@@ -663,8 +654,6 @@ public abstract class AbstractCompilerTests {
 
     @Test
     void unknownContainmentFeature_reportsMissingFeature() {
-        // `bogusFeature` is not a containment on UI.Application; it lives on
-        // line 3 of the source.
         var results = compileProject(Arrays.asList(uiPackage()), """
                 @language UI
                 application myApp {
@@ -708,10 +697,6 @@ public abstract class AbstractCompilerTests {
         return pkg;
     }
 
-    /**
-     * Asserts that the compilation produced a problem with the given category
-     * at the given source line, and returns it.
-     */
     private static Problem expectProblem(List<Result<EObject>> results, Problem.Category category, int line) {
         var allProblems = results.stream().flatMap(r -> r.getProblems().stream())
                 .collect(Collectors.toList());
@@ -766,8 +751,6 @@ public abstract class AbstractCompilerTests {
 
     @Test
     void listLiteralOnSingleValuedSlot_isTypeError() {
-        // Single-line source: "@language Tagged Item myItem (name: [...])"
-        // — the slot value is on line 1.
         var problems = compileFailingUsingTagged("Item myItem (name: ['a', 'b'])");
         assertHasTypeError(problems, "name", 1);
     }
