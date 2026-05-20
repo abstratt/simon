@@ -11,7 +11,6 @@ import static com.abstratt.simon.tests.fixtures.TestHelper.ensureSuccess;
 import static com.abstratt.simon.tests.fixtures.TestHelper.getPrimitiveValue;
 import static com.abstratt.simon.tests.fixtures.TestHelper.root;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -213,9 +212,9 @@ public abstract class AbstractCompilerTests {
                     }
                 """);
 
-        var problems = results.get(0).getProblems();
-        assertEquals(1, problems.size());
-        assertEquals(Problem.Category.UnresolvedName, problems.get(0).category(), problems.get(0)::toString);
+        var problem = expectProblem(results, Problem.Category.UnresolvedName, 6);
+        assertEquals(1, results.get(0).getProblems().size());
+        assertTrue(problem.message().contains("FOOBAR"), problem::toString);
 
         var ordersNamespace = results.get(0).getRootObject();
         var orderEntity = findChildByAttributeValue(ordersNamespace, "name", "Order");
@@ -320,10 +319,8 @@ public abstract class AbstractCompilerTests {
         var results = compileProject(uiPackage(), source);
         assertEquals(1, results.size());
         assertEquals(1, results.get(0).getProblems().size());
-        var problem = results.get(0).getProblems().get(0);
-        assertEquals(Problem.Category.TypeError, problem.category(), problem::toString);
+        var problem = expectProblem(results, Problem.Category.TypeError, 8);
         assertEquals(Problem.Severity.Error, problem.severity(), problem::toString);
-        assertEquals(8, problem.line());
         assertEquals(32, problem.column());
     }
 
@@ -493,9 +490,10 @@ public abstract class AbstractCompilerTests {
         var results = compileProject(imPackage(), toParse);
         var problems = results.get(0).getProblems();
         assertEquals(5, problems.size(), problems::toString);
-        for (var problem : problems) {
+        // Each misplaced comment is reported at the exact source line where it appears.
+        for (int line : new int[] { 3, 4, 7, 9, 11 }) {
+            var problem = expectProblem(results, Problem.Category.MisplacedModelComment, line);
             assertEquals(Problem.Severity.Error, problem.severity(), problem::toString);
-            assertEquals(Problem.Category.MisplacedModelComment, problem.category(), problem::toString);
         }
     }
 
@@ -586,12 +584,97 @@ public abstract class AbstractCompilerTests {
         var results = compileProject(Arrays.asList(badPackage), """
                 @language Bad
                 [default] doc""");
-        var problems = results.get(0).getProblems();
-        var errors = problems.stream().filter(p -> p.severity() == Problem.Severity.Error)
-                .collect(Collectors.toList());
-        assertFalse(errors.isEmpty(), problems::toString);
-        var combined = errors.stream().map(Problem::toString).collect(Collectors.joining("\n"));
-        assertTrue(combined.contains("default"), combined);
+        // [default] sits on line 2 of the source.
+        var problem = expectProblem(results, Problem.Category.TypeError, 2);
+        assertEquals(Problem.Severity.Error, problem.severity(), problem::toString);
+        assertTrue(problem.message().contains("default"), problem::toString);
+        assertTrue(problem.message().contains("Ambiguous"), problem::toString);
+    }
+
+    @Test
+    void unknownModifier() {
+        var results = compileProject(Arrays.asList(uiPackage()), """
+                @language UI
+                [bogus] application myApp""");
+        var problem = expectProblem(results, Problem.Category.UnknownElement, 2);
+        assertEquals(Problem.Severity.Error, problem.severity(), problem::toString);
+        var message = problem.message();
+        assertTrue(message.contains("Unknown modifier"), message);
+        assertTrue(message.contains("bogus"), message);
+        assertTrue(message.contains("Application"), message);
+        // Confirm nothing else (e.g. a stray UnresolvedName or TypeError) sneaked in.
+        assertEquals(1, results.get(0).getProblems().size(),
+                results.get(0).getProblems()::toString);
+    }
+
+    @Test
+    void malformedQualifiedModifier_reportsTypeError() {
+        // applyModifier rejects qualified identifiers with more than two
+        // segments: `[X.Y.Z]` triggers "must be a simple identifier or
+        // <EnumType>.<literal>".
+        var results = compileProject(Arrays.asList(uiPackage()), """
+                @language UI
+                [Foo.Bar.Baz] application myApp""");
+        var problem = expectProblem(results, Problem.Category.TypeError, 2);
+        assertEquals(Problem.Severity.Error, problem.severity(), problem::toString);
+        assertTrue(problem.message().contains("Foo.Bar.Baz"), problem::toString);
+        assertTrue(problem.message().contains("simple identifier"), problem::toString);
+    }
+
+    @Test
+    void syntaxError() {
+        // unclosed brace — ANTLR's BaseErrorListener reports SyntaxError.
+        // The error is reported at the line where the parser hits EOF
+        // while expecting more tokens (the open brace is on line 2).
+        var results = compileProject(Arrays.asList(uiPackage()), """
+                @language UI
+                application myApp {""");
+        var problem = expectProblem(results, Problem.Category.SyntaxError, 2);
+        assertEquals(Problem.Severity.Error, problem.severity(), problem::toString);
+    }
+
+    @Test
+    void noLanguageDeclared_reportsMissingElement() {
+        // root object declared without an @language directive
+        var results = compileProject(Arrays.asList(uiPackage()), "application myApp {}");
+        var problem = expectProblem(results, Problem.Category.MissingElement, 1);
+        assertTrue(problem.message().contains("No languages defined"), problem::toString);
+    }
+
+    @Test
+    void unknownLanguageElement_reportsUnknownElement() {
+        // type name that doesn't resolve in any language in scope
+        var results = compileProject(Arrays.asList(uiPackage()), """
+                @language UI
+                Bogus myThing""");
+        var problem = expectProblem(results, Problem.Category.UnknownElement, 2);
+        assertTrue(problem.message().contains("Bogus"), problem::toString);
+    }
+
+    @Test
+    void abstractType_reportsAbstractElement() {
+        // UI.Named is declared @Meta.ObjectType(instantiable = false)
+        var results = compileProject(Arrays.asList(uiPackage()), """
+                @language UI
+                Named myThing""");
+        var problem = expectProblem(results, Problem.Category.AbstractElement, 2);
+        assertTrue(problem.message().contains("Named"), problem::toString);
+    }
+
+    @Test
+    void unknownContainmentFeature_reportsMissingFeature() {
+        // `bogusFeature` is not a containment on UI.Application; it lives on
+        // line 3 of the source.
+        var results = compileProject(Arrays.asList(uiPackage()), """
+                @language UI
+                application myApp {
+                    bogusFeature {
+                        Screen s {}
+                    }
+                }""");
+        var problem = expectProblem(results, Problem.Category.MissingFeature, 3);
+        assertTrue(problem.message().contains("bogusFeature"), problem::toString);
+        assertTrue(problem.message().contains("Application"), problem::toString);
     }
 
     private EPackage buildCollidingModifierPackage() {
@@ -623,6 +706,20 @@ public abstract class AbstractCompilerTests {
 
         pkg.getEClassifiers().add(doc);
         return pkg;
+    }
+
+    /**
+     * Asserts that the compilation produced a problem with the given category
+     * at the given source line, and returns it.
+     */
+    private static Problem expectProblem(List<Result<EObject>> results, Problem.Category category, int line) {
+        var allProblems = results.stream().flatMap(r -> r.getProblems().stream())
+                .collect(Collectors.toList());
+        return allProblems.stream()
+                .filter(p -> p.category() == category && p.line() == line)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError(
+                        "Expected " + category + " at line " + line + "; got: " + allProblems));
     }
 
     private EEnum createEnum(String name, String... literalNames) {
@@ -669,14 +766,16 @@ public abstract class AbstractCompilerTests {
 
     @Test
     void listLiteralOnSingleValuedSlot_isTypeError() {
+        // Single-line source: "@language Tagged Item myItem (name: [...])"
+        // — the slot value is on line 1.
         var problems = compileFailingUsingTagged("Item myItem (name: ['a', 'b'])");
-        assertHasTypeError(problems, "name");
+        assertHasTypeError(problems, "name", 1);
     }
 
     @Test
     void singleLiteralOnMultivaluedSlot_isTypeError() {
         var problems = compileFailingUsingTagged("Item myItem (tags: 'only-one')");
-        assertHasTypeError(problems, "tags");
+        assertHasTypeError(problems, "tags", 1);
     }
 
     private List<String> readTags(EObject item) {
@@ -685,11 +784,13 @@ public abstract class AbstractCompilerTests {
                 .collect(Collectors.toList());
     }
 
-    private void assertHasTypeError(List<Problem> problems, String slotName) {
+    private void assertHasTypeError(List<Problem> problems, String slotName, int line) {
         assertTrue(
                 problems.stream().anyMatch(p -> p.category() == Problem.Category.TypeError
+                        && p.line() == line
                         && p.toString().contains(slotName)),
-                () -> "Expected TypeError mentioning '" + slotName + "', got: " + problems);
+                () -> "Expected TypeError at line " + line + " mentioning '" + slotName
+                        + "', got: " + problems);
     }
 
     private EObject emptyApplication(String toParse) {

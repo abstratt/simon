@@ -58,6 +58,7 @@ class SimonBuilder<T> extends SimonBaseListener {
         private final List<ModelCommentContext> modelComments;
 
         public ElementInfo(String sourceName, T object, Slotted type, List<ModifierContext> modifiers, List<ModelCommentContext> modelComments) {
+            this.sourceName = sourceName;
             this.object = object;
             this.type = type;
             this.modifiers = modifiers;
@@ -383,7 +384,11 @@ class SimonBuilder<T> extends SimonBaseListener {
 
 	private void applyModelComments(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info) {
 		var modelComments = info.getModelComments();
-        modelComments.forEach(it -> applyModelComment(info, it));
+        try {
+            modelComments.forEach(it -> applyModelComment(info, it));
+        } finally {
+            modelComments.clear();
+        }
 	}
 
     private void applyModelComment(ElementInfo info, ModelCommentContext it) {
@@ -395,7 +400,11 @@ class SimonBuilder<T> extends SimonBaseListener {
 
     private void applyModifiers(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info) {
         var modifiers = info.getModifiers();
-        modifiers.forEach(it -> applyModifier(ctx, info, it));
+        try {
+            modifiers.forEach(it -> applyModifier(ctx, info, it));
+        } finally {
+            modifiers.clear();
+        }
     }
 
     private void applyModifier(ParserRuleContext ctx, SimonBuilder<T>.ElementInfo info, ModifierContext modifier) {
@@ -460,9 +469,10 @@ class SimonBuilder<T> extends SimonBaseListener {
             return;
         }
         List<String> available = owner.slots().stream().filter(Slot::isModifier).map(Slot::name)
-                .collect(Collectors.toList());
-        throw new CompilerException("Unknown modifier '" + qualifiedId.getText() + "' on type " + owner.name()
-                + " - modifier-eligible slots: " + available);
+                .toList();
+        reportError(Severity.Error, Category.UnknownElement, sourceName, modifier,
+                "Unknown modifier '" + qualifiedId.getText() + "' on type " + owner.name()
+                        + " - modifier-eligible slots: " + available);
     }
 
 

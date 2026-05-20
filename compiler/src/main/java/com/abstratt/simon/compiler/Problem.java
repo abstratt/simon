@@ -51,7 +51,7 @@ public class Problem {
         return line;
     }
 
-    String message() {
+    public String message() {
         return message;
     }
 
