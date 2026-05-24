@@ -1,4 +1,4 @@
-# simon - {Sim}ple {O}bject {N}otation
+# simon - 𝐒𝐈𝐌𝘱𝘭𝘦 𝐎𝘣𝘫𝘦𝘤𝘵 𝐍𝘰𝘵𝘢𝘵𝘪𝘰𝘯
 
 Simon is a framework that supports implementation of DSLs driven by user-provided metamodels.
 
