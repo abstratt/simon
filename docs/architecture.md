@@ -11,6 +11,9 @@ what happens during compilation, then the self-describing bootstrap.
 The last and longest section — [How to extend Simon](#6-how-to-extend-simon) —
 is the practical payoff: recipes for the changes people actually make.
 
+For a critique of where this design is weak, see
+[`architecture-issues.md`](architecture-issues.md).
+
 ---
 
 ## 1. Big picture
