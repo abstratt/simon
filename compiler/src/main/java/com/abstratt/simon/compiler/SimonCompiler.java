@@ -82,6 +82,14 @@ public interface SimonCompiler<T> {
     }
 
     interface Factory {
+        /**
+         * Wires a metamodel source and a backend into a ready-to-use compiler: the
+         * source supplies the language's types, the backend builds the model.
+         *
+         * @param typeSourceFactory supplies the metamodel (the language's types)
+         * @param configurationProvider builds the model objects
+         * @param <T> the type of model being built
+         */
         <T> SimonCompiler<T> create(MetamodelSource.Factory<?> typeSourceFactory,
                 Backend<? extends ObjectType, ? extends Slotted, T> configurationProvider);
     }

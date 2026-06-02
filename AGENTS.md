@@ -32,6 +32,12 @@ follow the link to the full note.
 
 ## Reference
 
+- **Codebase architecture**: [`docs/architecture.md`](docs/architecture.md)
+  is the map of modules, the core contracts (`Metamodel`,
+  `MetamodelSource`, `Backend`, `SimonCompiler`), the compilation flow,
+  the self-describing bootstrap, and how-to-extend recipes. Read it before
+  adding a backend, a metamodel source, or a language.
+
 - **Published docs URLs**: link to `.html`, not `.md`. GitHub Pages with
   Jekyll serves the `.md` source raw (browsers show plain text) and the
   parallel `.html` URL as a themed rendered page. The in-repo

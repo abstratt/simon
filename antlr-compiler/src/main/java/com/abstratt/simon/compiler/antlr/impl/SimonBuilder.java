@@ -44,6 +44,17 @@ import com.abstratt.simon.parser.antlr.SimonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Builds the model from a parsed Simon source by listening to parse-tree
+ * events and driving the {@link Backend} accordingly.
+ *
+ * Construction happens in two passes. While parsing (pass 1), the listener
+ * methods instantiate objects, set slot values, and attach children as each
+ * element is encountered; references are recorded as deferred resolution
+ * requests. After all units are parsed, {@link #resolve()} (pass 2) resolves
+ * those requests and links the references — so a reference may point forward,
+ * across imports, anywhere in the model graph.
+ */
 class SimonBuilder<T> extends SimonBaseListener {
 
     private static final Logger log = LoggerFactory.getLogger(SimonBuilder.class);

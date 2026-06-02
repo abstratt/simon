@@ -42,6 +42,10 @@ public interface Metamodel {
          */
         boolean isRoot();
 
+        /**
+         * Whether this type is concrete and may be directly instantiated, as opposed
+         * to an abstract type that only serves as a supertype.
+         */
         boolean isInstantiable();
     }
 
@@ -147,7 +151,9 @@ public interface Metamodel {
     }
 
     /**
-     * Some types support features.
+     * A named, typed property of a type. The kinds of feature are {@link Slot}
+     * (holds a basic value), {@link Composition} (an owned child), and
+     * {@link Reference} (a link to a non-owned object).
      */
     interface Feature<T extends Type> extends Typed<T> {
 

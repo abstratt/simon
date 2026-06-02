@@ -130,6 +130,14 @@ application myApplication {
 
 ## Java/Ecore-based implementation
 
+For a full architectural walkthrough — the module roles, the core
+contracts (`Metamodel`, `MetamodelSource`, `Backend`, `SimonCompiler`),
+the compilation data flow, the self-describing bootstrap, and recipes for
+extending the framework — see [`docs/architecture.md`](docs/architecture.md)
+(also published, rendered, at
+[abstratt.github.io/simon/docs/architecture.html](https://abstratt.github.io/simon/docs/architecture.html)).
+The list below is a quick index.
+
 ### Module structure
 
 * gen-utils - utilities used by Simon but not tied to the Simon API
