@@ -4,7 +4,7 @@
  * <dependencyManagement>.
  */
 object SimonVersions {
-    const val JUNIT = "6.1.0"
+    const val JUNIT = "6.1.1"
     const val AUTO_SERVICE = "1.1.1"
     const val KOTLIN = "2.4.0"
     const val SLF4J = "2.0.18"
