@@ -13,7 +13,7 @@ object SimonVersions {
     const val COMMONS_IO = "2.22.0"
     const val EMF_ECORE = "2.42.0"
     const val CLASSGRAPH = "4.8.184"
-    const val STREAMEX = "0.8.4"
+    const val STREAMEX = "0.9.0"
     const val ANTLR = "4.13.2"
     const val GUAVA = "33.6.0-jre"
     const val COMPILE_TESTING = "0.23.0"
