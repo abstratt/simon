@@ -9,5 +9,5 @@ repositories {
 
 dependencies {
     // Makes the Kotlin JVM plugin available to the simon.kotlin-conventions precompiled plugin.
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.0")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20")
 }
