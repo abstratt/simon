@@ -15,7 +15,7 @@ object SimonVersions {
     const val CLASSGRAPH = "4.8.184"
     const val STREAMEX = "0.8.4"
     const val ANTLR = "4.13.2"
-    const val GUAVA = "33.6.0-jre"
+    const val GUAVA = "33.7.1-jre"
     const val COMPILE_TESTING = "0.23.0"
 
     /** Coordinates pinned for all modules via dependency constraints (Maven <dependencyManagement>). */
