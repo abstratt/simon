@@ -16,7 +16,7 @@ object SimonVersions {
     const val STREAMEX = "0.8.4"
     const val ANTLR = "4.13.2"
     const val GUAVA = "33.6.0-jre"
-    const val COMPILE_TESTING = "0.23.0"
+    const val COMPILE_TESTING = "0.24.0"
 
     /** Coordinates pinned for all modules via dependency constraints (Maven <dependencyManagement>). */
     val MANAGED_COORDINATES = listOf(
